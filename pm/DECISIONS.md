@@ -1,0 +1,18 @@
+# Decisions - Urdu PWA
+*v0.01 | 2026-09-11*
+
+**File Purpose**: Prepend-only log of significant decisions and major actions. Newest entry at top. Never edit prior entries. Work-local decisions live in their work-front doc's §Decisions; cross-cutting ones are promoted here.
+
+2026-09-11 (260911a): v0 makes zero LLM calls from the app. Define = vault lookup then external dictionary links; Add to vocab = manual form. Enrichment happens in ChatGPT. Rejected: Anthropic/OpenAI API in the Worker (sponsor: no paid credits; ChatGPT Plus includes no API credits), Workers AI (weak Urdu), Gemini free tier (not the sponsor's account).
+2026-09-11 (260911a): The Coach connects to the vault through Urdu Core's three-operation contract (get vocab / propose vocab / record reviews). Coach proposals are created immediately at mastery 0; no approval queue. Clipboard JSON handoff remains the contract definition and fallback.
+2026-09-11 (260911a): Coach client for v0 is decided by a week-1 GPT-Live-1 spike (PRD Appendix D). Pass → in-app voice over WebRTC with Worker-minted client secrets, sponsor cap ~$0.50/day (~10 min at $0.05/min). Fail → private "Only me" Custom GPT with Actions. GPT-Live-1 reached the API 2026-09-10; Custom GPTs still use Advanced Voice Mode, not GPT-Live. VISION §16 custom-voice-tutor non-goal is amended to permit this.
+2026-09-11 (260911a): v0 targets Android Chrome (installed PWA) only; Windows Chrome staged to v1, with v0 built responsive and without touch-only assumptions.
+2026-09-11 (260911a): Speech = browser SpeechSynthesis behind a speak() interface with a voice picker; spike on the phone first; hosted TTS (Azure ur-PK) only as a v1 fallback.
+2026-09-11 (260911a): v0 slice = Urdu Core + D1, Airtable import, PWA reader/vocab/review/handoff paste, Coach contract, one Coach client. Deferred: saved passages, tags/favourites UI, stats, undo, mixed-direction review, fuzzy duplicates.
+2026-09-11 (260911a): Data model = vocab, review_events, handoffs, tags (with descriptions, from Airtable), sessions (PRD Appendix A). Next review stored and derived; Airtable Next Review / Interval not imported but cross-checked. Home timezone America/Vancouver, day-granularity scheduling. Duplicate = equal normalized urdu_key (PRD Appendix B).
+2026-09-11 (260911a): Reader = self-hosted Noto Nastaliq Urdu; whitespace/punctuation tokenization keeping ZWNJ compounds; tap = speak; phrase actions via a floating bar over native browser selection (no custom long-press); current text in localStorage only.
+2026-09-11 (260911a): Hosting = one Worker serving static assets and /api at urdu.umber-amber.workers.dev. Auth = single secret → hashed random session token in D1 → HttpOnly Secure SameSite=Strict cookie (~1 year, revocable). Coach = separate bearer token accepted only on Coach routes. Rejected: stateless signed cookie (no per-device revocation).
+2026-09-11 (260911a): Review = due or never-reviewed, ordered next_review asc then added asc, cap 20/session (setting), direction chosen per session, five grade buttons + Skip, no undo in v0.
+2026-09-11 (260911a): Repo = single pnpm package: src/ (Vite+React PWA), worker/ (Urdu Core), shared/ (ladder, deltas, normalization, API types = single source of truth), migrations/, scripts/airtable-import.ts (posts to an admin endpoint; never touches D1). Vitest, Biome, wrangler static assets. Rejected: monorepo, ESLint+Prettier.
+2026-09-11 (260911a): Adopted the pm work-front regime (pm-* skills); PRD.md and PLAN.md written from the grill-me interview; spikes are mini-plans mp01/mp02, features f01-f07.
+2026-09-11: Project scaffolded with the pm-system doc model.
