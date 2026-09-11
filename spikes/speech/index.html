@@ -1,0 +1,242 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#1f6f5f">
+<title>Urdu Speech Spike (mp01)</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Nastaliq+Urdu&display=swap" rel="stylesheet">
+<style>
+  :root { --ink:#1e1c19; --muted:#6b6560; --bg:#fbf8f2; --card:#fff; --line:#e4dcd0; --accent:#1f6f5f; --warn:#b3261e; }
+  * { box-sizing: border-box; }
+  body { margin:0; padding:16px; font: 15px/1.45 system-ui, sans-serif; color:var(--ink); background:var(--bg); }
+  h1 { font-size:1.2rem; margin:0 0 4px; }
+  .sub { color:var(--muted); font-size:.85rem; margin-bottom:12px; }
+  section { background:var(--card); border:1px solid var(--line); border-radius:10px; padding:12px; margin-bottom:12px; }
+  h2 { font-size:.95rem; margin:0 0 8px; color:var(--muted); text-transform:uppercase; letter-spacing:.04em; }
+  .row { display:flex; flex-wrap:wrap; gap:8px; align-items:center; }
+  button { font: inherit; padding:10px 14px; min-height:44px; border-radius:8px; border:1px solid var(--line); background:#f6f2ea; color:var(--ink); }
+  button.primary { background:var(--accent); color:#fff; border-color:var(--accent); }
+  select, input[type=text], textarea { font:inherit; padding:8px; border:1px solid var(--line); border-radius:8px; width:100%; }
+  .ur { font-family: "Noto Nastaliq Urdu", "Jameel Noori Nastaleeq", "Noto Naskh Arabic", serif; direction:rtl; font-size:1.9rem; line-height:2.2; }
+  .samples { display:flex; flex-wrap:wrap; gap:8px; direction:rtl; }
+  .samples button { min-height:56px; padding:6px 14px; background:#fff; }
+  .samples button.phrase { width:100%; text-align:right; }
+  .stat { font-variant-numeric: tabular-nums; }
+  .big { font-size:1.6rem; font-weight:600; }
+  .muted { color:var(--muted); font-size:.85rem; }
+  .err { color:var(--warn); white-space:pre-wrap; }
+  table { border-collapse:collapse; width:100%; font-size:.85rem; }
+  td, th { text-align:left; padding:4px 6px; border-bottom:1px solid var(--line); vertical-align:top; }
+  tr.ur-voice td { background:#eaf5f1; }
+  label.slider { display:flex; gap:8px; align-items:center; flex:1 1 180px; }
+  label.slider input { flex:1; }
+  textarea.ur { font-size:1.4rem; min-height:80px; }
+  .pill { display:inline-block; padding:2px 8px; border-radius:999px; background:#eee; font-size:.8rem; }
+  .pill.on { background:#d9efe7; color:var(--accent); }
+</style>
+</head>
+<body>
+<h1>Urdu Speech Spike <span class="muted">mp01</span></h1>
+<div class="sub">
+  <span id="mode" class="pill">display-mode: ?</span>
+  <span id="support" class="pill">SpeechSynthesis: ?</span>
+  <span id="ua" class="muted"></span>
+</div>
+
+<section>
+  <h2>Voice</h2>
+  <div class="row">
+    <select id="voice"></select>
+  </div>
+  <div class="row" style="margin-top:8px">
+    <button id="reload">Reload voices</button>
+    <span id="voiceCount" class="muted"></span>
+  </div>
+  <div class="row" style="margin-top:8px">
+    <label class="slider">Rate <input id="rate" type="range" min="0.5" max="1.5" step="0.05" value="0.9"><span id="rateV" class="stat">0.90</span></label>
+    <label class="slider">Pitch <input id="pitch" type="range" min="0.5" max="1.5" step="0.05" value="1"><span id="pitchV" class="stat">1.00</span></label>
+  </div>
+</section>
+
+<section>
+  <h2>Tap to speak</h2>
+  <div class="samples ur" id="samples"></div>
+  <textarea id="free" class="ur" placeholder="یہاں کچھ لکھیں"></textarea>
+  <div class="row" style="margin-top:8px">
+    <button id="speakFree" class="primary">Speak text</button>
+    <button id="stop">Stop</button>
+  </div>
+</section>
+
+<section>
+  <h2>Latency</h2>
+  <div class="row">
+    <div><div class="muted">last tap → onstart</div><div id="last" class="big stat">–</div></div>
+    <div><div class="muted">median (last 10)</div><div id="median" class="big stat">–</div></div>
+    <div><div class="muted">utterances</div><div id="count" class="big stat">0</div></div>
+  </div>
+  <div id="err" class="err"></div>
+  <table id="log"><thead><tr><th>#</th><th>text</th><th>voice</th><th>tap→start</th><th>start→end</th><th>note</th></tr></thead><tbody></tbody></table>
+</section>
+
+<section>
+  <h2>All voices</h2>
+  <table id="voices"><thead><tr><th>name</th><th>lang</th><th>local</th><th>default</th></tr></thead><tbody></tbody></table>
+</section>
+
+<section>
+  <h2>Results</h2>
+  <div class="row">
+    <button id="copy">Copy results JSON</button>
+    <span id="copied" class="muted"></span>
+  </div>
+</section>
+
+<script>
+(() => {
+  const $ = id => document.getElementById(id);
+  const synth = window.speechSynthesis;
+  const state = { voices: [], log: [], firstUtteranceDone: false };
+
+  const SAMPLES = [
+    { t: 'پانی', k: 'word' }, { t: 'کتاب', k: 'word' }, { t: 'دوست', k: 'word' },
+    { t: 'شکریہ', k: 'word' }, { t: 'بازار', k: 'word' }, { t: 'مہربانی', k: 'word' },
+    { t: 'آپ کیسے ہیں؟', k: 'phrase' }, { t: 'مجھے اردو سیکھنا پسند ہے', k: 'phrase' },
+  ];
+
+  // environment
+  const standalone = matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
+  $('mode').textContent = 'display-mode: ' + (standalone ? 'standalone' : 'browser');
+  $('mode').classList.toggle('on', standalone);
+  const supported = 'speechSynthesis' in window && 'SpeechSynthesisUtterance' in window;
+  $('support').textContent = 'SpeechSynthesis: ' + (supported ? 'yes' : 'NO');
+  $('support').classList.toggle('on', supported);
+  $('ua').textContent = navigator.userAgent;
+  if (!supported) { $('err').textContent = 'speechSynthesis is not available in this browser.'; return; }
+
+  const isUrdu = v => v.lang.toLowerCase().startsWith('ur');
+  const esc = s => String(s).replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
+
+  // voices — Android Chrome returns [] on first call and fills in later via voiceschanged
+  function loadVoices() {
+    state.voices = synth.getVoices().slice().sort((a, b) => {
+      if (isUrdu(a) !== isUrdu(b)) return isUrdu(a) ? -1 : 1;
+      return a.lang.localeCompare(b.lang) || a.name.localeCompare(b.name);
+    });
+    const sel = $('voice');
+    const prev = sel.value;
+    sel.innerHTML = '';
+    const opt0 = document.createElement('option');
+    opt0.value = ''; opt0.textContent = '(browser default, lang=ur-PK, no voice set)';
+    sel.appendChild(opt0);
+    state.voices.forEach((v, i) => {
+      const o = document.createElement('option');
+      o.value = String(i);
+      o.textContent = v.lang + ' · ' + v.name + (v.localService ? '' : ' (network)') + (v.default ? ' [default]' : '');
+      sel.appendChild(o);
+    });
+    const firstUr = state.voices.findIndex(isUrdu);
+    if (prev && sel.querySelector('option[value="' + prev + '"]')) sel.value = prev;
+    else if (firstUr >= 0) sel.value = String(firstUr);
+    $('voiceCount').textContent = state.voices.length + ' voices, ' + state.voices.filter(isUrdu).length + ' Urdu';
+    const tb = $('voices').querySelector('tbody');
+    tb.innerHTML = '';
+    state.voices.forEach(v => {
+      const tr = document.createElement('tr');
+      if (isUrdu(v)) tr.className = 'ur-voice';
+      tr.innerHTML = '<td>' + esc(v.name) + '</td><td>' + esc(v.lang) + '</td><td>' + (v.localService ? 'yes' : 'no') + '</td><td>' + (v.default ? 'yes' : '') + '</td>';
+      tb.appendChild(tr);
+    });
+  }
+  synth.addEventListener('voiceschanged', loadVoices);
+  loadVoices();
+  let polls = 0;
+  const poll = setInterval(() => { if (state.voices.length || ++polls > 20) clearInterval(poll); else loadVoices(); }, 250);
+  $('reload').addEventListener('click', loadVoices);
+
+  // sliders
+  $('rate').addEventListener('input', e => { $('rateV').textContent = Number(e.target.value).toFixed(2); });
+  $('pitch').addEventListener('input', e => { $('pitchV').textContent = Number(e.target.value).toFixed(2); });
+
+  // samples
+  SAMPLES.forEach(s => {
+    const b = document.createElement('button');
+    b.textContent = s.t; b.className = s.k; b.lang = 'ur';
+    b.addEventListener('click', () => speak(s.t, s.k));
+    $('samples').appendChild(b);
+  });
+  $('speakFree').addEventListener('click', () => { const t = $('free').value.trim(); if (t) speak(t, 'free'); });
+  $('stop').addEventListener('click', () => synth.cancel());
+
+  // speak + measure
+  function speak(text, kind) {
+    const tap = performance.now();
+    synth.cancel(); // Android Chrome queues utterances otherwise
+    const u = new SpeechSynthesisUtterance(text);
+    const vi = $('voice').value;
+    const v = vi === '' ? null : state.voices[Number(vi)];
+    if (v) u.voice = v;
+    u.lang = v ? v.lang : 'ur-PK';
+    u.rate = Number($('rate').value);
+    u.pitch = Number($('pitch').value);
+    const entry = {
+      n: state.log.length + 1, text, kind,
+      voice: v ? v.lang + ' ' + v.name : '(default)',
+      tapToStart: null, startToEnd: null,
+      note: state.firstUtteranceDone ? '' : 'first utterance',
+    };
+    let startAt = null;
+    u.onstart = () => { startAt = performance.now(); entry.tapToStart = Math.round(startAt - tap); render(); };
+    u.onend = () => { if (startAt !== null) entry.startToEnd = Math.round(performance.now() - startAt); state.firstUtteranceDone = true; render(); };
+    u.onerror = e => { entry.note = 'error: ' + e.error; $('err').textContent = 'onerror: ' + e.error; render(); };
+    state.log.push(entry);
+    $('err').textContent = '';
+    render();
+    synth.speak(u);
+    setTimeout(() => {
+      if (entry.tapToStart === null && !entry.note.startsWith('error')) { entry.note += (entry.note ? '; ' : '') + 'no onstart after 3 s'; render(); }
+    }, 3000);
+  }
+
+  function median(sorted) { const m = sorted.length >> 1; return sorted.length % 2 ? sorted[m] : Math.round((sorted[m - 1] + sorted[m]) / 2); }
+  function recentLatencies() { return state.log.filter(e => e.tapToStart !== null).slice(-10).map(e => e.tapToStart).sort((a, b) => a - b); }
+
+  function render() {
+    const started = state.log.filter(e => e.tapToStart !== null);
+    const last = started[started.length - 1];
+    $('last').textContent = last ? last.tapToStart + ' ms' : '–';
+    const recent = recentLatencies();
+    $('median').textContent = recent.length ? median(recent) + ' ms' : '–';
+    $('count').textContent = String(state.log.length);
+    const tb = $('log').querySelector('tbody');
+    tb.innerHTML = '';
+    state.log.slice().reverse().forEach(e => {
+      const tr = document.createElement('tr');
+      tr.innerHTML = '<td>' + e.n + '</td><td class="ur" style="font-size:1.1rem;line-height:1.6">' + esc(e.text) + '</td><td>' + esc(e.voice) + '</td><td class="stat">' + (e.tapToStart ?? '…') + '</td><td class="stat">' + (e.startToEnd ?? '…') + '</td><td>' + esc(e.note) + '</td>';
+      tb.appendChild(tr);
+    });
+  }
+
+  // results export — paste this into the mp01 journal
+  $('copy').addEventListener('click', async () => {
+    const recent = recentLatencies();
+    const out = {
+      spike: 'mp01', at: new Date().toISOString(), ua: navigator.userAgent, standalone,
+      voices: state.voices.map(v => ({ name: v.name, lang: v.lang, local: v.localService, default: v.default })),
+      rate: Number($('rate').value), pitch: Number($('pitch').value),
+      medianTapToStartLast10: recent.length ? median(recent) : null,
+      utterances: state.log,
+    };
+    const text = JSON.stringify(out, null, 2);
+    try { await navigator.clipboard.writeText(text); $('copied').textContent = 'copied ' + text.length + ' chars'; }
+    catch (e) { $('copied').textContent = 'clipboard failed: ' + e.message; console.log(text); }
+  });
+})();
+</script>
+</body>
+</html>
