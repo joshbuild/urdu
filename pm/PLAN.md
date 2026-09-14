@@ -50,7 +50,7 @@
 
 | Handle | Slug / doc | Status | One-line |
 |---|---|---|---|
-| f01 | `features/f01-urdu-core-foundation.md` | planned | Repo, shared domain rules, D1 schema, unlock auth, vocab/review API, PWA shell. |
+| f01 | `features/f01-urdu-core-foundation.md` | 🟡 in progress (s01 pending sponsor Qs) | Repo, shared domain rules, D1 schema, unlock auth, vocab/review API, PWA shell. |
 | f02 | `features/f02-airtable-import.md` | planned | One-time idempotent import of the Airtable "Urdu Vocab" base into D1. |
 | f03 | `features/f03-reader.md` | planned | Paste-and-read in Nastaliq with tap-to-speak, selection action bar, add and define. |
 | f04 | `features/f04-vocab-ui.md` | planned | Browse, search, edit, and create vocabulary; settings. |
