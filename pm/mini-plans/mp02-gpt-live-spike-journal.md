@@ -90,3 +90,17 @@ The last row proves the restricted key authenticates against `/v1/live/sessions`
 Gotcha for anyone restarting: two `wrangler dev` instances on the same port wedge every request, including the local explorer API; kill all `node` and `workerd` processes before restarting.
 
 **s03 page (`spikes/gpt-live/index.html`)** built: token entry (sessionStorage), voice picker (marin/cedar plus the twelve launch-post names, unverified), Connect / End session / Mute, elapsed and billed-seconds counters, running voice-cost estimate (seconds + 15 s creation charge, at $0.05/min), transcript bubbles from the two transcript-delta streams, event log, browser-side tool-call handling (`response.event` → stub → `response.item.create` + `response.create`, with `delegation_id` echoed when present), backend usage capture from nested `response.completed`, and Copy results JSON. `node spikes/gpt-live/check.js` passes. **Awaiting the sponsor's desktop Chrome run** at `http://127.0.0.1:8787` with the token from `.dev.vars`: a short Urdu exchange plus one "add X to my vault" request. Unknowns that run settles: whether the session config is accepted; whether the tool call reaches the data channel (else Durable Object sideband fallback); which voice names are valid; how Urdu sounds.
+
+## 2026-09-14 — s03 desktop run 1 (Windows Chrome 152)
+
+Key needed `api.responses.write` for Responses delegation (first attempt: 401 `missing_scope`). Editing the existing key's permissions had not taken effect after 3 min; sponsor created a new key with List models read, Realtime request, Responses write. That works.
+
+Run 1, session `live_u7_EO7uD93mvnZ6hcUsNVdAs`, voice `marin`, 64 s elapsed, 44 billed seconds, voice cost estimate $0.049:
+- Worker to OpenAI session create 1823 ms; answer to `session.started` 153 ms; peer and data channel connected immediately.
+- **Session config accepted as written** (strict schema passed: `audio.output.voice`, Responses delegation, function tool).
+- Model spoke Urdu audibly. Its transcript came back in Roman Urdu ("Hmm. Theek hai, ek second."); the user transcript came back in Urdu script with English words inline.
+- **Tool call reached the browser data channel.** `session.delegation.created` then nested `response.event`s; `response.output_item.done` carried `add_to_vault {"urdu":"جملہ","roman":"jumla","english":"sentence","kind":"word"}` about 1.1 s after the delegation started. Stub returned ok. So no sideband / Durable Object is needed.
+- **Bug:** `response.item.create` and `response.create` were rejected, `unknown_parameter: delegation_id`. So the backend never received the result and the conversation did not resume from the tool call. Fixed: the page no longer sends `delegation_id` on those commands. Criterion 3 needs a rerun.
+- Backend usage for the delegation: 1089 input, 72 output (35 reasoning) tokens on gpt-5.6-luna, about $0.0003.
+- `session.close` sent at 60 s; no `session.closed` within 5 s, so final usage was not captured. Close drains delegated work, and the stuck delegation may have held it open. Page now waits 20 s.
+- Transcript fragments from one speaker now merge into one bubble.

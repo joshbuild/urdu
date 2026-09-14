@@ -183,7 +183,8 @@
     let cur = speakers[who];
     const other = who === "user" ? "assistant" : "user";
     // Start a new bubble when the speaker changes or after a long gap.
-    if (!cur || (ev.start_ms != null && cur.endMs != null && ev.start_ms - cur.endMs > 1500)) {
+    // New bubble only when the speaker changes; fragments from one speaker merge.
+    if (!cur) {
       cur = { who, text: "", startMs: ev.start_ms ?? null, endMs: null, el: null };
       const el = document.createElement("div");
       el.className = "t " + who;
@@ -228,11 +229,9 @@
       log("stub failed: " + e.message, "err");
     }
     const evt = { type: "response.item.create", event_id: "tool_result_" + n, item: { type: "function_call_output", call_id: item.call_id, output } };
-    if (delegationId) evt.delegation_id = delegationId;
+    // Live rejects delegation_id on these commands (desktop run 2026-09-14: unknown_parameter).
     send(evt);
-    const cont = { type: "response.create", event_id: "continue_" + n };
-    if (delegationId) cont.delegation_id = delegationId;
-    send(cont);
+    send({ type: "response.create", event_id: "continue_" + n });
   }
 
   function onEvent(raw) {
@@ -349,8 +348,8 @@
     if (dc && dc.readyState === "open") {
       send({ type: "session.close", event_id: "close_1" });
       setState("closing");
-      // If session.closed never arrives, tear down anyway.
-      setTimeout(() => { if (pc) { log("no session.closed within 5 s; tearing down", "err"); teardown("ended (no close event)"); } }, 5000);
+      // Close drains delegated work first; allow time for session.closed and its final usage.
+      setTimeout(() => { if (pc) { log("no session.closed within 20 s; tearing down", "err"); teardown("ended (no close event)"); } }, 20000);
     } else {
       teardown("ended");
     }
