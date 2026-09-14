@@ -1,6 +1,6 @@
 # Mini-plan — GPT-Live Spike
 
-**Status**: 🟡 IN PROGRESS — opened 2026-09-14; s01–s04 done 2026-09-14 (all four Appendix D criteria pass, sponsor-judged); s05 optional, s06 verdict next
+**Status**: 🟡 IN PROGRESS — opened 2026-09-14; s01–s04 done, s05 skipped, s06 docs done 2026-09-14 (Option 2); spike Worker deletion then `/pm-close`
 **Handle**: `mp02`
 **Created**: 2026-09-14 · **Updated**: 2026-09-14
 
@@ -35,7 +35,7 @@ Stages are strictly sequential.
 ## Done When
 
 All of the following are true:
-1. `spikes/gpt-live/` exists, ran on the phone in installed mode, and the s04 measurements plus the s05 comparison are recorded in `mp02-gpt-live-spike-journal.md`.
+1. `spikes/gpt-live/` exists, ran on the phone in installed mode, and the s04 measurements plus the s05 comparison are recorded in `mp02-gpt-live-spike-journal.md`. *(s05 dropped 2026-09-14, see §Decisions: satisfied by s04 alone.)*
 2. Each Appendix D criterion has an explicit pass/fail with evidence in this doc's §Decisions: (1) WebRTC session established from installed Android Chrome via a Worker-minted secret; (2) ten minutes of Urdu judged comparable to ChatGPT Voice by the sponsor; (3) a mid-conversation tool call hit the FR-F2 stub and the conversation resumed; (4) measured cost for the ten minutes at most $0.50 all-in.
 3. The FR-G option is recorded in `pm/DECISIONS.md` (all four pass → Option 2; any fail → Option 1).
 4. `pm/PRD.md` FR-G names the chosen option; `pm/PLAN.md` Phase 0 exit is satisfied and the f07 line says which client it builds.
@@ -54,6 +54,8 @@ All of the following are true:
 ---
 
 ## Decisions
+
+- 2026-09-14 — **Verdict (s06): FR-G Option 2, in-app GPT-Live-1 voice.** Pass/fail per Appendix D: (1) PASS, (2) PASS on a sponsor-accepted five-minute run, (3) PASS, (4) PASS by extrapolation (≈ $0.51 per ten minutes vs $0.60). Recorded in `DECISIONS.md` 260914c; PRD FR-G, FR-B5 (brokered flow, no browser secret), FR-I1 and Appendix D updated; PLAN Phase 0 mp02 line and f07 updated. s05 (Custom GPT comparison) skipped: it only informs Option 1's voice quality, and Option 1 is now deferred, so it cannot change the verdict. Carry to f07: the default soft cap ($0.50/day) warns just under ten minutes of voice, which is expected rather than a bug.
 
 - 2026-09-14 — Spike code lives under `spikes/gpt-live/` (Worker + page), reusing the existing `wrangler.jsonc` and Worker name `urdu`; the deployment is deleted after the run, as mp01's was. Rationale: PLAN Phase 0 allows "a Worker with one route" and nothing more; keeping it out of `worker/` stops throwaway code from becoming f01's starting point.
 - 2026-09-14 — The secret-minting route is protected by a spike-only shared token header, not by the future session cookie. Rationale: a public unauthenticated minting endpoint would let anyone spend the sponsor's credit; the real FR-B auth is f01's job.

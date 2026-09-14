@@ -18,7 +18,7 @@
 ### Phase 0 — Spikes (Current)
 **Goal:** Remove the two unknowns that could change the build before any product code exists. Throwaway code only.
 - mp01 `speech-spike` (✅ PASS 2026-09-14): a static page listing SpeechSynthesis voices on the sponsor's Android phone, speaking sample Urdu words and a phrase; record voice name, latency, and acceptability. Fallback decision: hosted TTS behind `speak()` in v1 if unacceptable.
-- mp02 `gpt-live-spike`: a throwaway Worker route minting a GPT-Live-1 client secret plus a page connecting over WebRTC from Android Chrome; run the four criteria in `PRD.md` Appendix D; also one Urdu voice session inside a private Custom GPT for comparison.
+- mp02 `gpt-live-spike` (✅ PASS 2026-09-14 → FR-G Option 2): a throwaway Worker route brokering a GPT-Live-1 WebRTC session plus a page run installed on the sponsor's Android phone; all four `PRD.md` Appendix D criteria passed. The Custom GPT comparison was skipped as moot once Option 2 was chosen.
 - Repo skeleton is allowed here only as far as the spikes need it (wrangler config, a Worker with one route).
 - **Exit:** Speech verdict recorded; FR-G option chosen and recorded in `DECISIONS.md`; `PRD.md` FR-G updated to name the chosen option.
 
@@ -38,12 +38,12 @@
 ### Phase 3 — Coach connection
 **Goal:** Words from conversation reach the vault with near-zero friction; v0 done.
 - f06 `coach-contract`: FR-F1..F5 (Coach routes, bearer auth, handoff idempotency, OpenAPI description, PWA paste-handoff screen).
-- f07 `coach-client`: whichever FR-G option Phase 0 chose. Option 1: create the private Custom GPT, port the Coach instructions, bind Actions, test the Voice-then-text loop. Option 2: Voice screen, WebRTC session, tools bound to f06, spend display and caps.
+- f07 `coach-client`: FR-G Option 2 (chosen by mp02). Voice screen, Worker-brokered GPT-Live-1 WebRTC session (FR-B5), Coach prompt in-repo (start from `mini-plans/mp02-coach-instructions.md` and the TODO tuning notes), tools bound to f06, spend display and caps.
 - **Exit:** After a Voice session, new vocabulary and quiz results are in D1 via the Coach client, with the clipboard handoff verified as a working fallback. v0 is complete; amend `VISION.md` §16 line on custom voice tutors to match the shipped option.
 
 ### Phase 4 — v1 (coarse)
 **Goal:** Broaden without changing the core.
-- Windows Chrome parity (right-click menu, desktop layout), saved passages and recent texts, tag and favourite UI, review statistics, CSV export, hosted TTS if the speech spike demanded it, the FR-G option not chosen in v0 if still wanted, fuzzy duplicate suggestions.
+- Windows Chrome parity (right-click menu, desktop layout), saved passages and recent texts, tag and favourite UI, review statistics, CSV export, hosted TTS as an option, the FR-G Option 1 Custom GPT if still wanted, fuzzy duplicate suggestions.
 
 ## Features Index
 *The roster of every feature (`f##`). Each row → its doc in `pm/features/`. Numbers are assigned by roster order, monotonic, never reused (archived items included). See `pm-glossary.md` §1. Spikes are mini-plans (`mp##`) and live in `pm/mini-plans.md` once `/pm-open` stands it up.*
@@ -56,4 +56,4 @@
 | f04 | `features/f04-vocab-ui.md` | planned | Browse, search, edit, and create vocabulary; settings. |
 | f05 | `features/f05-review.md` | planned | Due-item review session with five-grade self-scoring. |
 | f06 | `features/f06-coach-contract.md` | planned | Coach tool routes, bearer auth, clipboard handoff import, OpenAPI description. |
-| f07 | `features/f07-coach-client.md` | planned | The Coach client chosen by mp02: private Custom GPT with Actions, or in-app GPT-Live-1 voice. |
+| f07 | `features/f07-coach-client.md` | planned | In-app GPT-Live-1 voice Coach (FR-G Option 2, chosen by mp02). |

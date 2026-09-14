@@ -69,7 +69,7 @@ The sponsor already learns Urdu with (a) a ChatGPT "Urdu Coach" project used mai
 - **FR-B2** All `/api/*` routes used by the PWA require a valid session cookie. Deleting a `sessions` row revokes that device.
 - **FR-B3** Coach operations (FR-F) accept only a separate bearer token from Worker secrets, and that token is accepted nowhere else. The PWA cookie is not accepted on Coach routes.
 - **FR-B4** The secret and tokens never appear in frontend JS, the repo, URLs, or readable browser storage.
-- **FR-B5** If in-app voice ships (FR-G option 2), the Worker mints a short-lived OpenAI client secret per voice session for the browser; the OpenAI API key lives only in Worker secrets.
+- **FR-B5** In-app voice (FR-G Option 2) is brokered by the Worker: the browser sends its WebRTC SDP offer to a session-cookie-protected Worker route, which creates the GPT-Live-1 session (`POST /v1/live/sessions`) with the server-side Coach config and returns the SDP answer. No OpenAI credential of any kind reaches the browser; the OpenAI API key lives only in Worker secrets. *(Amended 2026-09-14: GPT-Live-1 has no browser client-secret flow; see DECISIONS 260914b.)*
 
 ### FR-C Reader (PWA)
 - **FR-C1** Paste area accepting arbitrary Urdu text; pasted newlines become paragraphs; RTL layout.
@@ -99,10 +99,11 @@ The sponsor already learns Urdu with (a) a ChatGPT "Urdu Coach" project used mai
 - **FR-F4** The clipboard handoff is a single JSON document carrying `handoff_id`, `session_at`, optional `proposals` (FR-F2 shape) and optional `results` (FR-F3 shape). The PWA has a Paste-handoff screen that validates, submits through the same Worker logic, and shows per-item outcomes.
 - **FR-F5** An OpenAPI 3.1 description of FR-F1..F3 is maintained in-repo for use as the Custom GPT Action schema.
 
-### FR-G Coach client (one of two, chosen by the Phase 0 spike)
-- **Option 1: Custom GPT.** A private ("Only me") Custom GPT "Urdu Coach GPT" carrying the current Coach instructions plus Actions bound to FR-F with bearer auth. Voice sessions run in its voice mode; vault operations run in text chat after the session.
-- **Option 2: In-app voice.** A Voice screen in the PWA connecting over WebRTC to GPT-Live-1 using a Worker-minted client secret (FR-B5), with the Coach system prompt maintained in-repo, and tools bound to FR-F1..F3 callable mid-conversation. Per-session and daily spend visible in Settings; a soft daily cap (default $0.50) warns and a hard cap ends the session.
-- **Selection rule**: Option 2 ships if the spike passes all four criteria in Appendix D; otherwise Option 1 ships and Option 2 is deferred to v1.
+### FR-G Coach client: Option 2, in-app voice (chosen by the Phase 0 spike)
+- **Chosen 2026-09-14 (mp02; DECISIONS 260914c):** the spike passed all four Appendix D criteria, so v0 ships Option 2. Option 1 is deferred to v1.
+- **Option 2: In-app voice (v0).** A Voice screen in the PWA connecting over WebRTC to GPT-Live-1 through a Worker-brokered session (FR-B5), with the Coach system prompt maintained in-repo, and tools bound to FR-F1..F3 callable mid-conversation. Per-session and daily spend visible in Settings; a soft daily cap (default $0.50) warns and a hard cap ends the session.
+- **Option 1: Custom GPT (deferred to v1).** A private ("Only me") Custom GPT "Urdu Coach GPT" carrying the current Coach instructions plus Actions bound to FR-F with bearer auth. Voice sessions run in its voice mode; vault operations run in text chat after the session.
+- **Selection rule (applied)**: Option 2 ships if the spike passes all four criteria in Appendix D; otherwise Option 1 ships and Option 2 is deferred to v1.
 
 ### FR-H Airtable import
 - **FR-H1** `scripts/airtable-import.ts` reads the Airtable CSV export(s) and posts batches to `POST /api/admin/import` (session-cookie or admin-token protected). Idempotent by `airtable_id`; re-running updates rather than duplicates.
@@ -110,7 +111,7 @@ The sponsor already learns Urdu with (a) a ChatGPT "Urdu Coach" project used mai
 - **FR-H3** Tags table imported from the Airtable Tags table (name, description). Mastery Levels table is not imported.
 
 ### FR-I Settings
-- **FR-I1** Voice picker for speech; review session limit; lock this device (deletes the session); if Option 2 ships, voice spend display and caps.
+- **FR-I1** Voice picker for speech; review session limit; lock this device (deletes the session); voice spend display and caps (FR-G Option 2).
 
 ## 6. Non-Functional Requirements
 - **Latency**: tap-to-speech start under 300 ms on the phone; API round trips under 500 ms p95 from Vancouver.
@@ -154,3 +155,5 @@ NFC normalize; strip tashkeel (U+064B to U+0652, U+0670) and tatweel (U+0640); m
 4. Measured cost for the ten minutes, including backend and tool charges, is at most $0.60. *(Amended 2026-09-14 from $0.50: GPT-Live-1 voice alone is $0.05/min, so $0.50 was the voice-only floor; see DECISIONS 260914b.)*
 
 All four pass leads to FR-G Option 2. Any fail leads to Option 1. Also run, cheaply: one Urdu voice session inside a private Custom GPT to judge its Advanced Voice Mode quality, since that is Option 1's voice surface.
+
+**Result (2026-09-14, mp02):** all four PASS → Option 2. (1) Installed Android Chrome, `standalone: true`, Worker-brokered session (the "client secret" wording maps to the brokered flow, FR-B5). (2) Sponsor judged a five-minute installed session on the real Coach instructions "pretty comparable" to ChatGPT Voice and accepted five minutes in place of ten. (3) `add_to_vault` reached the stub mid-conversation and the Coach continued (desktop, phone tab, installed). (4) ≈ $0.26 for five minutes, ≈ $0.51 per ten by linear extrapolation; $0.40 dashboard total for every spike run. The Custom GPT comparison was not run: with Option 2 chosen it could not change the verdict. Evidence: `mini-plans/mp02-gpt-live-spike-journal.md`.
