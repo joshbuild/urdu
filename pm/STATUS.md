@@ -8,11 +8,11 @@
 ## Open Workfronts
 *Work items actively in flight. One line each → its doc/journal. Closed fronts drop off (rosters keep the full list).*
 
-- 🟡 mp02 `gpt-live-spike` — opened 2026-09-14, Stage 0 (research + build); Stages 1–2 need the sponsor's funded OpenAI key and phone → `mini-plans/mp02-gpt-live-spike.md` (journal: `mini-plans/mp02-gpt-live-spike-journal.md`)
+- 🟡 mp02 `gpt-live-spike` — s01 API research done 2026-09-14; s02/s03 build next; sponsor owes the criterion-4 cost answer before the phone run → `mini-plans/mp02-gpt-live-spike.md` (journal: `mini-plans/mp02-gpt-live-spike-journal.md`)
 
 ## Next Session Pointers
 *The 1–3 concrete next actions for a cold start.*
 
-1. mp02-s01: research the current GPT-Live-1 API surface (client secret, WebRTC, tool events, price) into the journal. No sponsor input needed.
-2. mp02-s02/s03: build `spikes/gpt-live/` Worker route + page; desktop-check with a funded key in `.dev.vars`.
-3. Sponsor: answer mp02's three open questions (fund the API key, which account, paste the Coach instructions). Then s04 phone run, s05 Custom GPT comparison, verdict, `/pm-open` f01.
+1. Sponsor: answer mp02's criterion-4 question (Appendix D's $0.50 bound is below the $0.50 voice-only cost of ten minutes) and paste the Coach instructions.
+2. mp02-s02/s03: build `spikes/gpt-live/` Worker session-broker route + WebRTC page per the journal's s01 API surface; desktop-check with the key in `.dev.vars`.
+3. Sponsor: `wrangler secret put` the key. Then s04 phone run, s05 Custom GPT comparison, verdict, `/pm-open` f01.

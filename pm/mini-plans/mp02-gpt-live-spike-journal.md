@@ -5,3 +5,69 @@
 ## 2026-09-14 — opened
 
 Opened after mp01 closed. Stage 0 cleared: s01 (API research) needs no sponsor input; s02/s03 can be built and desktop-checked once the sponsor supplies a funded OpenAI key in `.dev.vars`. Three open questions raised for the sponsor (API credit, which account, Coach instructions source) — see the doc.
+
+## 2026-09-14 — s01 API research (done)
+
+Sponsor funded an OpenAI API account (project `Urdu`, restricted key: List models read + Realtime request, 30-day expiry) and placed the key in `.dev.vars` (gitignored). Note for s02: the key's scope was chosen before s01 found that GPT-Live uses `/v1/live/sessions`, not `/v1/realtime`; if the first desktop call returns 401/403 on scope, the key needs the Live resource (or "All") added in the OpenAI dashboard.
+
+Sources read: OpenAI *Getting started with GPT-Live*, *WebRTC* quickstart (`?api=live`), *Delegation and tools in GPT-Live*, *Managing GPT-Live sessions*, model page `gpt-live-1`, pricing page, the Realtime client-secrets reference (for contrast), and Microsoft's Foundry GPT-Live how-to (fuller field table; same API shape).
+
+### API surface
+
+**GPT-Live-1 is not the Realtime API.** It is the *Live Sessions API*: `POST https://api.openai.com/v1/live/sessions`. `POST /v1/realtime/client_secrets` and `ek_…` ephemeral keys belong to `gpt-realtime-*` and are not used here. Model id: `gpt-live-1` (only snapshot). Launched in the API 2026-09-10.
+
+**Session create (server, project API key):**
+```
+POST https://api.openai.com/v1/live/sessions
+Authorization: Bearer <OPENAI_API_KEY>
+Content-Type: application/json
+{
+  "session": {
+    "model": "gpt-live-1",
+    "instructions": "<Coach prompt, written in the language we want spoken>",
+    "audio": { "output": { "voice": "marin" } },
+    "delegation": {
+      "type": "responses",
+      "responses": {
+        "model": "gpt-5.6-luna",
+        "instructions": "<backend prompt>",
+        "tools": [ { "type": "function", "name": "add_to_vault", "description": "...", "parameters": { ... } } ],
+        "tool_choice": "auto"
+      }
+    }
+  },
+  "transport": { "type": "webrtc", "sdp": "<browser SDP offer>" }
+}
+→ { "session": { "id": "<session_id>" }, "transport": { "type": "webrtc", "sdp": "<answer>" } }
+```
+The browser's SDP offer travels through our Worker, which returns the answer. There is no browser-held secret in this flow; the Worker is the only holder of the key. Criterion 1's "Worker-minted client secret" wording maps to "Worker-brokered session" (same trust boundary, stronger). The `session` object is strict: unknown fields are rejected. `model`, `instructions`, `audio.output.voice`, and `delegation.type` are immutable after start; only `delegation.responses.*` can change via `session.update`. Creating a WebRTC session bills 15 s of voice up front.
+
+**Browser (WebRTC):** `new RTCPeerConnection()`; `getUserMedia({audio:true})` then `addTrack`; `ontrack` into an autoplay audio element; `createDataChannel("oai-events")`; `createOffer` and `setLocalDescription`; POST `offer.sdp` to our Worker; `setRemoteDescription({type:"answer", sdp})`. Wait for `session.started` on the data channel before sending commands. Needs HTTPS or localhost (fine: `wrangler dev` locally, workers.dev on the phone).
+
+**Data-channel / WebSocket events (JSON, same on both):**
+- `session.started`, `session.updated`, `session.closed` (final cumulative `usage.seconds` + `reason`; read cost from this), `error` (`code`, `message`, `client_event_id`).
+- `session.input_transcript.delta` (user), `session.output_transcript.delta` (assistant), each `delta` + `start_ms`/`end_ms`. No turn-complete event; fragments interleave.
+- `session.usage.updated` gives cumulative `usage.seconds` and `context_window.usage_ratio`.
+- Client to server: `session.close`; `session.instructions.append` / `session.thinking.append` / `session.commentary.append` (`content` up to 500 tokens, `delegation_id` null for general context).
+- Responses delegation: backend events arrive nested as `response.event` (`delegation_id`, `event: { type: "response.output_item.done", … }`). A completed function call is a `response.output_item.done` item with `call_id`, `name`, `arguments`. The application returns it with `response.item.create { item: { type: "function_call_output", call_id, output } }` and must then send `response.create` ("appending a function result does not automatically continue the response"). Speech continues while the backend works.
+- Sideband: a trusted server can attach a second WebSocket to the running session at `wss://api.openai.com/v1/live/sessions/{session_id}/attach` (Bearer key; pattern confirmed on Azure's mirror, OpenAI's own page does not print it), receives the same events, and its commands enter the same stream.
+
+**Where tool calls are executed.** OpenAI's docs say the browser data channel is "for captions and local UI updates" and route custom-tool execution through the server. But the sideband doc also says the sideband "receives the same JSON server events as the primary connection, and any commands it sends enter the same session stream", which implies the primary (the browser's data channel) can do both too. Plan: s03 tries tool handling in the browser first (zero extra infrastructure); if `response.event` never reaches the data channel or `response.item.create` is rejected, s02 grows a Durable Object that holds the sideband WebSocket and executes the stub. Recorded as a mini-plan decision.
+
+**Voices:** default `marin`; the launch post lists twelve GPT-Live voices (Quartz, Ripple, Vesper, Willow, Stone, Gleam, Meridian, Bossa, Tempo, Beacon, Delta, Cinder). Pick in s03 by ear. Language is not a config field: "write your prompt in the language you want the model to speak". Urdu is not listed anywhere as supported or unsupported; that is exactly what criterion 2 tests.
+
+**Pricing (pricing page, 2026-09-14):**
+
+| Item | Price |
+|---|---|
+| gpt-live-1 voice | $0.05 / min, billed per second, plus 15 s at WebRTC session create |
+| gpt-5.6-terra (backend, docs default) | $2.00 in / $0.20 cached / $12.00 out per 1M tokens |
+| gpt-5.6-luna (backend, cheap) | $0.20 in / $0.02 cached / $1.20 out per 1M tokens |
+| web_search tool | $10 / 1k calls (not needed) |
+
+**Cost finding for criterion 4.** Ten minutes of voice alone is $0.50 plus $0.0125 for the creation charge. PRD Appendix D criterion 4 says "at most $0.50 including backend and tool charges" for ten minutes, so it cannot pass as written even with a free backend. Decision 260911a's intent was "~$0.50/day ≈ 10 min at $0.05/min", i.e. voice cost only. Backend cost with gpt-5.6-luna for a 10-minute chat with a few delegations is on the order of a cent. Raised as a sponsor question in the doc: amend criterion 4 to a realistic bound (e.g. at most $0.60 all-in for ten minutes), or keep it and accept that Option 1 wins by arithmetic.
+
+### Consequences for s02/s03
+- Worker route becomes `POST /api/spike/session` taking `{sdp}` and returning `{sessionId, sdp}`; the session config (voice, instructions, delegation, `add_to_vault` tool) lives server-side. No secret-minting route.
+- `wrangler.jsonc` needs `main` (the Worker) and `assets.directory = ./spikes/gpt-live`. Durable Objects only if the browser-side tool path fails.
+- Page needs a `sessionStorage` spike token, connect/disconnect, transcript pane from the two transcript-delta streams, `session.usage.updated` seconds times $0.05/60 as the running cost, `response.event` logging, function-call handling, and `session.closed` usage capture into the results JSON.
