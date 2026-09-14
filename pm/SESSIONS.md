@@ -8,6 +8,7 @@
 ## Log
 *Newest at top.*
 
+- 260914c · mp02 gpt-live-spike · s01 API research; criterion 4 amended to $0.60; s02 Worker + s03 page built; desktop runs: Urdu speech, tool round trip, close usage all work; deployed, sponsor to set secrets + redeploy, then phone run → `mini-plans/mp02-gpt-live-spike-journal.md`
 - 260914b · mp01 → mp02 · closed mp01 (archived); opened mp02 gpt-live-spike at Stage 0 with slices + 3 sponsor questions → `mini-plans/mp02-gpt-live-spike-journal.md`
 - 260914a · mp01 speech-spike · s01–s04 done: served via Cloudflare (LAN blocked), phone run PASS (ur_PK local, 60 ms median, 3.5/5, standalone ok); PRD §2.3/FR-C4 + DECISIONS updated; spike Worker deleted; ready for /pm-close → `mini-plans/archive/mp01-speech-spike-journal-archive.md`
 - 260911a · grill-me · Scope/requirements/architecture interview (12 questions) → PRD.md, PLAN.md, 12 decisions; pm scaffold laid → no journal (pre-workfront)
