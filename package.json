@@ -1,0 +1,12 @@
+{
+  "name": "urdu",
+  "private": true,
+  "version": "0.0.0",
+  "scripts": {
+    "deploy": "wrangler deploy",
+    "spike:check": "node spikes/speech/check.js"
+  },
+  "devDependencies": {
+    "wrangler": "^4.131.2"
+  }
+}

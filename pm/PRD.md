@@ -28,7 +28,7 @@ The sponsor already learns Urdu with (a) a ChatGPT "Urdu Coach" project used mai
 - Everything in `VISION.md` §16 (multi-user, accounts, offline-first, dictionary, curriculum, custom voice tutor built from scratch, analytics, billing). The §16 line on a custom voice tutor is amended: in-app voice using OpenAI's GPT-Live-1 API is permitted because it is the same model family as ChatGPT Voice and allows vault tool calls mid-conversation.
 
 ### 2.3 Assumptions
-- Sponsor's phone is Android with Chrome; Google TTS provides an Urdu voice (verified by spike).
+- Sponsor's phone is Android with Chrome; Google TTS provides two local Urdu voices out of the box, `ur_PK` (Urdu Pakistan, preferred) and `ur_IN`. Verified by mp01 on 2026-09-14: median tap-to-speech 60 ms, sponsor rates ur_PK 3.5/5, works installed (standalone). Android reports voice `lang` with underscores (`ur_PK`), not BCP-47 hyphens.
 - Sponsor's ChatGPT Plus subscription covers Custom GPTs with Actions; API usage (GPT-Live-1) is paid separately and capped by the sponsor at about $0.50/day.
 - Airtable export is available as CSV with record IDs.
 - Cloudflare account exists; target host `urdu.umber-amber.workers.dev`.
@@ -75,7 +75,7 @@ The sponsor already learns Urdu with (a) a ChatGPT "Urdu Coach" project used mai
 - **FR-C1** Paste area accepting arbitrary Urdu text; pasted newlines become paragraphs; RTL layout.
 - **FR-C2** Rendered in self-hosted Noto Nastaliq Urdu with large size and about 2.2 line height; no dependency on device fonts.
 - **FR-C3** Text is tokenized on whitespace and punctuation, keeping ZWNJ-joined compounds as one token; each token is a tappable element. Native browser text selection across tokens must still work.
-- **FR-C4** Tap on a token speaks it via a `speak(text)` interface backed by browser SpeechSynthesis, using the voice chosen in Settings (list of available Urdu voices; sensible default).
+- **FR-C4** Tap on a token speaks it via a `speak(text)` interface backed by browser SpeechSynthesis, using the voice chosen in Settings (list of available Urdu voices; default = first voice whose `lang` normalised to lowercase with `_`→`-` equals `ur-pk`, else any `ur-*`; never the browser default, which on the sponsor's phone is Assamese). `speak()` cancels any queued utterance first, and may pre-warm a newly selected voice, since the first utterance per voice costs ~1 s.
 - **FR-C5** When any text is selected, a floating action bar appears above the selection with Speak, Add to vocab, Define. No custom long-press handler; native selection handles are not overridden.
 - **FR-C6** Add to vocab opens a form prefilled with the selected Urdu (or tapped token), kind inferred (phrase if it contains whitespace), and the source sentence in notes; user fills Roman/English/notes/example/tags; save calls FR-A6 and surfaces a duplicate rejection inline with a link to the existing item.
 - **FR-C7** Define: first looks up the vault by `urdu_key` and shows the existing entry if found; otherwise offers external dictionary links opening in a new tab (Rekhta dictionary, Wiktionary, Google Translate) with the term prefilled. No LLM call.

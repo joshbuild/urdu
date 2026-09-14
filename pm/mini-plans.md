@@ -7,7 +7,7 @@
 
 | Handle | Slug / doc | Status | Stage | One-line |
 |---|---|---|---|---|
-| mp01 | `mini-plans/mp01-speech-spike.md` | 🟡 IN PROGRESS | Stage 1 — serve to the phone and measure | Prove browser SpeechSynthesis speaks Urdu acceptably on the sponsor's Android phone; record the verdict. |
+| mp01 | `mini-plans/mp01-speech-spike.md` | 🟡 IN PROGRESS | Stage 2 — verdict PASS recorded; awaiting close | Prove browser SpeechSynthesis speaks Urdu acceptably on the sponsor's Android phone; record the verdict. |
 | mp02 | `mini-plans/mp02-gpt-live-spike.md` | 🔴 NOT STARTED | — | Run the GPT-Live-1 WebRTC feasibility spike (PRD Appendix D) to choose the FR-G Coach client. |
 
 ## Archived

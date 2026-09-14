@@ -17,7 +17,7 @@
 
 ### Phase 0 — Spikes (Current)
 **Goal:** Remove the two unknowns that could change the build before any product code exists. Throwaway code only.
-- mp01 `speech-spike`: a static page listing SpeechSynthesis voices on the sponsor's Android phone, speaking sample Urdu words and a phrase; record voice name, latency, and acceptability. Fallback decision: hosted TTS behind `speak()` in v1 if unacceptable.
+- mp01 `speech-spike` (✅ PASS 2026-09-14): a static page listing SpeechSynthesis voices on the sponsor's Android phone, speaking sample Urdu words and a phrase; record voice name, latency, and acceptability. Fallback decision: hosted TTS behind `speak()` in v1 if unacceptable.
 - mp02 `gpt-live-spike`: a throwaway Worker route minting a GPT-Live-1 client secret plus a page connecting over WebRTC from Android Chrome; run the four criteria in `PRD.md` Appendix D; also one Urdu voice session inside a private Custom GPT for comparison.
 - Repo skeleton is allowed here only as far as the spikes need it (wrangler config, a Worker with one route).
 - **Exit:** Speech verdict recorded; FR-G option chosen and recorded in `DECISIONS.md`; `PRD.md` FR-G updated to name the chosen option.

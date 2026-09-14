@@ -1,8 +1,8 @@
 # Mini-plan — Speech Spike
 
-**Status**: 🟡 IN PROGRESS — opened 2026-09-11; Stage 0 done pending desktop check, next Stage 1 (serve to the phone)
+**Status**: 🟡 IN PROGRESS — opened 2026-09-11; s01–s04 done 2026-09-14, verdict PASS; awaiting `/pm-close`
 **Handle**: `mp01`
-**Created**: 2026-09-11 · **Updated**: 2026-09-11
+**Created**: 2026-09-11 · **Updated**: 2026-09-14
 
 **Owner docs it serves**:
 - `pm/PRD.md` §2.3 (assumption: Android Chrome + Google TTS provides an Urdu voice, "verified by spike"), FR-C4 (`speak()` over SpeechSynthesis), FR-I1 (voice picker), §6 latency NFR (tap-to-speech under 300 ms).
@@ -57,12 +57,14 @@ All of the following are true:
 
 ## Open Questions
 
-- **Is the spike page kept or deleted after the verdict?** Options: (a) keep `spikes/speech/` as a reference until f03 lands its `speak()`, then delete; (b) delete at close. Agent's call; leaning (a) because the voice-list and latency harness is useful during f03. Resolve at s04.
-- **What if only a network (non-local) Urdu voice exists?** Network voices on Android Chrome add latency and fail offline. Treat as pass only if latency still meets 300 ms; record the distinction either way. Agent's call at s04.
+- ~~Is the spike page kept or deleted after the verdict?~~ Resolved 2026-09-14: (a) keep `spikes/speech/` in the repo until f03 lands `speak()`, then delete. The Cloudflare deployment of it was deleted at s04.
+- ~~What if only a network (non-local) Urdu voice exists?~~ Moot: both Urdu voices are local.
 
 ---
 
 ## Decisions
 
 - 2026-09-11 — Spike is a dependency-free static folder under `spikes/speech/`, served over LAN first, Cloudflare only as fallback. Rationale: PLAN Phase 0 allows repo skeleton "only as far as the spikes need it"; a static page needs none.
+- 2026-09-14 — **Verdict: PASS.** Evidence (journal): two local Urdu voices present with no install (`ur_PK`, `ur_IN`); median tap-to-`onstart` 60 ms on single words (bound 300 ms); sponsor scores ur_PK 3.5/5 for both words and phrases, prefers it over ur_IN; speech works in standalone mode. Quirks: ~1 s warm-up on first utterance per voice; speech stops when the app is switched away (acceptable); `lang` tags use underscores. Consequence: f03 builds `speak()` on SpeechSynthesis; hosted TTS stays a v1 option only, not a fallback obligation.
+- 2026-09-14 — Served via Cloudflare, not LAN: the work laptop's firewall blocked the phone even on the phone's own hotspot, and the sponsor preferred not to open a port. Repo now has `package.json` (wrangler devDep), `wrangler.jsonc`, `.gitignore`; the spike Worker was deleted after the run.
 - 2026-09-11 — Pass criteria fixed as in §Done When before any measurement is taken, so the verdict cannot be argued to fit the result. The 300 ms bound comes from the PRD §6 latency NFR.

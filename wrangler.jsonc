@@ -1,0 +1,7 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "urdu",
+  "compatibility_date": "2026-09-01",
+  // Phase 0: static assets only (mp01 speech spike). mp02 adds the Worker entry point.
+  "assets": { "directory": "./spikes/speech" }
+}
