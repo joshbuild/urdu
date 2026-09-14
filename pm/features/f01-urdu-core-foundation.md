@@ -1,6 +1,6 @@
 # Feature Plan — Urdu Core Foundation
 
-**Status**: 🟡 IN PROGRESS (2026-09-14) — opened; slices drafted, sponsor questions pending before s01
+**Status**: 🟡 IN PROGRESS (2026-09-14) — opened; Q1–Q4 answered, Q5 (router) pending before s01
 **Handle**: `f01`
 **Created**: 2026-09-14 · **Updated**: 2026-09-14
 
@@ -150,22 +150,23 @@ If `secret put` runs before the first deploy, wrangler creates the Worker; eithe
 
 ### Next Steps
 
-1. Sponsor answers Open Questions Q1–Q5.
+1. Sponsor decides Q5 (router).
 2. Build s01; sponsor runs `git rm package-lock.json` and `pnpm wrangler d1 create urdu`.
 
 ### Open Questions
 
-*Sponsor calls, batched. Each has a recommendation; silence on one means the recommendation stands.*
+*Q1–Q4 answered 2026-09-14 (see Decisions).*
 
-- **Q1 Unlock brute-force protection.** PRD says nothing. Options: (a) rely on a long random secret only; (b) (a) plus a Cloudflare Workers rate-limit binding on `/api/unlock` (e.g. 5 attempts/min per IP; no schema change); (c) a D1 lockout counter (adds a table outside Appendix A). **Recommend (b).**
-- **Q2 Deleting a vocab item.** Its `review_events`: (a) delete them too (FK cascade); (b) keep them as orphans for history. Export exists either way. **Recommend (a).**
-- **Q3 Secret shape.** You will type or autofill it on the phone once per device. (a) Random 24+ chars generated and stored in your password manager (unlock form is built for autofill); (b) a memorable multi-word passphrase you type. Affects only the guidance and the minimum length the Worker enforces at startup. **Recommend (a).**
-- **Q4 Smoke script writes to production.** It creates and deletes one `__smoke__` vocab row and one review event (deleted with it under Q2a) before f02 imports your real data. OK, or smoke against `wrangler dev` only and rely on the phone check for production? **Recommend OK to write to production.**
-- **Q5 Router.** PRD leaves Hono vs plain fetch open. I plan Hono (small, typed routing and middleware groups, which is what `/api` vs `/coach` separation needs). Say so if you'd rather have zero router dependency.
+- **Q5 Router.** PRD leaves Hono vs plain fetch open. Sponsor asked for the trade-offs before deciding (2026-09-14); pros/cons given in session. Blocks s01.
 
 ## Decisions
 
-*Agent-resolved at open; sponsor can overturn.*
+*Agent-resolved at open unless marked sponsor; sponsor can overturn.*
+
+- 2026-09-14 (sponsor, Q1) — Unlock brute-force protection = long random secret plus a Workers rate-limit binding on `POST /api/unlock` (about 5 attempts/min per IP). No lockout table.
+- 2026-09-14 (sponsor, Q2) — Deleting a vocab item deletes its `review_events` (FK `ON DELETE CASCADE`).
+- 2026-09-14 (sponsor, Q3) — Secret is a random 24+ character string kept in the sponsor's password manager; unlock form built for autofill; Worker rejects a configured secret shorter than 24 chars.
+- 2026-09-14 (sponsor, Q4) — Smoke script runs against production, creating and deleting one `__smoke__` item and its review.
 
 - 2026-09-14 — Vite dev/build via `@cloudflare/vite-plugin` rather than separate `vite` + `wrangler dev` processes: one `pnpm dev`, one build output, local D1 via Miniflare.
 - 2026-09-14 — Package manager is pnpm per DECISIONS 260911a; the spike-era `package-lock.json` goes. Deploy script invoked as `pnpm run deploy` because `pnpm deploy` is a pnpm built-in (PRD §6 wording to be aligned at close).

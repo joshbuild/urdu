@@ -8,9 +8,9 @@
 ## Open Workfronts
 *Work items actively in flight. One line each → its doc/journal. Closed fronts drop off (rosters keep the full list).*
 
-- 🟡 f01 `urdu-core-foundation` (Phase 1) — opened 2026-09-14; s01 scaffold next, after sponsor answers Q1–Q5 → `features/f01-urdu-core-foundation.md` · journal `features/f01-urdu-core-foundation-journal.md`
+- 🟡 f01 `urdu-core-foundation` (Phase 1) — opened 2026-09-14; s01 scaffold next, after sponsor decides Q5 (router) → `features/f01-urdu-core-foundation.md` · journal `features/f01-urdu-core-foundation-journal.md`
 
 ## Next Session Pointers
 *The 1–3 concrete next actions for a cold start.*
 
-1. f01: get sponsor answers to Open Questions Q1–Q5 (doc §Open Questions), then build s01 scaffold.
+1. f01: get sponsor's router decision (Q5; Q1–Q4 answered), then build s01 scaffold.
