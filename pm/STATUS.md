@@ -8,7 +8,6 @@
 ## Open Workfronts
 *Work items actively in flight. One line each → its doc/journal. Closed fronts drop off (rosters keep the full list).*
 
-- 🟡 mp01 `speech-spike` — verdict PASS 2026-09-14, all slices done; awaiting `/pm-close` → `mini-plans/mp01-speech-spike.md` (journal: `mini-plans/mp01-speech-spike-journal.md`)
 
 ## Next Session Pointers
 *The 1–3 concrete next actions for a cold start.*

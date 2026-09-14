@@ -1,6 +1,6 @@
 # Journal — mp01 speech-spike
 
-*Verbose per-front record. Hub: `pm/STATUS.md`; doc: `mp01-speech-spike.md`.*
+*Verbose per-front record. Hub: `pm/STATUS.md`; doc: `mp01-speech-spike-archive.md`.*
 
 ## 2026-09-14 — s01 verified, s02 served via Cloudflare, s03 tab-mode run
 

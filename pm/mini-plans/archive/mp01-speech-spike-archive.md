@@ -1,8 +1,10 @@
 # Mini-plan — Speech Spike
 
-**Status**: 🟡 IN PROGRESS — opened 2026-09-11; s01–s04 done 2026-09-14, verdict PASS; awaiting `/pm-close`
+> **As shipped (2026-09-14).** Done; verdict **PASS**. Browser SpeechSynthesis on the sponsor's Android phone gives two local Urdu voices (`ur_PK`, `ur_IN`), 60 ms median tap-to-speech, sponsor 3.5/5, works installed. Live truth: `pm/DECISIONS.md` (260914a), `pm/PRD.md` §2.3 + FR-C4, `pm/PLAN.md` Phase 0. Code: `spikes/speech/` (kept until f03 ships `speak()`; deletion tracked in `pm/TODO.md`). f03 builds `speak()` on SpeechSynthesis with an explicit ur-PK default; hosted TTS is a v1 option only. Execution record below and in the sibling journal.
+
+**Status**: 🟢 DONE — closed 2026-09-14 (verdict PASS)
 **Handle**: `mp01`
-**Created**: 2026-09-11 · **Updated**: 2026-09-14
+**Created**: 2026-09-11 · **Updated**: 2026-09-14 · **Closed**: 2026-09-14
 
 **Owner docs it serves**:
 - `pm/PRD.md` §2.3 (assumption: Android Chrome + Google TTS provides an Urdu voice, "verified by spike"), FR-C4 (`speak()` over SpeechSynthesis), FR-I1 (voice picker), §6 latency NFR (tap-to-speech under 300 ms).

@@ -7,11 +7,10 @@
 
 | Handle | Slug / doc | Status | Stage | One-line |
 |---|---|---|---|---|
-| mp01 | `mini-plans/mp01-speech-spike.md` | 🟡 IN PROGRESS | Stage 2 — verdict PASS recorded; awaiting close | Prove browser SpeechSynthesis speaks Urdu acceptably on the sponsor's Android phone; record the verdict. |
 | mp02 | `mini-plans/mp02-gpt-live-spike.md` | 🔴 NOT STARTED | — | Run the GPT-Live-1 WebRTC feasibility spike (PRD Appendix D) to choose the FR-G Coach client. |
 
 ## Archived
 
 | Handle | Slug / doc | Closed | One-line |
 |---|---|---|---|
-| (none) | | | |
+| mp01 | `mini-plans/archive/mp01-speech-spike-archive.md` | 2026-09-14 | Speech spike: verdict PASS — SpeechSynthesis ur_PK on Android Chrome, 60 ms median, 3.5/5, works installed. |
