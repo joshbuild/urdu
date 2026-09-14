@@ -1,0 +1,387 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#5a3d8a">
+<title>Urdu GPT-Live Spike (mp02)</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Nastaliq+Urdu&display=swap" rel="stylesheet">
+<style>
+  :root { --ink:#1e1c19; --muted:#6b6560; --bg:#f7f4fb; --card:#fff; --line:#e2dbea; --accent:#5a3d8a; --warn:#b3261e; --ok:#1f6f5f; }
+  * { box-sizing: border-box; }
+  body { margin:0; padding:16px; font: 15px/1.45 system-ui, sans-serif; color:var(--ink); background:var(--bg); }
+  h1 { font-size:1.2rem; margin:0 0 4px; }
+  .sub { color:var(--muted); font-size:.85rem; margin-bottom:12px; }
+  section { background:var(--card); border:1px solid var(--line); border-radius:10px; padding:12px; margin-bottom:12px; }
+  h2 { font-size:.95rem; margin:0 0 8px; color:var(--muted); text-transform:uppercase; letter-spacing:.04em; }
+  .row { display:flex; flex-wrap:wrap; gap:8px; align-items:center; }
+  button { font: inherit; padding:10px 14px; min-height:44px; border-radius:8px; border:1px solid var(--line); background:#f3eff8; color:var(--ink); }
+  button.primary { background:var(--accent); color:#fff; border-color:var(--accent); }
+  button.danger { background:#fbe9e7; color:var(--warn); border-color:#f1c9c5; }
+  button:disabled { opacity:.5; }
+  select, input[type=text], input[type=password] { font:inherit; padding:8px; border:1px solid var(--line); border-radius:8px; width:100%; }
+  .stat { font-variant-numeric: tabular-nums; }
+  .big { font-size:1.6rem; font-weight:600; }
+  .muted { color:var(--muted); font-size:.85rem; }
+  .err { color:var(--warn); white-space:pre-wrap; }
+  .pill { display:inline-block; padding:2px 8px; border-radius:999px; background:#eee; font-size:.8rem; }
+  .pill.on { background:#d9efe7; color:var(--ok); }
+  .pill.bad { background:#fbe9e7; color:var(--warn); }
+  .grid { display:grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap:8px; }
+  .transcript { max-height:40vh; overflow:auto; border:1px solid var(--line); border-radius:8px; padding:8px; background:#fcfbfe; }
+  .t { margin:4px 0; padding:6px 8px; border-radius:8px; }
+  .t.user { background:#eef3ff; }
+  .t.assistant { background:#f2ecfa; }
+  .t .who { font-size:.75rem; color:var(--muted); }
+  .t .txt { font-family: "Noto Nastaliq Urdu", "Noto Naskh Arabic", system-ui, serif; direction:rtl; font-size:1.25rem; line-height:1.9; text-align:right; unicode-bidi:plaintext; }
+  .log { max-height:30vh; overflow:auto; font: 12px/1.4 ui-monospace, Menlo, Consolas, monospace; white-space:pre-wrap; background:#1e1c19; color:#e8e4dc; padding:8px; border-radius:8px; }
+  .log .tool { color:#ffd479; }
+  .log .err { color:#ff8a80; }
+  .log .ok { color:#a5d6a7; }
+  label { display:block; font-size:.85rem; color:var(--muted); margin-bottom:4px; }
+</style>
+</head>
+<body>
+<h1>Urdu GPT-Live Spike <span class="muted">mp02</span></h1>
+<div class="sub">
+  <span id="mode" class="pill">display-mode: ?</span>
+  <span id="secure" class="pill">secure: ?</span>
+  <span id="state" class="pill">idle</span>
+  <span id="ua" class="muted"></span>
+</div>
+
+<section>
+  <h2>Setup</h2>
+  <div class="row">
+    <div style="flex:1 1 200px">
+      <label for="token">Spike token (kept in sessionStorage only)</label>
+      <input id="token" type="password" autocomplete="off" placeholder="X-Spike-Token">
+    </div>
+    <div style="flex:1 1 140px">
+      <label for="voice">Voice</label>
+      <select id="voice">
+        <option>marin</option><option>cedar</option>
+        <option>Quartz</option><option>Ripple</option><option>Vesper</option><option>Willow</option>
+        <option>Stone</option><option>Gleam</option><option>Meridian</option><option>Bossa</option>
+        <option>Tempo</option><option>Beacon</option><option>Delta</option><option>Cinder</option>
+      </select>
+    </div>
+  </div>
+  <div class="row" style="margin-top:8px">
+    <button id="connect" class="primary">Connect</button>
+    <button id="disconnect" class="danger" disabled>End session</button>
+    <button id="mute" disabled>Mute mic</button>
+    <button id="health">Check Worker</button>
+  </div>
+  <div id="setupErr" class="err"></div>
+</section>
+
+<section>
+  <h2>Session</h2>
+  <div class="grid">
+    <div><div class="muted">Elapsed</div><div id="elapsed" class="big stat">0:00</div></div>
+    <div><div class="muted">Billed seconds</div><div id="billed" class="big stat">–</div></div>
+    <div><div class="muted">Voice cost est.</div><div id="cost" class="big stat">$0.000</div></div>
+    <div><div class="muted">Tool calls</div><div id="tools" class="big stat">0</div></div>
+  </div>
+  <div class="muted" style="margin-top:6px">
+    Session <span id="sid" class="stat">–</span> · offer→answer <span id="createMs" class="stat">–</span> ms · answer→session.started <span id="startMs" class="stat">–</span> ms · context <span id="ctx" class="stat">–</span>
+  </div>
+</section>
+
+<section>
+  <h2>Transcript</h2>
+  <div id="transcript" class="transcript"></div>
+</section>
+
+<section>
+  <h2>Events</h2>
+  <div class="row" style="margin-bottom:8px">
+    <button id="copy">Copy results JSON</button>
+    <button id="clearLog">Clear log</button>
+    <span id="copied" class="muted"></span>
+  </div>
+  <div id="log" class="log"></div>
+</section>
+
+<audio id="audio" autoplay playsinline></audio>
+
+<script>
+(() => {
+  const $ = (id) => document.getElementById(id);
+  const VOICE_RATE_PER_SEC = 0.05 / 60;
+  const CREATE_CHARGE_SEC = 15;
+
+  const results = {
+    page: "mp02 gpt-live spike",
+    ua: navigator.userAgent,
+    standalone: false,
+    secureContext: window.isSecureContext,
+    sessionId: null,
+    voice: null,
+    model: null,
+    backend: null,
+    timings: { createMs: null, answerToStartedMs: null, connectedAt: null, closedAt: null },
+    usage: { seconds: null, contextRatio: null, final: null, closeReason: null },
+    backendUsage: [],
+    toolCalls: [],
+    transcript: [],
+    eventCounts: {},
+    errors: [],
+  };
+
+  let pc = null, dc = null, mic = null, timer = null, t0 = null, answerAt = null;
+  const speakers = { user: null, assistant: null };
+
+  const mode = window.matchMedia("(display-mode: standalone)").matches ? "standalone" : "browser";
+  results.standalone = mode === "standalone";
+  $("mode").textContent = "display-mode: " + mode;
+  $("mode").classList.toggle("on", results.standalone);
+  $("secure").textContent = "secure: " + window.isSecureContext;
+  $("secure").classList.toggle("bad", !window.isSecureContext);
+  $("ua").textContent = navigator.userAgent.replace(/^Mozilla\/5\.0 /, "").slice(0, 90);
+
+  try { $("token").value = sessionStorage.getItem("spikeToken") || ""; } catch {}
+  $("token").addEventListener("change", () => { try { sessionStorage.setItem("spikeToken", $("token").value); } catch {} });
+
+  function setState(s, cls) {
+    $("state").textContent = s;
+    $("state").className = "pill" + (cls ? " " + cls : "");
+  }
+  function log(msg, cls) {
+    const el = document.createElement("div");
+    if (cls) el.className = cls;
+    const t = t0 ? ((performance.now() - t0) / 1000).toFixed(1) + "s " : "";
+    el.textContent = t + msg;
+    $("log").appendChild(el);
+    $("log").scrollTop = $("log").scrollHeight;
+  }
+  function fail(msg, e) {
+    const text = msg + (e ? ": " + (e.message || JSON.stringify(e)) : "");
+    results.errors.push(text);
+    $("setupErr").textContent = text;
+    log(text, "err");
+  }
+  function headers() {
+    return { "content-type": "application/json", "x-spike-token": $("token").value.trim() };
+  }
+  function fmtElapsed(ms) {
+    const s = Math.floor(ms / 1000);
+    return Math.floor(s / 60) + ":" + String(s % 60).padStart(2, "0");
+  }
+  function updateCost(seconds) {
+    if (seconds == null) return;
+    results.usage.seconds = seconds;
+    $("billed").textContent = seconds;
+    $("cost").textContent = "$" + ((seconds + CREATE_CHARGE_SEC) * VOICE_RATE_PER_SEC).toFixed(3);
+  }
+  function appendTranscript(who, delta, ev) {
+    let cur = speakers[who];
+    const other = who === "user" ? "assistant" : "user";
+    // Start a new bubble when the speaker changes or after a long gap.
+    if (!cur || (ev.start_ms != null && cur.endMs != null && ev.start_ms - cur.endMs > 1500)) {
+      cur = { who, text: "", startMs: ev.start_ms ?? null, endMs: null, el: null };
+      const el = document.createElement("div");
+      el.className = "t " + who;
+      el.innerHTML = '<div class="who"></div><div class="txt"></div>';
+      el.querySelector(".who").textContent = who;
+      $("transcript").appendChild(el);
+      cur.el = el;
+      speakers[who] = cur;
+      speakers[other] = null;
+      results.transcript.push(cur);
+    }
+    cur.text += delta;
+    if (ev.end_ms != null) cur.endMs = ev.end_ms;
+    cur.el.querySelector(".txt").textContent = cur.text;
+    $("transcript").scrollTop = $("transcript").scrollHeight;
+  }
+
+  function send(obj) {
+    if (!dc || dc.readyState !== "open") { log("data channel not open; dropped " + obj.type, "err"); return; }
+    dc.send(JSON.stringify(obj));
+    log("→ " + obj.type + (obj.item ? " (" + obj.item.type + ")" : ""), "tool");
+  }
+
+  async function handleFunctionCall(item, delegationId) {
+    const n = results.toolCalls.length + 1;
+    const rec = { n, name: item.name, call_id: item.call_id, arguments: item.arguments, delegationId, at: performance.now() - t0, result: null, error: null };
+    results.toolCalls.push(rec);
+    $("tools").textContent = String(n);
+    log("TOOL CALL " + item.name + " " + item.arguments, "tool");
+    let args = {};
+    try { args = JSON.parse(item.arguments || "{}"); } catch (e) { rec.error = "bad arguments JSON"; }
+    let output;
+    try {
+      const r = await fetch("/api/spike/vault-add", { method: "POST", headers: headers(), body: JSON.stringify(args) });
+      const data = await r.json();
+      rec.result = data;
+      output = JSON.stringify(data);
+      log("stub → " + output, "ok");
+    } catch (e) {
+      rec.error = e.message;
+      output = JSON.stringify({ ok: false, error: e.message });
+      log("stub failed: " + e.message, "err");
+    }
+    const evt = { type: "response.item.create", event_id: "tool_result_" + n, item: { type: "function_call_output", call_id: item.call_id, output } };
+    if (delegationId) evt.delegation_id = delegationId;
+    send(evt);
+    const cont = { type: "response.create", event_id: "continue_" + n };
+    if (delegationId) cont.delegation_id = delegationId;
+    send(cont);
+  }
+
+  function onEvent(raw) {
+    let ev;
+    try { ev = JSON.parse(raw); } catch { log("non-JSON message: " + String(raw).slice(0, 120), "err"); return; }
+    const type = ev.type || "?";
+    results.eventCounts[type] = (results.eventCounts[type] || 0) + 1;
+
+    switch (type) {
+      case "session.started":
+        results.timings.answerToStartedMs = answerAt ? Math.round(performance.now() - answerAt) : null;
+        $("startMs").textContent = results.timings.answerToStartedMs ?? "–";
+        if (ev.session && ev.session.id && !results.sessionId) { results.sessionId = ev.session.id; $("sid").textContent = ev.session.id; }
+        setState("live", "on");
+        log("session.started " + JSON.stringify(ev.session || {}).slice(0, 300), "ok");
+        return;
+      case "session.input_transcript.delta":
+        appendTranscript("user", ev.delta || "", ev); return;
+      case "session.output_transcript.delta":
+        appendTranscript("assistant", ev.delta || "", ev); return;
+      case "session.usage.updated":
+        updateCost(ev.usage && ev.usage.seconds);
+        if (ev.context_window) { results.usage.contextRatio = ev.context_window.usage_ratio; $("ctx").textContent = Math.round((ev.context_window.usage_ratio || 0) * 100) + "%"; }
+        return;
+      case "session.closed":
+        results.usage.final = ev.usage || null;
+        results.usage.closeReason = ev.reason || null;
+        if (ev.usage && ev.usage.seconds != null) updateCost(ev.usage.seconds);
+        log("session.closed reason=" + ev.reason + " usage=" + JSON.stringify(ev.usage), "ok");
+        teardown("closed");
+        return;
+      case "error":
+        results.errors.push(ev);
+        log("ERROR " + JSON.stringify(ev).slice(0, 400), "err");
+        return;
+      case "response.event": {
+        const inner = ev.event || {};
+        const it = inner.type || "?";
+        results.eventCounts["response.event:" + it] = (results.eventCounts["response.event:" + it] || 0) + 1;
+        if (it === "response.output_item.done" && inner.item && inner.item.type === "function_call") {
+          handleFunctionCall(inner.item, ev.delegation_id);
+        } else if (it === "response.completed" || it === "response.done") {
+          const u = inner.response && inner.response.usage;
+          if (u) { results.backendUsage.push(u); log("backend usage " + JSON.stringify(u), "ok"); }
+        } else if (it === "response.output_text.done") {
+          log("backend text: " + String(inner.text || "").slice(0, 200));
+        } else if (!/delta$/.test(it)) {
+          log("response.event " + it);
+        }
+        return;
+      }
+      default:
+        if (/\.delta$/.test(type)) return;
+        log(type + " " + JSON.stringify(ev).slice(0, 200));
+    }
+  }
+
+  async function connect() {
+    $("setupErr").textContent = "";
+    if (!$("token").value.trim()) { fail("Enter the spike token first"); return; }
+    $("connect").disabled = true;
+    setState("connecting");
+    t0 = performance.now();
+    results.timings.connectedAt = new Date().toISOString();
+    results.voice = $("voice").value;
+    try {
+      mic = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true } });
+    } catch (e) { fail("Microphone permission", e); reset(); return; }
+
+    pc = new RTCPeerConnection();
+    pc.addEventListener("track", (e) => { $("audio").srcObject = e.streams[0] || new MediaStream([e.track]); log("remote audio track", "ok"); });
+    pc.addEventListener("connectionstatechange", () => { log("pc: " + pc.connectionState); if (pc.connectionState === "failed") fail("Peer connection failed"); });
+    pc.addTrack(mic.getAudioTracks()[0], mic);
+    dc = pc.createDataChannel("oai-events");
+    dc.addEventListener("open", () => log("data channel open", "ok"));
+    dc.addEventListener("close", () => log("data channel closed"));
+    dc.addEventListener("message", (e) => onEvent(e.data));
+
+    try {
+      const offer = await pc.createOffer();
+      await pc.setLocalDescription(offer);
+      const r = await fetch("/api/spike/session", { method: "POST", headers: headers(), body: JSON.stringify({ sdp: offer.sdp, voice: results.voice }) });
+      const data = await r.json();
+      if (!r.ok || !data.sdp) { fail("Worker /api/spike/session " + r.status, { message: JSON.stringify(data).slice(0, 600) }); reset(); return; }
+      results.sessionId = data.sessionId; results.model = data.model; results.backend = data.backend;
+      results.timings.createMs = data.createMs;
+      $("sid").textContent = data.sessionId || "?";
+      $("createMs").textContent = data.createMs;
+      log("session created " + data.sessionId + " in " + data.createMs + " ms (worker→openai)", "ok");
+      answerAt = performance.now();
+      await pc.setRemoteDescription({ type: "answer", sdp: data.sdp });
+    } catch (e) { fail("SDP exchange", e); reset(); return; }
+
+    $("disconnect").disabled = false;
+    $("mute").disabled = false;
+    timer = setInterval(() => { $("elapsed").textContent = fmtElapsed(performance.now() - t0); }, 500);
+  }
+
+  function teardown(reason) {
+    if (timer) { clearInterval(timer); timer = null; }
+    results.timings.closedAt = new Date().toISOString();
+    if (dc) { try { dc.close(); } catch {} }
+    if (pc) { try { pc.close(); } catch {} }
+    if (mic) { mic.getTracks().forEach((t) => t.stop()); }
+    setState(reason || "ended");
+    $("disconnect").disabled = true;
+    $("mute").disabled = true;
+    $("connect").disabled = false;
+    dc = null; pc = null; mic = null;
+  }
+  function reset() { teardown("idle"); }
+
+  function endSession() {
+    if (dc && dc.readyState === "open") {
+      send({ type: "session.close", event_id: "close_1" });
+      setState("closing");
+      // If session.closed never arrives, tear down anyway.
+      setTimeout(() => { if (pc) { log("no session.closed within 5 s; tearing down", "err"); teardown("ended (no close event)"); } }, 5000);
+    } else {
+      teardown("ended");
+    }
+  }
+
+  $("connect").addEventListener("click", connect);
+  $("disconnect").addEventListener("click", endSession);
+  $("mute").addEventListener("click", () => {
+    if (!mic) return;
+    const t = mic.getAudioTracks()[0];
+    t.enabled = !t.enabled;
+    $("mute").textContent = t.enabled ? "Mute mic" : "Unmute mic";
+    log(t.enabled ? "mic unmuted" : "mic muted");
+  });
+  $("health").addEventListener("click", async () => {
+    try {
+      const r = await fetch("/api/spike/health");
+      const d = await r.json();
+      log("health " + JSON.stringify(d), d.hasKey && d.hasToken ? "ok" : "err");
+      if (!d.hasKey || !d.hasToken) $("setupErr").textContent = "Worker is missing OPENAI_API_KEY or SPIKE_TOKEN";
+    } catch (e) { fail("Worker unreachable", e); }
+  });
+  $("clearLog").addEventListener("click", () => { $("log").textContent = ""; });
+  $("copy").addEventListener("click", async () => {
+    const out = { ...results, transcript: results.transcript.map((t) => ({ who: t.who, text: t.text, startMs: t.startMs, endMs: t.endMs })) };
+    const text = JSON.stringify(out, null, 2);
+    try { await navigator.clipboard.writeText(text); $("copied").textContent = "copied " + text.length + " chars"; }
+    catch { $("copied").textContent = "clipboard blocked; see console"; console.log(text); }
+  });
+  window.addEventListener("pagehide", () => { if (pc) teardown("pagehide"); });
+})();
+</script>
+</body>
+</html>

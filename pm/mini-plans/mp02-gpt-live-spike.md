@@ -1,6 +1,6 @@
 # Mini-plan — GPT-Live Spike
 
-**Status**: 🟡 IN PROGRESS — opened 2026-09-14; s01 done 2026-09-14; s02/s03 next; Stages 1–2 gated on the sponsor's phone and the criterion-4 answer
+**Status**: 🟡 IN PROGRESS — opened 2026-09-14; s01–s02 done 2026-09-14, s03 built and awaiting the sponsor's desktop run; Stage 1 gated on that run and the phone
 **Handle**: `mp02`
 **Created**: 2026-09-14 · **Updated**: 2026-09-14
 
@@ -45,7 +45,7 @@ All of the following are true:
 
 ## Open Questions
 
-- **Criterion 4 is unpassable as written (sponsor).** s01 found voice alone costs $0.05/min, so ten minutes is $0.50 before the 15 s creation charge and any backend tokens; Appendix D's "at most $0.50 including backend and tool charges" cannot be met. Decision 260911a's intent was voice-only (~$0.50/day ≈ 10 min). Options: (a) amend Appendix D criterion 4 to "at most $0.60 all-in for ten minutes" (backend on gpt-5.6-luna adds about a cent); (b) keep it and record Option 1 as chosen by arithmetic without running the spike; (c) another bound. Sponsor's call before s04; s02/s03 can be built either way.
+- ~~**Criterion 4 is unpassable as written (sponsor).**~~ Resolved 2026-09-14: sponsor chose (a); PRD Appendix D now says $0.60; DECISIONS 260914b. Original: s01 found voice alone costs $0.05/min, so ten minutes is $0.50 before the 15 s creation charge and any backend tokens; Appendix D's "at most $0.50 including backend and tool charges" cannot be met. Decision 260911a's intent was voice-only (~$0.50/day ≈ 10 min). Options: (a) amend Appendix D criterion 4 to "at most $0.60 all-in for ten minutes" (backend on gpt-5.6-luna adds about a cent); (b) keep it and record Option 1 as chosen by arithmetic without running the spike; (c) another bound. Sponsor's call before s04; s02/s03 can be built either way.
 - ~~**OpenAI API credit (sponsor).**~~ Resolved 2026-09-14: sponsor funded an API account (project `Urdu`, restricted 30-day key) and placed the key in `.dev.vars`. Original note kept below.
 - **OpenAI API credit (sponsor, original).** Decision 260911a records that the sponsor has no paid API credits and ChatGPT Plus includes none. This spike needs a funded OpenAI API key: roughly $1–2 of prepaid credit covers the desktop check plus the ten-minute run. Sponsor to confirm they will fund it before s04; without it the spike cannot run and Option 1 ships by default (Appendix D: any criterion unmet → Option 1).
 - **Which OpenAI account.** The same key later serves FR-B5 if Option 2 ships; use the account the sponsor intends to keep, not a throwaway.
@@ -58,4 +58,4 @@ All of the following are true:
 - 2026-09-14 — Spike code lives under `spikes/gpt-live/` (Worker + page), reusing the existing `wrangler.jsonc` and Worker name `urdu`; the deployment is deleted after the run, as mp01's was. Rationale: PLAN Phase 0 allows "a Worker with one route" and nothing more; keeping it out of `worker/` stops throwaway code from becoming f01's starting point.
 - 2026-09-14 — The secret-minting route is protected by a spike-only shared token header, not by the future session cookie. Rationale: a public unauthenticated minting endpoint would let anyone spend the sponsor's credit; the real FR-B auth is f01's job.
 - 2026-09-14 — Tool calls are handled in the browser over the WebRTC data channel first (`response.event` in, `response.item.create` + `response.create` out); a Durable Object holding the sideband WebSocket (`/v1/live/sessions/{id}/attach`) is the fallback only if the data channel does not carry them. Rationale: zero extra infrastructure for a throwaway, and the docs imply both connections see the same stream. Backend model for delegation is `gpt-5.6-luna`, not the docs' `gpt-5.6-terra`: an Urdu coach needs no frontier reasoning and the cost criterion is tight.
-- 2026-09-14 — Pass criteria are the four in PRD Appendix D exactly as written, fixed before any measurement, so the verdict cannot be argued to fit the result.
+- 2026-09-14 — Pass criteria are the four in PRD Appendix D exactly as written, fixed before any measurement, so the verdict cannot be argued to fit the result. Criterion 4's bound was amended to $0.60 the same day, before any run, because the original $0.50 equalled the voice-only floor (sponsor decision; DECISIONS 260914b).

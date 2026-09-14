@@ -8,11 +8,11 @@
 ## Open Workfronts
 *Work items actively in flight. One line each → its doc/journal. Closed fronts drop off (rosters keep the full list).*
 
-- 🟡 mp02 `gpt-live-spike` — s01 API research done 2026-09-14; s02/s03 build next; sponsor owes the criterion-4 cost answer before the phone run → `mini-plans/mp02-gpt-live-spike.md` (journal: `mini-plans/mp02-gpt-live-spike-journal.md`)
+- 🟡 mp02 `gpt-live-spike` — s01–s02 done, s03 page built 2026-09-14; sponsor's desktop Chrome run next, then deploy + phone run → `mini-plans/mp02-gpt-live-spike.md` (journal: `mini-plans/mp02-gpt-live-spike-journal.md`)
 
 ## Next Session Pointers
 *The 1–3 concrete next actions for a cold start.*
 
-1. Sponsor: answer mp02's criterion-4 question (Appendix D's $0.50 bound is below the $0.50 voice-only cost of ten minutes) and paste the Coach instructions.
-2. mp02-s02/s03: build `spikes/gpt-live/` Worker session-broker route + WebRTC page per the journal's s01 API surface; desktop-check with the key in `.dev.vars`.
-3. Sponsor: `wrangler secret put` the key. Then s04 phone run, s05 Custom GPT comparison, verdict, `/pm-open` f01.
+1. Sponsor: s03 desktop run — `npx wrangler dev`, open `http://127.0.0.1:8787`, paste the `SPIKE_TOKEN` from `.dev.vars`, Connect, speak Urdu, ask it to add a word to the vault, End session, Copy results JSON into the journal. Also paste the real Coach instructions (the Worker uses a stand-in prompt).
+2. Agent: fix whatever the desktop run surfaces (session schema, tool path, voice names), then s04: sponsor runs `npx wrangler secret put OPENAI_API_KEY` and `SPIKE_TOKEN` (a new value, not the local one); agent deploys; phone run.
+3. s05 Custom GPT comparison, s06 verdict, `/pm-close mp02`, then `/pm-open` f01. Then s04 phone run, s05 Custom GPT comparison, verdict, `/pm-open` f01.

@@ -71,3 +71,22 @@ The browser's SDP offer travels through our Worker, which returns the answer. Th
 - Worker route becomes `POST /api/spike/session` taking `{sdp}` and returning `{sessionId, sdp}`; the session config (voice, instructions, delegation, `add_to_vault` tool) lives server-side. No secret-minting route.
 - `wrangler.jsonc` needs `main` (the Worker) and `assets.directory = ./spikes/gpt-live`. Durable Objects only if the browser-side tool path fails.
 - Page needs a `sessionStorage` spike token, connect/disconnect, transcript pane from the two transcript-delta streams, `session.usage.updated` seconds times $0.05/60 as the running cost, `response.event` logging, function-call handling, and `session.closed` usage capture into the results JSON.
+
+## 2026-09-14 — criterion 4 amended; s02 built and verified; s03 built, awaiting desktop run
+
+Sponsor chose $0.60 for Appendix D criterion 4 (DECISIONS 260914b; PRD amended). Sponsor also confirmed API credit is loaded.
+
+**s02 Worker (`spikes/gpt-live/worker.ts`).** `wrangler.jsonc` now has `main`, `assets.binding = ASSETS`, `assets.run_worker_first = ["/api/*"]`, and `assets.directory = ./spikes/gpt-live`. Routes: `GET /api/spike/health`, `POST /api/spike/session` (SDP in, `{sessionId, sdp, createMs}` out; session config server-side: `gpt-live-1`, voice from the page, stand-in Coach prompt, Responses delegation on `gpt-5.6-luna` with the `add_to_vault` function tool), `POST /api/spike/vault-add` (FR-F2 stub; logs and returns `{ok, id}`). Both POST routes require `X-Spike-Token`. `SPIKE_TOKEN` generated into `.dev.vars` (a first append landed on the key's line because the file had no trailing newline; fixed). Local verification with `wrangler dev`:
+
+| Call | Result |
+|---|---|
+| health | `{ok, hasKey:true, hasToken:true}` |
+| session without token | 401 |
+| vault-add with token | 200, stub id returned |
+| session with a dummy SDP | 502 wrapping OpenAI 400 `invalid_offer`: "Offer did not have an audio media section." |
+
+The last row proves the restricted key authenticates against `/v1/live/sessions` (no 401/403 on scope) and the request reaches SDP validation. Whether the `session` object itself is accepted (strict schema: `audio.output.voice`, `delegation.responses.tools`) is only proven by a real browser offer, i.e. s03's desktop run. **s02 done.**
+
+Gotcha for anyone restarting: two `wrangler dev` instances on the same port wedge every request, including the local explorer API; kill all `node` and `workerd` processes before restarting.
+
+**s03 page (`spikes/gpt-live/index.html`)** built: token entry (sessionStorage), voice picker (marin/cedar plus the twelve launch-post names, unverified), Connect / End session / Mute, elapsed and billed-seconds counters, running voice-cost estimate (seconds + 15 s creation charge, at $0.05/min), transcript bubbles from the two transcript-delta streams, event log, browser-side tool-call handling (`response.event` → stub → `response.item.create` + `response.create`, with `delegation_id` echoed when present), backend usage capture from nested `response.completed`, and Copy results JSON. `node spikes/gpt-live/check.js` passes. **Awaiting the sponsor's desktop Chrome run** at `http://127.0.0.1:8787` with the token from `.dev.vars`: a short Urdu exchange plus one "add X to my vault" request. Unknowns that run settles: whether the session config is accepted; whether the tool call reaches the data channel (else Durable Object sideband fallback); which voice names are valid; how Urdu sounds.

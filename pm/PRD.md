@@ -151,6 +151,6 @@ NFC normalize; strip tashkeel (U+064B to U+0652, U+0670) and tatweel (U+0640); m
 1. A throwaway page on Android Chrome (installed PWA context) establishes a WebRTC session to GPT-Live-1 using a Worker-minted client secret.
 2. Ten minutes of Urdu conversation is judged by the sponsor as comparable to ChatGPT Voice.
 3. A tool call ("add X to my vault") executes mid-conversation against a stub of FR-F2 and the conversation resumes.
-4. Measured cost for the ten minutes, including backend and tool charges, is at most $0.50.
+4. Measured cost for the ten minutes, including backend and tool charges, is at most $0.60. *(Amended 2026-09-14 from $0.50: GPT-Live-1 voice alone is $0.05/min, so $0.50 was the voice-only floor; see DECISIONS 260914b.)*
 
 All four pass leads to FR-G Option 2. Any fail leads to Option 1. Also run, cheaply: one Urdu voice session inside a private Custom GPT to judge its Advanced Voice Mode quality, since that is Option 1's voice surface.
