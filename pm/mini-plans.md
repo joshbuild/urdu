@@ -7,7 +7,7 @@
 
 | Handle | Slug / doc | Status | Stage | One-line |
 |---|---|---|---|---|
-| mp02 | `mini-plans/mp02-gpt-live-spike.md` | 🔴 NOT STARTED | — | Run the GPT-Live-1 WebRTC feasibility spike (PRD Appendix D) to choose the FR-G Coach client. |
+| mp02 | `mini-plans/mp02-gpt-live-spike.md` | 🟡 IN PROGRESS | Stage 0 — research + build | Run the GPT-Live-1 WebRTC feasibility spike (PRD Appendix D) to choose the FR-G Coach client. |
 
 ## Archived
 
