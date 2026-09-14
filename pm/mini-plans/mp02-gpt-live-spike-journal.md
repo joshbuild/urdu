@@ -104,3 +104,17 @@ Run 1, session `live_u7_EO7uD93mvnZ6hcUsNVdAs`, voice `marin`, 64 s elapsed, 44 
 - Backend usage for the delegation: 1089 input, 72 output (35 reasoning) tokens on gpt-5.6-luna, about $0.0003.
 - `session.close` sent at 60 s; no `session.closed` within 5 s, so final usage was not captured. Close drains delegated work, and the stuck delegation may have held it open. Page now waits 20 s.
 - Transcript fragments from one speaker now merge into one bubble.
+
+## 2026-09-14 — s03 desktop run 2 (fix verified; s03 done)
+
+Session `live_u7_EO7yVpCwsefDsFwOqIxsp`, voice `marin`, ~47 s. Worker to OpenAI create 200 ms this time (1823 ms on run 1, likely a cold connection).
+- Tool path works end to end: `add_to_vault {"urdu":"زندگی","roman":"zindagi","english":"life","kind":"word"}` about 1.2 s after `session.delegation.created`; stub ok; `response.item.create` + `response.create` accepted with no `delegation_id`; backend continued and produced the confirmation "زندگی آپ کے vocabulary vault میں save کر دی ہے—اس کا مطلب ہے “life.”" 1.8 s after the tool result. Tap-to-confirmation roughly 3 s.
+- Backend usage for the whole tool exchange: 2 calls, 2342 input + 90 output tokens on gpt-5.6-luna, about $0.0006.
+- `session.closed` arrived 0.6 s after `session.close`: reason `close_requested`, `usage.seconds` 45 for about 46 s elapsed. So the 15 s creation charge appears to be counted inside `usage.seconds`, not added on top; the page's estimate double-counts it. Harmless (overstates), noted for the verdict.
+- Backend confirmation text mixes English words into Urdu script ("vocabulary vault", "save"); acceptable for a spike, tune in the real Coach prompt.
+
+**s03 done** on desktop. Criterion 3 is effectively proven; it is formally judged on the phone in s04.
+
+## 2026-09-14 — s04 deploy (partial)
+
+`npx wrangler deploy` published the spike to https://urdu.umber-amber.workers.dev (version 1fed1120). That upload included `worker.ts` and `check.js` as public assets (no secrets in either); `spikes/gpt-live/.assetsignore` now excludes them from the next deploy. Setting the secrets and redeploying from the agent was blocked by the permission classifier (production deploy), so the sponsor runs those. Until then the deployed health route reports `hasKey:false, hasToken:false` and both POST routes return 401, so nothing can spend credit. The deployed `SPIKE_TOKEN` is a new value (kept in gitignored `.wrangler/prod-token.txt`), distinct from the local one.

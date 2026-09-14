@@ -8,11 +8,11 @@
 ## Open Workfronts
 *Work items actively in flight. One line each → its doc/journal. Closed fronts drop off (rosters keep the full list).*
 
-- 🟡 mp02 `gpt-live-spike` — s01–s02 done, s03 page built 2026-09-14; sponsor's desktop Chrome run next, then deploy + phone run → `mini-plans/mp02-gpt-live-spike.md` (journal: `mini-plans/mp02-gpt-live-spike-journal.md`)
+- 🟡 mp02 `gpt-live-spike` — s01–s03 done 2026-09-14 (desktop: Urdu speech, tool call round trip, close usage all work); s04 deployed, sponsor to set secrets and redeploy, then phone run → `mini-plans/mp02-gpt-live-spike.md` (journal: `mini-plans/mp02-gpt-live-spike-journal.md`)
 
 ## Next Session Pointers
 *The 1–3 concrete next actions for a cold start.*
 
-1. Sponsor: s03 desktop run — `npx wrangler dev`, open `http://127.0.0.1:8787`, paste the `SPIKE_TOKEN` from `.dev.vars`, Connect, speak Urdu, ask it to add a word to the vault, End session, Copy results JSON into the journal. Also paste the real Coach instructions (the Worker uses a stand-in prompt).
-2. Agent: fix whatever the desktop run surfaces (session schema, tool path, voice names), then s04: sponsor runs `npx wrangler secret put OPENAI_API_KEY` and `SPIKE_TOKEN` (a new value, not the local one); agent deploys; phone run.
+1. Sponsor: `npx wrangler secret put OPENAI_API_KEY` (value from `.dev.vars`), `npx wrangler secret put SPIKE_TOKEN` (value from `.wrangler/prod-token.txt`), `npx wrangler deploy`.
+2. Sponsor: s04 phone run at https://urdu.umber-amber.workers.dev in installed mode, ten minutes of Urdu, at least one vault add, End session, paste results JSON + 1–5 score vs ChatGPT Voice + OpenAI usage-dashboard cost. Paste the real Coach instructions first if wanted.
 3. s05 Custom GPT comparison, s06 verdict, `/pm-close mp02`, then `/pm-open` f01. Then s04 phone run, s05 Custom GPT comparison, verdict, `/pm-open` f01.
