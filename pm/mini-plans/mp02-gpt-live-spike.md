@@ -1,6 +1,6 @@
 # Mini-plan — GPT-Live Spike
 
-**Status**: 🟡 IN PROGRESS — opened 2026-09-14; s01–s02 done 2026-09-14, s03 built and awaiting the sponsor's desktop run; Stage 1 gated on that run and the phone
+**Status**: 🟡 IN PROGRESS — opened 2026-09-14; s01–s04 done 2026-09-14 (all four Appendix D criteria pass, sponsor-judged); s05 optional, s06 verdict next
 **Handle**: `mp02`
 **Created**: 2026-09-14 · **Updated**: 2026-09-14
 
@@ -49,7 +49,7 @@ All of the following are true:
 - ~~**OpenAI API credit (sponsor).**~~ Resolved 2026-09-14: sponsor funded an API account (project `Urdu`, restricted 30-day key) and placed the key in `.dev.vars`. Original note kept below.
 - **OpenAI API credit (sponsor, original).** Decision 260911a records that the sponsor has no paid API credits and ChatGPT Plus includes none. This spike needs a funded OpenAI API key: roughly $1–2 of prepaid credit covers the desktop check plus the ten-minute run. Sponsor to confirm they will fund it before s04; without it the spike cannot run and Option 1 ships by default (Appendix D: any criterion unmet → Option 1).
 - **Which OpenAI account.** The same key later serves FR-B5 if Option 2 ships; use the account the sponsor intends to keep, not a throwaway.
-- **Coach instructions source.** s02 needs the current Coach system prompt to make criterion 2 a fair comparison. Sponsor to paste the current ChatGPT Urdu Coach instructions into the journal (or point to where they live); otherwise the spike uses a short stand-in prompt and the journal notes it.
+- ~~**Coach instructions source.**~~ Resolved 2026-09-14: sponsor pasted them; verbatim in `mp02-coach-instructions.md`, adapted in `spikes/gpt-live/worker.ts` for the five-minute run. Original: s02 needs the current Coach system prompt to make criterion 2 a fair comparison. Sponsor to paste the current ChatGPT Urdu Coach instructions into the journal (or point to where they live); otherwise the spike uses a short stand-in prompt and the journal notes it.
 
 ---
 
@@ -58,4 +58,5 @@ All of the following are true:
 - 2026-09-14 — Spike code lives under `spikes/gpt-live/` (Worker + page), reusing the existing `wrangler.jsonc` and Worker name `urdu`; the deployment is deleted after the run, as mp01's was. Rationale: PLAN Phase 0 allows "a Worker with one route" and nothing more; keeping it out of `worker/` stops throwaway code from becoming f01's starting point.
 - 2026-09-14 — The secret-minting route is protected by a spike-only shared token header, not by the future session cookie. Rationale: a public unauthenticated minting endpoint would let anyone spend the sponsor's credit; the real FR-B auth is f01's job.
 - 2026-09-14 — Tool calls are handled in the browser over the WebRTC data channel first (`response.event` in, `response.item.create` + `response.create` out); a Durable Object holding the sideband WebSocket (`/v1/live/sessions/{id}/attach`) is the fallback only if the data channel does not carry them. Rationale: zero extra infrastructure for a throwaway, and the docs imply both connections see the same stream. Backend model for delegation is `gpt-5.6-luna`, not the docs' `gpt-5.6-terra`: an Urdu coach needs no frontier reasoning and the cost criterion is tight.
+- 2026-09-14 — s04 result (sponsor-judged): (1) PASS, installed Android Chrome, `standalone: true`, Worker-brokered session. (2) PASS, "pretty comparable" to ChatGPT Voice after a five-minute session on the real Coach instructions; sponsor accepted five minutes instead of ten. (3) PASS, `add_to_vault` reached the stub mid-conversation and the Coach continued, on desktop, phone tab, and installed. (4) PASS, five minutes ≈ $0.255 (≈ $0.51 per ten), dashboard total for all of today's runs $0.40. All four pass → Option 2 by the FR-G rule; formalised in s06. Evidence: journal.
 - 2026-09-14 — Pass criteria are the four in PRD Appendix D exactly as written, fixed before any measurement, so the verdict cannot be argued to fit the result. Criterion 4's bound was amended to $0.60 the same day, before any run, because the original $0.50 equalled the voice-only floor (sponsor decision; DECISIONS 260914b).

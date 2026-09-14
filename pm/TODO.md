@@ -13,4 +13,5 @@
 ## Tasks
 *Bullets, each tagged.*
 
+- f07 Coach prompt tuning from mp02's five-minute run: English-explanation requests answered in Urdu, garbled non-correction, barging into learner hesitations, markdown in spoken text; test confirm-after-result with a failing add. Fold into f07's doc when it opens. #agent-research
 - Delete `spikes/speech/` once f03 ships `speak()` (mp01 decision 2026-09-14). #agent-implement

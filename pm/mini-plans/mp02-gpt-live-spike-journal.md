@@ -118,3 +118,69 @@ Session `live_u7_EO7yVpCwsefDsFwOqIxsp`, voice `marin`, ~47 s. Worker to OpenAI 
 ## 2026-09-14 — s04 deploy (partial)
 
 `npx wrangler deploy` published the spike to https://urdu.umber-amber.workers.dev (version 1fed1120). That upload included `worker.ts` and `check.js` as public assets (no secrets in either); `spikes/gpt-live/.assetsignore` now excludes them from the next deploy. Setting the secrets and redeploying from the agent was blocked by the permission classifier (production deploy), so the sponsor runs those. Until then the deployed health route reports `hasKey:false, hasToken:false` and both POST routes return 401, so nothing can spend credit. The deployed `SPIKE_TOKEN` is a new value (kept in gitignored `.wrangler/prod-token.txt`), distinct from the local one.
+
+## 2026-09-14 — s04 phone smoke run (deployed; not yet the criterion run)
+
+Sponsor set the secrets and redeployed; the deployed Worker works. Session `live_u7_EO86jrmiqvHDCvCPwHIoy`, Android 10 Chrome 152, voice `marin`, backend `gpt-5.6-luna`. **Browser tab, not installed** (`standalone: false`), 38 billed seconds. Sponsor: "worked. replied saying vocab added."
+- Worker to OpenAI create 208 ms; answer to `session.started` 258 ms. No errors.
+- Urdu greeting exchange, then a spoken request in mixed Urdu/English to add زندگی. `add_to_vault {"urdu":"زندگی","roman":"zindagi","english":"life","kind":"word"}` reached the stub (ok) at 31.9 s. Backend: 2 calls, 2397 input + 92 output (26 reasoning) tokens, about $0.0006. `session.closed` with `close_requested`, `usage.seconds` 38.
+- Voice cost for the session about $0.032. Context ratio 0.014 after 38 s.
+- Model's transcript came back in Urdu script this time (desktop run 1 was Roman).
+- **Ordering concern:** the voice model's "ہو گیا، زندگی کا مطلب ہے 'life'" ended at 31.8 s, before the tool call arrived at 31.9 s. It said "done" before the add had happened, and no later spoken confirmation appears in the transcript even though the backend made a second (29-token) response after the result. Here the add succeeded, so no harm, but a real Coach must not confirm a vault write it has not seen succeed. Watch for this in the ten-minute run (does a failed add still get "done"?); if it repeats, tighten the instructions ("say you are adding it; confirm only after the result") before the verdict.
+
+What this proves for Appendix D: the deployed Worker-brokered WebRTC session works on the phone, and criterion 3's path works on the phone. Still owed for s04: criterion 1 in **installed** mode, the ~ten-minute session for criterion 2 (sponsor 1–5 vs ChatGPT Voice), and dashboard cost for criterion 4.
+
+## 2026-09-14 — s04 installed-mode run (criterion 1 PASS)
+
+Session `live_u7_EO8CY9U8NTo9Cow6PvAOa`, same phone, launched from the home-screen icon: **`standalone: true`**, `secureContext: true`, no errors. 30 billed seconds.
+- Worker to OpenAI create 820 ms (208 ms on the tab run); answer to `session.started` 291 ms.
+- User opened in Roman Urdu ("Salam. Aap kaise hain"); the model answered in Urdu. Spoken request "ایک لفظ ایڈ کریں ووکیب کو… مشک" → `add_to_vault {"urdu":"مشک","roman":"mushk","english":"musk","kind":"word"}` reached the stub (ok) at 20.9 s, 3.9 s after the user finished speaking.
+- Backend: 2 calls, 2352 input + 113 output (48 reasoning) tokens, about $0.0006. Voice about $0.025.
+- Ordering: the Coach's utterance "ٹھیک ہے۔ میں یہ لفظ ابھی… شامل کر دیتی ہوں۔ ہو گیا…" ran 17.6–25.2 s and the tool call landed at 20.9 s, inside it. The transcript has no word-level timing, so it can't show whether "ہو گیا" came before or after the result. Still unproven; the ten-minute run should include one add that the stub rejects to settle it (see below).
+
+**Criterion 1: PASS.** A WebRTC session was set up from installed Android Chrome through the Worker, and a tool call worked in the same session.
+**Criterion 3: PASS on the phone** (tab and installed runs both hit the stub and continued).
+Still owed: criterion 2 (ten minutes, sponsor 1–5 vs ChatGPT Voice) and criterion 4 (dashboard cost for that session).
+
+## 2026-09-14 — real Coach instructions in (for the criterion 2 run)
+
+Sponsor pasted the ChatGPT Urdu Coach instructions; verbatim copy in `pm/mini-plans/mp02-coach-instructions.md` (also the starting point for f07). `spikes/gpt-live/worker.ts` `COACH_INSTRUCTIONS` now uses them, adapted:
+- Aim & Scope and Interaction Style kept word for word.
+- Added a short voice section (short turns, correct after the learner finishes, no letter-by-letter spelling).
+- Airtable schema, mastery, update, lookup, import and quiz sections cut: the spike has only `add_to_vault`. The Coach says so if asked for those. This means criterion 2 judges conversation and correction quality, not vocab management.
+- Add rule reworded: say "adding it" while in progress; never say done until the backend reports the result; say so if it failed. Backend instructions got the same rule, from the source's "Never claim a change succeeded unless the action actually succeeded".
+All runs before this entry (desktop 1–2, phone tab, phone installed) used the stand-in prompt. esbuild bundles the Worker cleanly. Sponsor redeploys (`npx wrangler deploy`) before the ten-minute run.
+
+## 2026-09-14 — s04 five-minute installed run (real Coach instructions)
+
+Session `live_u7_EO8N3sxyIZ3AjhhzsKb1J`, installed (`standalone: true`), voice `marin`, first run on the real Coach prompt. 303 billed seconds (5 min 6 s), no errors, closed `close_requested`. Create 222 ms, answer to started 229 ms. Context ratio 0.095 at the end, so ten minutes is about 0.19 (no pressure). Sponsor: "it worked pretty well." No 1–5 score yet.
+
+**What the session was.** Sponsor gave seven words out loud (قدرت، قلت، بار بار، جادو، لہجہ، خستہ، لباس) and asked to be quizzed, then asked for English explanations, made a sentence, and asked to add the new word.
+
+**Cost (estimate; dashboard figure still owed).** Voice 303 s × $0.05/60 = $0.253. Backend: 5 responses, 12,617 input (5,866 cached, 2,376 cache-write) + 623 output tokens on gpt-5.6-luna ≈ $0.002 (cache writes priced as plain input). Total ≈ **$0.255 for five minutes → about $0.51 for ten**, under the $0.60 bound. 4 delegations, 1 tool call: the backend also produced quiz and explanation text, so backend cost grows with the kind of session, but at luna prices it stays around a cent per ten minutes.
+
+**Went well**
+- Quiz run as the instructions say: one item at a time, waited, marked right answers, corrected قلت ("opposite" → کمی / shortage), handled "never heard this word" by explaining خستہ.
+- Asked for the last words to be repeated when it didn't catch them, instead of guessing.
+- Resolved "یہ نیا لفظ ایڈ کریں" to لباس from context. `add_to_vault {"urdu":"لباس","roman":"libaas","english":"clothing; outfit","kind":"word"}`, stub ok at 283.1 s.
+- Add wording followed the new rule: "میں ابھی اسے… شامل کر رہی ہوں" (adding), then "شامل کر دیا گیا ہے" (done). The utterance started at 280.4 s and the tool call landed at 283.1 s, about 3 s in, which is roughly where the "adding" clause ends. Consistent with confirm-after-result, but the transcript has no word timing and the stub never fails, so the failure case is still untested.
+- Responses start almost at once: the Coach usually begins within 0–600 ms of the end of the learner's turn. Yielded well when asked to wait ("جی، آرام سے سوچ لیں").
+
+**Problems**
+1. **Ignored "explain in English" twice.** At 152.8 s the sponsor asked for the خستہ explanation in English; the Coach said "میں اس کی وضاحت انگریزی میں کرتی ہوں" and explained in Urdu. At 180.6 s ("Now tell me the same thing in English") it switched to لباس, not خستہ, and again answered mostly in Urdu with English glosses. The instruction "If I ask for an English explanation, explain in English" is kept word for word, so this is the model, not the prompt adaptation.
+2. **Bogus correction.** Sponsor said "میں لباس پہنوں گا"; the Coach said "ہلکی سی درستی" and then gave the identical sentence plus "بس ایک چھوٹی سی گردن" (گردن = neck; meaningless here). May be a pronunciation note that came out garbled; as heard, it corrects nothing and is confusing. The source says "Do not overcorrect harmless variation."
+3. **Jumps into hesitations.** Several overlaps where the Coach started while the sponsor was mid-sentence or saying "um" (3.6 s, 13.6 s, 38.4 s, 135.8 s, 194.2 s, 216.8 s). Fast turn-taking is good, but a learner who pauses to think gets talked over. Worth asking the sponsor how it felt and comparing with ChatGPT Voice.
+4. Markdown (`**bold**`) appears in the Coach transcript, probably from backend-written text. Harmless to audio unless it gets read out.
+5. Minor: قدرت accepted as "nature" when the sponsor said "power or nature"; both are right (قدرت also means power or ability), so the Coach's "بالکل… nature" slightly narrowed a correct answer.
+
+**Status against Appendix D.** Criterion 1 PASS (earlier run). Criterion 3 PASS. Criterion 4 on track (≈ $0.51 per ten minutes extrapolated; needs the dashboard figure, and the criterion says ten minutes). Criterion 2 not yet judged: the criterion says ten minutes, and the sponsor's 1–5 score against ChatGPT Voice is still owed.
+
+## 2026-09-14 — sponsor judgment on the five-minute run (s04 done)
+
+Sponsor: "against chatgpt voice on my phone, i'd say it's pretty comparable." No numeric score given; recorded as comparable. OpenAI dashboard: September spend $0.40, all of it today, covering every run (desktop 1–2, phone tab, phone installed, the five-minute run; about 460 billed seconds plus backend). So the five-minute run cost at most $0.40, and the per-run arithmetic ($0.255) puts ten minutes at about $0.51, under $0.60. Sponsor accepted the five-minute run as enough for the spike ("we can massage as we go along"), so no second session.
+
+Appendix D result: (1) PASS, (2) PASS by sponsor judgment on five minutes, (3) PASS, (4) PASS by extrapolation, backed by the dashboard total. By the FR-G selection rule this points to Option 2 (in-app GPT-Live-1 voice). The formal verdict and PRD/PLAN edits are s06.
+
+Carried to f07 if Option 2 ships: English-explanation requests ignored, a garbled non-correction, barging into learner hesitations, markdown in spoken text, and confirm-after-result untested against a failing tool.
+
+Uncommitted state at wrap: `spikes/gpt-live/worker.ts` (real Coach prompt, deployed by the sponsor) and `pm/mini-plans/mp02-coach-instructions.md` are committed in this wrap. The spike Worker is still live at urdu.umber-amber.workers.dev with secrets set; delete it in s06.
