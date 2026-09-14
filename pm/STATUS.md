@@ -15,4 +15,4 @@
 
 1. Sponsor: `npx wrangler secret put OPENAI_API_KEY` (value from `.dev.vars`), `npx wrangler secret put SPIKE_TOKEN` (value from `.wrangler/prod-token.txt`), `npx wrangler deploy`.
 2. Sponsor: s04 phone run at https://urdu.umber-amber.workers.dev in installed mode, ten minutes of Urdu, at least one vault add, End session, paste results JSON + 1–5 score vs ChatGPT Voice + OpenAI usage-dashboard cost. Paste the real Coach instructions first if wanted.
-3. s05 Custom GPT comparison, s06 verdict, `/pm-close mp02`, then `/pm-open` f01. Then s04 phone run, s05 Custom GPT comparison, verdict, `/pm-open` f01.
+3. s05 Custom GPT comparison, s06 verdict, `/pm-close mp02`, then `/pm-open` f01.
