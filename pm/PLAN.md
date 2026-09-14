@@ -15,14 +15,14 @@
 
 ## Phases
 
-### Phase 0 — Spikes (Current)
+### Phase 0 — Spikes (✅ Done 2026-09-14)
 **Goal:** Remove the two unknowns that could change the build before any product code exists. Throwaway code only.
 - mp01 `speech-spike` (✅ PASS 2026-09-14): a static page listing SpeechSynthesis voices on the sponsor's Android phone, speaking sample Urdu words and a phrase; record voice name, latency, and acceptability. Fallback decision: hosted TTS behind `speak()` in v1 if unacceptable.
 - mp02 `gpt-live-spike` (✅ PASS 2026-09-14 → FR-G Option 2): a throwaway Worker route brokering a GPT-Live-1 WebRTC session plus a page run installed on the sponsor's Android phone; all four `PRD.md` Appendix D criteria passed. The Custom GPT comparison was skipped as moot once Option 2 was chosen.
 - Repo skeleton is allowed here only as far as the spikes need it (wrangler config, a Worker with one route).
 - **Exit:** Speech verdict recorded; FR-G option chosen and recorded in `DECISIONS.md`; `PRD.md` FR-G updated to name the chosen option.
 
-### Phase 1 — Foundation
+### Phase 1 — Foundation (Current)
 **Goal:** A deployed Urdu Core with the sponsor's vocabulary in it.
 - f01 `urdu-core-foundation`: repo layout (`src/`, `worker/`, `shared/`, `migrations/`, `scripts/`), Biome, Vitest, wrangler with D1 + static assets, `pnpm dev` / `pnpm deploy`; `shared/` ladder, deltas, scheduling, normalization with tests; D1 migrations for Appendix A; unlock + session cookie (FR-B1..B4); vocab CRUD, due selection, review recording (FR-A); JSON export; minimal PWA shell with unlock screen and manifest so deploy can be verified on the phone.
 - f02 `airtable-import`: admin import endpoint and CSV import script (FR-H); run it for real; cross-check report reviewed by the sponsor.

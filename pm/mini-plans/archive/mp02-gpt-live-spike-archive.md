@@ -1,8 +1,10 @@
 # Mini-plan — GPT-Live Spike
 
-**Status**: 🟡 IN PROGRESS — opened 2026-09-14; s01–s04 done, s05 skipped, s06 docs done 2026-09-14 (Option 2); spike Worker deletion then `/pm-close`
+> **As shipped (2026-09-14).** Done; all four PRD Appendix D criteria **PASS**, so v0's Coach client is **FR-G Option 2 (in-app GPT-Live-1 voice)**. Installed Android Chrome ran a Worker-brokered WebRTC session (`POST /v1/live/sessions`; no browser-held secret). Mid-conversation `add_to_vault` tool calls came in over the data channel, with no sideband. The sponsor judged a five-minute session on the real Coach prompt "pretty comparable" to ChatGPT Voice, at ≈ $0.51 per ten minutes. The Custom GPT comparison (s05) was skipped as moot. The spike Worker was deleted. Live truth: `pm/DECISIONS.md` (260914b, 260914c), `pm/PRD.md` FR-G, FR-B5, FR-I1, Appendix D, `pm/PLAN.md` Phase 0 + f07. Carried forward: `mini-plans/mp02-coach-instructions.md` (f07's prompt source) and the f07 tuning item in `pm/TODO.md`. Code: `spikes/gpt-live/` (reference for f07's session route and tool handling; deletion tracked in `pm/TODO.md`). Execution record below and in the sibling journal.
+
+**Status**: 🟢 DONE — closed 2026-09-14 (verdict PASS → Option 2)
 **Handle**: `mp02`
-**Created**: 2026-09-14 · **Updated**: 2026-09-14
+**Created**: 2026-09-14 · **Updated**: 2026-09-14 · **Closed**: 2026-09-14
 
 **Owner docs it serves**:
 - `pm/PRD.md` FR-G (Coach client: Option 1 Custom GPT vs Option 2 in-app voice), FR-B5 (Worker-minted client secret), Appendix D (the four pass criteria), §6 cost NFR.

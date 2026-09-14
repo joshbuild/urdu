@@ -187,4 +187,8 @@ Carried to f07 if Option 2 ships: English-explanation requests ignored, a garble
 
 Option 2 recorded: DECISIONS 260914c (written at the previous wrap) plus this session's PRD edits (FR-G names Option 2 with Option 1 deferred to v1; FR-B5 rewritten for the brokered SDP flow, no browser-held credential; FR-I1 unconditional spend display; Appendix D result paragraph) and PLAN edits (Phase 0 mp02 line ✅, f07 phase line and roster one-liner). s05 skipped as moot, with Done-When 1 annotated. `git grep` finds no OpenAI key in tracked files; `.dev.vars` and `.wrangler/prod-token.txt` are ignored. `npx wrangler delete --name urdu --force` was blocked by the permission classifier (irreversible deletion), so the sponsor runs it. Then `/pm-close mp02`. Note that deleting the Worker also drops its `OPENAI_API_KEY` and `SPIKE_TOKEN` secrets; f07 sets the key again on the real Worker.
 
+## 2026-09-14 — Worker deleted; closed
+
+Sponsor ran `npx wrangler delete --name urdu`. The dashboard's Workers & Pages now shows no projects, and `curl` on `/api/spike/health` returns `000` (no connection). Done-When 5 met. Closed via `/pm-close`.
+
 Uncommitted state at the earlier wrap: `spikes/gpt-live/worker.ts` (real Coach prompt, deployed by the sponsor) and `pm/mini-plans/mp02-coach-instructions.md` are committed in this wrap. The spike Worker is still live at urdu.umber-amber.workers.dev with secrets set; delete it in s06.

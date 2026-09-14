@@ -7,10 +7,10 @@
 
 | Handle | Slug / doc | Status | Stage | One-line |
 |---|---|---|---|---|
-| mp02 | `mini-plans/mp02-gpt-live-spike.md` | 🟡 IN PROGRESS | Stage 2 — Option 2 recorded; Worker deletion + close next | Run the GPT-Live-1 WebRTC feasibility spike (PRD Appendix D) to choose the FR-G Coach client. |
 
 ## Archived
 
 | Handle | Slug / doc | Closed | One-line |
 |---|---|---|---|
+| mp02 | `mini-plans/archive/mp02-gpt-live-spike-archive.md` | 2026-09-14 | GPT-Live spike: all four Appendix D criteria PASS → FR-G Option 2, in-app voice; ≈ $0.51/10 min, "pretty comparable" to ChatGPT Voice. |
 | mp01 | `mini-plans/archive/mp01-speech-spike-archive.md` | 2026-09-14 | Speech spike: verdict PASS — SpeechSynthesis ur_PK on Android Chrome, 60 ms median, 3.5/5, works installed. |
