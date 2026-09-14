@@ -13,5 +13,4 @@
 ## Tasks
 *Bullets, each tagged.*
 
-- Rename Cloudflare account workers.dev subdomain `urdu` → `umber-amber` (dashboard: Workers & Pages → Overview → Change subdomain). Until then deploys land at `*.urdu.workers.dev`. #sponsor-respond
 - Delete `spikes/speech/` once f03 ships `speak()` (mp01 decision 2026-09-14). #agent-implement

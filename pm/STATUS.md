@@ -14,5 +14,4 @@
 *The 1–3 concrete next actions for a cold start.*
 
 1. `/pm-close mp01` (Done-When gate is met; verdict already in DECISIONS/PRD/PLAN). Keep `spikes/speech/` until f03 ships `speak()`.
-2. Sponsor: rename the Cloudflare account's workers.dev subdomain from `urdu` to `umber-amber` in the dashboard (Workers & Pages → Overview), so deploys land at `urdu.umber-amber.workers.dev` as the docs say. Tracked in TODO.
-3. `/pm-open` mp02 `gpt-live-spike` (Phase 0). `wrangler.jsonc` + wrangler devDep already exist; needs the sponsor's OpenAI API key as a Worker secret and the phone. Then the FR-G decision, then `/pm-open` f01.
+2. `/pm-open` mp02 `gpt-live-spike` (Phase 0). `wrangler.jsonc` + wrangler devDep already exist; needs the sponsor's OpenAI API key as a Worker secret and the phone. Then the FR-G decision, then `/pm-open` f01.
