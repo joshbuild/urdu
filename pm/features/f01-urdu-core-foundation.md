@@ -146,13 +146,13 @@ If `secret put` runs before the first deploy, wrangler creates the Worker; eithe
 
 ### Recently Completed
 
+- 2026-09-14 — s01 sponsor steps done: `package-lock.json` removed; D1 `urdu` created (WNAM, id `3b3e3582-…`), binding `DB`, local dev stays on local D1 (declined remote). s01 complete.
 - 2026-09-14 — s01 scaffold built: pnpm deps pinned, Vite + React + `@cloudflare/vite-plugin`, Hono Worker with `/api/health` and JSON 404, `wrangler.jsonc` repointed (D1 `DB` placeholder id, `HOME_TZ`), tsconfig project refs (app / worker / node), Biome, Vitest `shared` + `worker` projects, bundle secret scan. `pnpm check` green (2 Worker tests). `pnpm dev` starts; probing it with curl was denied by the permission prompt, so the local HTTP check is unverified by the agent.
 - 2026-09-14 — Doc and journal written; front opened; roster and STATUS updated.
 
 ### Next Steps
 
-1. Sponsor: `git rm package-lock.json`; `pnpm wrangler d1 create urdu` and pass back the `database_id`.
-2. Build s02 (shared rules) and s03 (schema).
+1. Build s02 (shared rules) and s03 (schema).
 
 ### Open Questions
 
