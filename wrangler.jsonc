@@ -13,8 +13,8 @@
     {
       "binding": "DB",
       "database_name": "urdu",
-      // Placeholder until the sponsor runs `pnpm wrangler d1 create urdu`; local dev and tests ignore it.
-      "database_id": "00000000-0000-0000-0000-000000000000",
+      // Production D1 (WNAM). `pnpm dev` and tests use a local copy; only `--remote` commands touch this.
+      "database_id": "3b3e3582-051e-47e6-a75b-a4d323e198b7",
       "migrations_dir": "migrations"
     }
   ],
