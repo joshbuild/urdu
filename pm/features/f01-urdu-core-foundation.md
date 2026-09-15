@@ -124,7 +124,7 @@ Dependencies: s01 → (s02 ∥ s03) → s04 → (s05 → s06) ∥ s07 → s08. E
 | **s04 auth** | unlock, lock, session middleware, cookie helpers, JSON content-type guard, last-seen throttle, unlock rate limit (per Q1) | Auth integration tests | put a local `UNLOCK_SECRET` in `.dev.vars` (or let the agent generate a dev-only one) |
 | **s05 vocab + due** | `worker/domain/vocab.ts`, `routes/api-vocab.ts`, `GET /api/status`, tag auto-insert | Vocab, due, FR-A8 tests | — |
 | **s06 review + export** | `worker/domain/review.ts` (batch with stale-mastery guard), review route, `GET /api/export` | Review and export tests | — |
-| **s07 PWA shell** | manifest, icons, unlock screen, status screen, lock; 44 px targets | `pnpm dev` desktop run through Chrome device emulation; bundle secret scan | — |
+| **s07 PWA shell** | manifest, icons (source art: `design/icon/icon_1254.png`, sponsor-supplied; derive 192/512 `any` icons, plus a `maskable` variant with extra teal padding because the lettering's corners fall outside the 80% safe zone; sample the teal for `theme_color`/`background_color`), unlock screen, status screen, lock; 44 px targets | `pnpm dev` desktop run through Chrome device emulation; bundle secret scan | — |
 | **s08 deploy + phone** | `scripts/smoke.ts`; CLAUDE.md commands; deploy runbook executed | Done-When 1–6 | runs the commands below, then the phone check and smoke |
 
 **s08 sponsor runbook** (the classifier blocks the agent from these):
