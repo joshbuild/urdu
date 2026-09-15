@@ -2,12 +2,44 @@
   "name": "urdu",
   "private": true,
   "version": "0.0.0",
+  "type": "module",
+  "packageManager": "pnpm@10.11.0",
   "scripts": {
-    "dev": "wrangler dev",
-    "deploy": "wrangler deploy",
+    "dev": "vite dev",
+    "build": "vite build",
+    "preview": "vite preview",
+    "types": "wrangler types worker/worker-configuration.d.ts",
+    "typecheck": "tsc -b",
+    "lint": "biome check .",
+    "format": "biome check --write .",
+    "test": "vitest run",
+    "check": "pnpm typecheck && pnpm lint && pnpm test && pnpm build && node scripts/scan-bundle.mjs",
+    "deploy": "vite build && wrangler deploy",
     "spike:check": "node spikes/speech/check.js && node spikes/gpt-live/check.js"
   },
+  "dependencies": {
+    "hono": "4.13.7",
+    "react": "19.3.0",
+    "react-dom": "19.3.0"
+  },
   "devDependencies": {
-    "wrangler": "^4.131.2"
+    "@biomejs/biome": "2.5.13",
+    "@cloudflare/vite-plugin": "1.54.9",
+    "@cloudflare/vitest-pool-workers": "0.22.0",
+    "@types/node": "26.5.1",
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0",
+    "@vitejs/plugin-react": "6.1.1",
+    "tsx": "4.23.13",
+    "typescript": "6.0.3",
+    "vite": "8.3.0",
+    "vitest": "4.1.11",
+    "wrangler": "4.131.2"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "esbuild",
+      "workerd"
+    ]
   }
 }

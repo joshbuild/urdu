@@ -1,6 +1,6 @@
 # Feature Plan — Urdu Core Foundation
 
-**Status**: 🟡 IN PROGRESS (2026-09-14) — opened; Q1–Q4 answered, Q5 (router) pending before s01
+**Status**: 🟡 IN PROGRESS (2026-09-14) — opened; all questions answered; s01 scaffold in build
 **Handle**: `f01`
 **Created**: 2026-09-14 · **Updated**: 2026-09-14
 
@@ -146,18 +146,17 @@ If `secret put` runs before the first deploy, wrangler creates the Worker; eithe
 
 ### Recently Completed
 
+- 2026-09-14 — s01 scaffold built: pnpm deps pinned, Vite + React + `@cloudflare/vite-plugin`, Hono Worker with `/api/health` and JSON 404, `wrangler.jsonc` repointed (D1 `DB` placeholder id, `HOME_TZ`), tsconfig project refs (app / worker / node), Biome, Vitest `shared` + `worker` projects, bundle secret scan. `pnpm check` green (2 Worker tests). `pnpm dev` starts; probing it with curl was denied by the permission prompt, so the local HTTP check is unverified by the agent.
 - 2026-09-14 — Doc and journal written; front opened; roster and STATUS updated.
 
 ### Next Steps
 
-1. Sponsor decides Q5 (router).
-2. Build s01; sponsor runs `git rm package-lock.json` and `pnpm wrangler d1 create urdu`.
+1. Sponsor: `git rm package-lock.json`; `pnpm wrangler d1 create urdu` and pass back the `database_id`.
+2. Build s02 (shared rules) and s03 (schema).
 
 ### Open Questions
 
-*Q1–Q4 answered 2026-09-14 (see Decisions).*
-
-- **Q5 Router.** PRD leaves Hono vs plain fetch open. Sponsor asked for the trade-offs before deciding (2026-09-14); pros/cons given in session. Blocks s01.
+*None open. Q1–Q5 answered 2026-09-14 (see Decisions).*
 
 ## Decisions
 
@@ -167,7 +166,10 @@ If `secret put` runs before the first deploy, wrangler creates the Worker; eithe
 - 2026-09-14 (sponsor, Q2) — Deleting a vocab item deletes its `review_events` (FK `ON DELETE CASCADE`).
 - 2026-09-14 (sponsor, Q3) — Secret is a random 24+ character string kept in the sponsor's password manager; unlock form built for autofill; Worker rejects a configured secret shorter than 24 chars.
 - 2026-09-14 (sponsor, Q4) — Smoke script runs against production, creating and deleting one `__smoke__` item and its review.
+- 2026-09-14 (sponsor, Q5) — Router = Hono, pinned to an exact version. Chosen after a pros/cons pass against plain `fetch` + `URLPattern` (agent leaned slightly to plain fetch for fewest moving parts); Hono's middleware groups and cookie helpers own the `/api` vs `/coach` auth-zone and cookie plumbing. Rejected: plain fetch, itty-router.
 
+- 2026-09-14 (s01) — `compatibility_date` = 2026-08-22, not 2026-09-01: the workerd bundled with `@cloudflare/vitest-pool-workers` 0.22.0 supports dates only up to 2026-08-22. Bump together with the pool package.
+- 2026-09-14 (s01) — TypeScript pinned to 6.0.3 rather than 7.0.x (boring over new); Vitest 4.1.11 because the Workers pool peers on `^4.1`. Runtime and binding types come from `wrangler types` (`worker/worker-configuration.d.ts`, committed; rerun `pnpm types` after editing `wrangler.jsonc`).
 - 2026-09-14 — Vite dev/build via `@cloudflare/vite-plugin` rather than separate `vite` + `wrangler dev` processes: one `pnpm dev`, one build output, local D1 via Miniflare.
 - 2026-09-14 — Package manager is pnpm per DECISIONS 260911a; the spike-era `package-lock.json` goes. Deploy script invoked as `pnpm run deploy` because `pnpm deploy` is a pnpm built-in (PRD §6 wording to be aligned at close).
 - 2026-09-14 — Scheduling dates are plain `YYYY-MM-DD` strings and day arithmetic is calendar arithmetic; timezone matters only when computing "today" from an instant. This makes DST a property of `todayIn`, which is where the DST tests aim.

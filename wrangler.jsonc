@@ -1,14 +1,25 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "urdu",
-  "compatibility_date": "2026-09-01",
-  // Phase 0, mp02: throwaway GPT-Live spike Worker + its static page.
-  // f01 replaces `main` with worker/ and `assets.directory` with the Vite build.
-  "main": "./spikes/gpt-live/worker.ts",
+  "compatibility_date": "2026-08-22",
+  // Urdu Core Worker. Built and served through @cloudflare/vite-plugin; `pnpm run deploy`
+  // deploys the Vite build output (client assets + Worker) using this config.
+  "main": "./worker/index.ts",
   "assets": {
-    "directory": "./spikes/gpt-live",
-    "binding": "ASSETS",
+    "not_found_handling": "single-page-application",
     "run_worker_first": ["/api/*"]
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "urdu",
+      // Placeholder until the sponsor runs `pnpm wrangler d1 create urdu`; local dev and tests ignore it.
+      "database_id": "00000000-0000-0000-0000-000000000000",
+      "migrations_dir": "migrations"
+    }
+  ],
+  "vars": {
+    "HOME_TZ": "America/Vancouver"
   },
   "observability": { "enabled": true }
 }
