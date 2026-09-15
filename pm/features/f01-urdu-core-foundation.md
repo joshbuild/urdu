@@ -146,13 +146,15 @@ If `secret put` runs before the first deploy, wrangler creates the Worker; eithe
 
 ### Recently Completed
 
+- 2026-09-14 — s02 shared rules built: `shared/mastery.ts` (ladder, grades, deltas, labels, `applyGrade`, guards), `dates.ts` (`todayIn`, `addDays`, `nextReviewOn`, `isIsoDate`), `normalize.ts` (`urduKey`, `inferKind`), `ulid.ts` (monotonic factory). 77 unit tests; `pnpm check` green (79 total).
+
 - 2026-09-14 — s01 sponsor steps done: `package-lock.json` removed; D1 `urdu` created (WNAM, id `3b3e3582-…`), binding `DB`, local dev stays on local D1 (declined remote). s01 complete.
 - 2026-09-14 — s01 scaffold built: pnpm deps pinned, Vite + React + `@cloudflare/vite-plugin`, Hono Worker with `/api/health` and JSON 404, `wrangler.jsonc` repointed (D1 `DB` placeholder id, `HOME_TZ`), tsconfig project refs (app / worker / node), Biome, Vitest `shared` + `worker` projects, bundle secret scan. `pnpm check` green (2 Worker tests). `pnpm dev` starts; probing it with curl was denied by the permission prompt, so the local HTTP check is unverified by the agent.
 - 2026-09-14 — Doc and journal written; front opened; roster and STATUS updated.
 
 ### Next Steps
 
-1. Build s02 (shared rules) and s03 (schema).
+1. Build s03 (schema).
 
 ### Open Questions
 
@@ -178,3 +180,8 @@ If `secret put` runs before the first deploy, wrangler creates the Worker; eithe
 - 2026-09-14 — Session middleware mounts on `/api/*` only; Coach routes will live under `/coach/*` with their own bearer middleware (f06), which gives FR-B3's "cookie not accepted on Coach routes, token not accepted elsewhere" by construction.
 - 2026-09-14 — No service worker in f01; install works from the manifest alone (mp01 evidence) and offline is a non-goal.
 - 2026-09-14 — Urdu search matches the normalized query against `urdu_key`, so tashkeel and letter variants don't defeat search.
+- 2026-09-14 (s02) — Appendix B "strip punctuation" is implemented as: Unicode punctuation **and symbols** (`\p{P}\p{S}`) become a space, then whitespace collapses. So `ہاں،جی` and `ہاں، جی` share a key, and a comma never glues two words together. "Other format characters" = all of `\p{Cf}`.
+- 2026-09-14 (s02) — `inferKind` decides from the normalized key (phrase if it contains a space), so stray outer spaces or a trailing ۔ don't make a word a phrase.
+- 2026-09-14 (s02) — `urduKey` can return `""` (punctuation-only input); rejecting an empty key is the vocab service's job (s05), not normalization's.
+- 2026-09-14 (s02) — API request/response types move to the slices that add the routes (s04–s06) rather than being guessed in s02.
+- 2026-09-14 (s02) — ULID factory is injectable (`monotonicUlid(random)`) for tests; the module-level `ulid()` is monotonic per Worker isolate, which is all ordering needs since `added_at` breaks due-order ties.

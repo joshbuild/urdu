@@ -2,7 +2,7 @@
 
 *Verbose per-front record. Hub: `pm/STATUS.md`; doc: `f01-urdu-core-foundation.md`.*
 
-**Current state (2026-09-14):** s01 scaffold complete (`pnpm check` green, 2 Worker tests); D1 `urdu` exists in production with no schema. Next: s02 shared rules and s03 schema, no sponsor input needed. Next sponsor step is the s08 runbook.
+**Current state (2026-09-14):** s01 scaffold and s02 shared rules complete (`pnpm check` green, 79 tests); D1 `urdu` exists in production with no schema. Next: s03 schema, no sponsor input needed. Next sponsor step is the s08 runbook.
 
 ## 2026-09-14 — opened
 
@@ -26,3 +26,13 @@ s01 landed (commits `3da80c7`, `fb0b9aa`, `733c35f`):
 - `biome init` + `biome check --write .` reformatted `.vscode/settings.json` and `urdu.code-workspace`; reverted and excluded them from Biome.
 - `pnpm dev` started on :5199, but the agent's curl probes were denied at the permission prompt; the local HTTP check wasn't done by the agent.
 - Sponsor ran `git rm package-lock.json` and `pnpm wrangler d1 create urdu` (WNAM, id `3b3e3582-051e-47e6-a75b-a4d323e198b7`), binding `DB`, declined remote-for-local-dev. Wrangler updated the existing entry in place but re-indented the file with tabs (broke Biome) and kept the stale placeholder comment; both fixed.
+
+## 2026-09-14 — s02 shared rules
+
+Built `shared/mastery.ts`, `dates.ts`, `normalize.ts`, `ulid.ts` with 77 node unit tests (ladder table, 5×7 `applyGrade` matrix, Vancouver `todayIn` either side of local midnight on both 2026 DST days and at UTC-midnight instants, `addDays` across month/year/leap day, `nextReviewOn` per level, every Appendix B rule alone plus collide / must-not-collide pairs, ULID spec time vector, same-ms and clock-backwards monotonicity, overflow). Expected dates were computed with Node `Intl` before writing the tests. `pnpm check` green.
+
+Choices recorded in the doc's §Decisions: punctuation and symbols become spaces; `inferKind` uses the key; empty key is s05's to reject; API types wait for their route slices.
+
+Not covered by Appendix B, left alone: yeh-with-hamza typed as ی + U+0654 does not match precomposed ئ U+0626 (NFC composes only from Arabic yeh); Arabic-Indic vs Extended digits; noon ghunna mark U+0658. Revisit only if a real duplicate slips through.
+
+Tooling gotcha: the agent's file-writing path turns `\uXXXX` escapes into literal characters before they reach disk (Biome was wrongly suspected first). `\u{XXXX}` brace escapes survive, so `shared/normalize*.ts` use that form with `u`-flag regexes.
