@@ -1,6 +1,6 @@
 # Feature Plan — Urdu Core Foundation
 
-**Status**: 🟡 IN PROGRESS (2026-09-14) — s01–s05 done; s06 review + export and s07 PWA shell next
+**Status**: 🟡 IN PROGRESS (2026-09-14) — s01–s06 done; s07 PWA shell next, then s08 deploy + phone
 **Handle**: `f01`
 **Created**: 2026-09-14 · **Updated**: 2026-09-14
 
@@ -146,6 +146,8 @@ If `secret put` runs before the first deploy, wrangler creates the Worker; eithe
 
 ### Recently Completed
 
+- 2026-09-14 — s06 review + export built: `POST /api/vocab/:id/reviews` (201 `{item, event}`, 404, 409 on a stale read) via `recordReview`/`applyReview` in `worker/domain/review.ts`, which f06 reuses with `source=coach` + handoff id; `GET /api/export` (vocab, review_events, tags, handoffs; no sessions). 19 review/export tests plus export in the FR-A8 test; `pnpm check` green (194 total). Recovered after an interrupted session; commit `f619c9c`.
+
 - 2026-09-14 — s05 vocab + due built: `POST/GET/PATCH/DELETE /api/vocab[/:id]`, `GET /api/vocab` (q, tag, due, sort, limit, offset, filtered total), `GET /api/vocab/due`, `GET /api/status` (total, due, today); duplicate check on normalized key with 409 + existing id (race caught by the unique index); tag rows auto-inserted in the same batch. 45 vocab tests incl. FR-A8; `pnpm check` green (175 total). Commit `6e1efea`.
 
 - 2026-09-14 — s04 auth built: `POST /api/unlock` (rate-limit binding `UNLOCK_LIMITER` 5/min per IP, 24-char minimum on the configured secret, hashed timing-safe compare), `POST /api/lock`, `requireSession` on `/api/*` with hourly `last_seen_at` throttle, `__Host-` HttpOnly/Secure/SameSite=Strict one-year cookie, token stored only as SHA-256, JSON content-type guard on non-GET. Tests bind `UNLOCK_SECRET` explicitly. 22 auth tests; `pnpm check` green (130 total).
@@ -160,7 +162,8 @@ If `secret put` runs before the first deploy, wrangler creates the Worker; eithe
 
 ### Next Steps
 
-1. Build s06 (review + export); s07 (PWA shell) can run in parallel.
+1. Build s07 (PWA shell: manifest + icons from `design/icon/icon_1254.png`, unlock, status, lock).
+2. Then s08 (smoke script, CLAUDE.md commands, sponsor runbook, phone check).
 
 ### Open Questions
 
@@ -201,3 +204,6 @@ If `secret put` runs before the first deploy, wrangler creates the Worker; eithe
 - 2026-09-14 (s05) — PATCH `urdu` re-infers `kind` unless `kind` is sent in the same request. Changing `urdu` to a variant of its own key is not a duplicate.
 - 2026-09-14 (s05) — List defaults: `sort=added` (newest first), `limit` 50, max 200; due defaults to 20. List returns the filtered `total` for paging. Search is a substring `LIKE` on `urdu_key` (normalized query), `roman`, and `english`, with `%`/`_` escaped. `GET /api/status` and `/api/vocab/due` also return the server's `today`.
 - 2026-09-14 (s05) — Errors: 400 `{error:"invalid_request", field?, message}`, 409 `{error:"duplicate", existing_id}`, 404 `{error:"not_found"}`.
+- 2026-09-14 (s06) — The stale-review guard conditions on `mastery` **and** `updated_at` (refines the open-time decision, which named mastery only), so an edit that leaves mastery unchanged still makes a review based on the old read fail. A failed guard returns 409 `{error:"conflict", message}`, or 404 if the row was deleted in between.
+- 2026-09-14 (s06) — A review sets `last_reviewed_on` to server "today" and `reviewed_at`/`updated_at` to the same instant. The PWA review body is exactly `{grade, direction}`; `source` is fixed server-side (`pwa`), and a client-sent `source` or `mastery` is a 400.
+- 2026-09-14 (s06) — Export is one JSON object `{exported_at, vocab, review_events, tags, handoffs}`, rows in insertion order, handoff `payload`/`outcome` parsed from their stored JSON text, served as an attachment `urdu-export-<today>.json` with `Cache-Control: no-store`.

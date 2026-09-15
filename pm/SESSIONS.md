@@ -8,6 +8,7 @@
 ## Log
 *Newest at top.*
 
+- 260914j · f01 urdu-core-foundation · s06 review + export found uncommitted after an interrupted session; no other loose ends; verified (`pnpm check` green, 194 tests) and committed → `features/f01-urdu-core-foundation-journal.md`
 - 260914i · f01 urdu-core-foundation · s05 vocab + due + status found uncommitted after an interrupted session; verified (`pnpm check` green, 175 tests) and committed; spike vars gone from `Env` → `features/f01-urdu-core-foundation-journal.md`
 - 260914h · f01 urdu-core-foundation · s02 shared rules, s03 schema, s04 auth built (s04 finished after an interrupted session); `pnpm check` green, 130 tests → `features/f01-urdu-core-foundation-journal.md`
 - 260914g · f01 urdu-core-foundation · opened f01 (doc + 8 slices); sponsor answered Q1–Q5 (Hono chosen); s01 scaffold built, `pnpm check` green; sponsor dropped npm lockfile and created D1 `urdu` → `features/f01-urdu-core-foundation-journal.md`

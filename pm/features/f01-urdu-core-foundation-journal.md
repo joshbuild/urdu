@@ -2,7 +2,7 @@
 
 *Verbose per-front record. Hub: `pm/STATUS.md`; doc: `f01-urdu-core-foundation.md`.*
 
-**Current state (2026-09-14):** s01–s05 complete (scaffold, shared rules, schema, auth, vocab + due + status); 175 tests; local D1 migrated to `0001_init`; production D1 `urdu` still has no schema (s08 runbook). Next: s06 review + export, s07 PWA shell in parallel.
+**Current state (2026-09-14):** s01–s06 complete (scaffold, shared rules, schema, auth, vocab + due + status, review + export); 194 tests; local D1 migrated to `0001_init`; production D1 `urdu` still has no schema (s08 runbook). Next: s07 PWA shell, then s08 deploy + phone.
 
 ## 2026-09-14 — opened
 
@@ -66,3 +66,13 @@ Files: `shared/api.ts` (vocab request/response types, sources, sorts), `worker/d
 Sponsor removed `OPENAI_API_KEY`/`SPIKE_TOKEN` from `.dev.vars`; `pnpm types` regenerated `Env` without them (in the same commit). Test runs still print "Using secrets defined in .dev.vars", which now means only `UNLOCK_SECRET`.
 
 Slice choices are in the doc's §Decisions (s05 entries).
+
+## 2026-09-14 — s06 review + export
+
+Built in a session that was interrupted before commit (files written 19:05–19:07, after the 260914i wrap). The next session found five modified and five untracked files, confirmed nothing else was loose (no s07 files, no stray edits from the parallel session), ran `pnpm check` (green, 194 tests, 19 new in `test/review.test.ts` plus `/api/export` added to the FR-A8 read-only test) and committed as `f619c9c`.
+
+Files: `worker/domain/review.ts` (`recordReview` reads then `applyReview`: one D1 batch, `INSERT … SELECT … WHERE EXISTS` for the event and a guarded `UPDATE`, both conditioned on the row's `mastery` and `updated_at`; zero changes → re-read to report `stale` vs `not_found`), `worker/domain/review-input.ts` (grade + direction only, unknown fields rejected), `worker/domain/export.ts` (batch-reads vocab, review_events, tags, handoffs; parses handoff `payload`/`outcome` JSON), `worker/routes/api-review.ts` (`POST /api/vocab/:id/reviews` → 201 `{item, event}` / 404 / 409 `conflict`; `GET /api/export` with `Content-Disposition` attachment and `no-store`), `shared/api.ts` (review/export/conflict types). `worker/domain/vocab.ts` now exports `VocabRow`/`toItem`; `worker/routes/api-vocab.ts` exports `today`/`invalid`/`readJson` for reuse by the review routes.
+
+Loose end noted, not acted on: route helpers are imported from a sibling route module (`api-vocab.ts`). Fine at two modules; move them to a `routes/helpers.ts` if a third route group (f06 `/coach/*`) needs them.
+
+Slice choices are in the doc's §Decisions (s06 entries).
