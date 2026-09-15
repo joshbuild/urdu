@@ -2,7 +2,7 @@
 
 *Verbose per-front record. Hub: `pm/STATUS.md`; doc: `f01-urdu-core-foundation.md`.*
 
-**Current state (2026-09-14):** s01 scaffold, s02 shared rules, s03 schema, s04 auth complete; local D1 migrated to `0001_init`; production D1 `urdu` still has no schema (s08 runbook). s04 auth complete (130 tests). Next: s05 vocab + due, s07 in parallel.
+**Current state (2026-09-14):** s01–s05 complete (scaffold, shared rules, schema, auth, vocab + due + status); 175 tests; local D1 migrated to `0001_init`; production D1 `urdu` still has no schema (s08 runbook). Next: s06 review + export, s07 PWA shell in parallel.
 
 ## 2026-09-14 — opened
 
@@ -56,3 +56,13 @@ Files: `worker/env.ts` (Hono `AppEnv`), `worker/auth/{cookie,crypto,sessions,mid
 Gotcha: Vite warns that `import "./test/constants"` in `vitest.config.ts` lacks an extension under the future native config loader; adding `.ts` fails tsc (TS5097, `allowImportingTsExtensions` off). Left as-is.
 
 Still open: spike values in `.dev.vars` keep `OPENAI_API_KEY`/`SPIKE_TOKEN` on the generated `Env`; sponsor to remove them, then `pnpm types`.
+
+## 2026-09-14 — s05 vocab + due
+
+Built in a session that was interrupted before commit; the next session found the files untracked, ran `pnpm check` (green, 175 tests, 45 new in `test/vocab.test.ts`) and committed as `6e1efea`.
+
+Files: `shared/api.ts` (vocab request/response types, sources, sorts), `worker/domain/vocab-input.ts` (body parsing and validation), `worker/domain/vocab.ts` (D1 service: create, get, list, update, delete, due, counts), `worker/routes/api-vocab.ts` (`/api/vocab*`, `/api/status`), `test/client.ts` (shared `clearTables` + unlocked API helper for Worker tests). `worker/index.ts` mounts the routes behind `requireSession`.
+
+Sponsor removed `OPENAI_API_KEY`/`SPIKE_TOKEN` from `.dev.vars`; `pnpm types` regenerated `Env` without them (in the same commit). Test runs still print "Using secrets defined in .dev.vars", which now means only `UNLOCK_SECRET`.
+
+Slice choices are in the doc's §Decisions (s05 entries).

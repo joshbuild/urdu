@@ -1,6 +1,6 @@
 # Feature Plan — Urdu Core Foundation
 
-**Status**: 🟡 IN PROGRESS (2026-09-14) — opened; all questions answered; s01 scaffold in build
+**Status**: 🟡 IN PROGRESS (2026-09-14) — s01–s05 done; s06 review + export and s07 PWA shell next
 **Handle**: `f01`
 **Created**: 2026-09-14 · **Updated**: 2026-09-14
 
@@ -146,6 +146,8 @@ If `secret put` runs before the first deploy, wrangler creates the Worker; eithe
 
 ### Recently Completed
 
+- 2026-09-14 — s05 vocab + due built: `POST/GET/PATCH/DELETE /api/vocab[/:id]`, `GET /api/vocab` (q, tag, due, sort, limit, offset, filtered total), `GET /api/vocab/due`, `GET /api/status` (total, due, today); duplicate check on normalized key with 409 + existing id (race caught by the unique index); tag rows auto-inserted in the same batch. 45 vocab tests incl. FR-A8; `pnpm check` green (175 total). Commit `6e1efea`.
+
 - 2026-09-14 — s04 auth built: `POST /api/unlock` (rate-limit binding `UNLOCK_LIMITER` 5/min per IP, 24-char minimum on the configured secret, hashed timing-safe compare), `POST /api/lock`, `requireSession` on `/api/*` with hourly `last_seen_at` throttle, `__Host-` HttpOnly/Secure/SameSite=Strict one-year cookie, token stored only as SHA-256, JSON content-type guard on non-GET. Tests bind `UNLOCK_SECRET` explicitly. 22 auth tests; `pnpm check` green (130 total).
 
 - 2026-09-14 — s03 schema built: `migrations/0001_init.sql` (five STRICT tables, CHECKs, unique `urdu_key`/`airtable_id`/`token_hash`, due index, cascade FK); Worker test setup applies migrations; 29 schema tests. Also applied cleanly via `wrangler d1 migrations apply urdu --local`. `pnpm check` green (108 total).
@@ -158,8 +160,7 @@ If `secret put` runs before the first deploy, wrangler creates the Worker; eithe
 
 ### Next Steps
 
-1. Build s05 (vocab + due); s07 (PWA shell) can run in parallel.
-2. Sponsor: remove the spike's `OPENAI_API_KEY` and `SPIKE_TOKEN` from `.dev.vars`, then `pnpm types` to drop them from `Env`.
+1. Build s06 (review + export); s07 (PWA shell) can run in parallel.
 
 ### Open Questions
 
@@ -195,3 +196,8 @@ If `secret put` runs before the first deploy, wrangler creates the Worker; eithe
 - 2026-09-14 (s03) — Worker tests clear all tables in `beforeEach` rather than relying on the pool's storage isolation, whose behavior in pool 0.22 isn't documented in the package.
 - 2026-09-14 (s02) — ULID factory is injectable (`monotonicUlid(random)`) for tests; the module-level `ulid()` is monotonic per Worker isolate, which is all ordering needs since `added_at` breaks due-order ties.
 - 2026-09-14 (s04) — Cookie is `__Host-urdu_session` (forces Secure, Path=/, no Domain; Chrome treats localhost as secure so `pnpm dev` works). CSRF defence = SameSite=Strict plus requiring `Content-Type: application/json` on every non-GET `/api/*` request (415 otherwise). An unknown cookie gets 401 and is cleared. Session label = User-Agent truncated to 200 chars. Rate-limit key is `CF-Connecting-IP`. Tests override `UNLOCK_SECRET` via a Miniflare binding and assert the override took effect.
+- 2026-09-14 (s05) — PWA create accepts `source` `reading` or `manual` only (default `manual`); `coach` and `airtable` arrive through f06/f02 paths. Create never takes `mastery` or review dates; PATCH may set `mastery` (correction) but never dates or `source`. Unknown body fields → 400 naming the field.
+- 2026-09-14 (s05) — Input limits: `urdu` ≤ 500 chars, other text ≤ 2000, ≤ 20 tags of ≤ 50 chars. Text is trimmed; optional text sent as `""` or `null` is stored as null; tags are trimmed and de-duplicated.
+- 2026-09-14 (s05) — PATCH `urdu` re-infers `kind` unless `kind` is sent in the same request. Changing `urdu` to a variant of its own key is not a duplicate.
+- 2026-09-14 (s05) — List defaults: `sort=added` (newest first), `limit` 50, max 200; due defaults to 20. List returns the filtered `total` for paging. Search is a substring `LIKE` on `urdu_key` (normalized query), `roman`, and `english`, with `%`/`_` escaped. `GET /api/status` and `/api/vocab/due` also return the server's `today`.
+- 2026-09-14 (s05) — Errors: 400 `{error:"invalid_request", field?, message}`, 409 `{error:"duplicate", existing_id}`, 404 `{error:"not_found"}`.
