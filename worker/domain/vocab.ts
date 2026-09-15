@@ -8,7 +8,7 @@ import { inferKind, urduKey } from "../../shared/normalize";
 import { ulid } from "../../shared/ulid";
 import type { CreateInput } from "./vocab-input";
 
-type VocabRow = Omit<VocabItem, "tags" | "favourite" | "mastery"> & {
+export type VocabRow = Omit<VocabItem, "tags" | "favourite" | "mastery"> & {
   tags: string;
   favourite: number;
   mastery: number;
@@ -20,7 +20,7 @@ export type WriteResult =
   | { ok: false; error: "empty_key" }
   | { ok: false; error: "not_found" };
 
-function toItem(row: VocabRow): VocabItem {
+export function toItem(row: VocabRow): VocabItem {
   return {
     ...row,
     tags: JSON.parse(row.tags) as string[],

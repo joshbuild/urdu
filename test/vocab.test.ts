@@ -423,6 +423,7 @@ describe("FR-A8: reads never write", () => {
       `/api/vocab?q=${encodeURIComponent(KITAB)}&due=true&tag=t&sort=mastery`,
       "/api/vocab/due",
       "/api/status",
+      "/api/export",
     ]) {
       expect((await api("GET", path)).status).toBe(200);
     }

@@ -11,6 +11,7 @@ import { Hono } from "hono";
 import { requireJson, requireSession } from "./auth/middleware";
 import type { AppEnv } from "./env";
 import { lockRoutes, unlockRoutes } from "./routes/api-auth";
+import { reviewRoutes } from "./routes/api-review";
 import { vocabRoutes } from "./routes/api-vocab";
 
 const app = new Hono<AppEnv>();
@@ -26,6 +27,7 @@ app.route("/", unlockRoutes);
 app.use("/api/*", requireSession);
 app.route("/", lockRoutes);
 app.route("/", vocabRoutes);
+app.route("/", reviewRoutes);
 
 app.all("/api/*", (c) => c.json({ error: "not_found" }, 404));
 

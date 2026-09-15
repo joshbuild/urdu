@@ -30,9 +30,9 @@ export const MAX_LIMIT = 200;
 
 type Ctx = Context<AppEnv>;
 
-const today = (c: Ctx) => todayIn(c.env.HOME_TZ, new Date());
+export const today = (c: Ctx) => todayIn(c.env.HOME_TZ, new Date());
 
-function invalid(c: Ctx, error: InputError) {
+export function invalid(c: Ctx, error: InputError) {
   const body: InvalidRequestResponse = { error: "invalid_request", ...error };
   return c.json(body, 400);
 }
@@ -53,7 +53,7 @@ function writeFailure(c: Ctx, result: Exclude<WriteResult, { ok: true }>) {
   }
 }
 
-async function readJson(c: Ctx): Promise<unknown> {
+export async function readJson(c: Ctx): Promise<unknown> {
   return c.req.json<unknown>().catch(() => undefined);
 }
 
