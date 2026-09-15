@@ -8,10 +8,10 @@
 ## Open Workfronts
 *Work items actively in flight. One line each → its doc/journal. Closed fronts drop off (rosters keep the full list).*
 
-- 🟡 f01 `urdu-core-foundation` (Phase 1) — s01 scaffold done; s02 shared rules + s03 schema next → `features/f01-urdu-core-foundation.md` · journal `features/f01-urdu-core-foundation-journal.md`
+- 🟡 f01 `urdu-core-foundation` (Phase 1) — s01–s03 done (scaffold, shared rules, schema); s04 auth next → `features/f01-urdu-core-foundation.md` · journal `features/f01-urdu-core-foundation-journal.md`
 
 ## Next Session Pointers
 *The 1–3 concrete next actions for a cold start.*
 
-1. f01 s02: `shared/` mastery ladder, grade deltas, scheduling (DST tests), Appendix B normalization, ULID, with unit tests.
-2. f01 s03: `migrations/0001_init.sql` for Appendix A plus schema integration tests (Q2: cascade review events on delete).
+1. f01 s04 auth: unlock/lock, session middleware, cookie, JSON guard, last-seen throttle, unlock rate limit. Ask sponsor first: own local `UNLOCK_SECRET` in `.dev.vars` or agent-generated; also make tests set bindings explicitly (spike OpenAI key still in `.dev.vars`).
+2. Then s05 vocab + due and s07 PWA shell (s07 can run in parallel with s05/s06).

@@ -146,6 +146,8 @@ If `secret put` runs before the first deploy, wrangler creates the Worker; eithe
 
 ### Recently Completed
 
+- 2026-09-14 — s03 schema built: `migrations/0001_init.sql` (five STRICT tables, CHECKs, unique `urdu_key`/`airtable_id`/`token_hash`, due index, cascade FK); Worker test setup applies migrations; 29 schema tests. Also applied cleanly via `wrangler d1 migrations apply urdu --local`. `pnpm check` green (108 total).
+
 - 2026-09-14 — s02 shared rules built: `shared/mastery.ts` (ladder, grades, deltas, labels, `applyGrade`, guards), `dates.ts` (`todayIn`, `addDays`, `nextReviewOn`, `isIsoDate`), `normalize.ts` (`urduKey`, `inferKind`), `ulid.ts` (monotonic factory). 77 unit tests; `pnpm check` green (79 total).
 
 - 2026-09-14 — s01 sponsor steps done: `package-lock.json` removed; D1 `urdu` created (WNAM, id `3b3e3582-…`), binding `DB`, local dev stays on local D1 (declined remote). s01 complete.
@@ -154,7 +156,7 @@ If `secret put` runs before the first deploy, wrangler creates the Worker; eithe
 
 ### Next Steps
 
-1. Build s03 (schema).
+1. Build s04 (auth). Sponsor choice first: put a local `UNLOCK_SECRET` in `.dev.vars`, or let the agent generate a dev-only one.
 
 ### Open Questions
 
@@ -184,4 +186,8 @@ If `secret put` runs before the first deploy, wrangler creates the Worker; eithe
 - 2026-09-14 (s02) — `inferKind` decides from the normalized key (phrase if it contains a space), so stray outer spaces or a trailing ۔ don't make a word a phrase.
 - 2026-09-14 (s02) — `urduKey` can return `""` (punctuation-only input); rejecting an empty key is the vocab service's job (s05), not normalization's.
 - 2026-09-14 (s02) — API request/response types move to the slices that add the routes (s04–s06) rather than being guessed in s02.
+- 2026-09-14 (s03) — Tables are `STRICT`, so a non-integer mastery or a text `favourite` is a type error rather than silently stored. Optional vocab text fields (`roman`, `english`, `notes`, examples) are nullable, not empty-string. Extra backstop CHECKs beyond Appendix A: 26-char ids, non-empty `urdu`/`urdu_key`, `tags` must be a JSON array, `*_on` columns must look like `YYYY-MM-DD`, and `last_reviewed_on`/`next_review_on` are null together or set together. Session ids are ULIDs; `token_hash` is 64-char hex.
+- 2026-09-14 (s03) — `review_events.handoff_id` is a plain indexed column with no FK to `handoffs`, so f06 can insert events and the handoff record in whatever order its batch needs. `handoffs.status` has no CHECK; its values are f06's to define (adding a CHECK later in SQLite means a table rebuild, which is acceptable at this size).
+- 2026-09-14 (s03) — Due index is composite `(next_review_on, added_at)` to match FR-A7's ordering; a test asserts the query plan uses it.
+- 2026-09-14 (s03) — Worker tests clear all tables in `beforeEach` rather than relying on the pool's storage isolation, whose behavior in pool 0.22 isn't documented in the package.
 - 2026-09-14 (s02) — ULID factory is injectable (`monotonicUlid(random)`) for tests; the module-level `ulid()` is monotonic per Worker isolate, which is all ordering needs since `added_at` breaks due-order ties.

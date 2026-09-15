@@ -2,7 +2,7 @@
 
 *Verbose per-front record. Hub: `pm/STATUS.md`; doc: `f01-urdu-core-foundation.md`.*
 
-**Current state (2026-09-14):** s01 scaffold and s02 shared rules complete (`pnpm check` green, 79 tests); D1 `urdu` exists in production with no schema. Next: s03 schema, no sponsor input needed. Next sponsor step is the s08 runbook.
+**Current state (2026-09-14):** s01 scaffold, s02 shared rules, s03 schema complete (`pnpm check` green, 108 tests); local D1 migrated to `0001_init`; production D1 `urdu` still has no schema (s08 runbook). Next: s04 auth, which needs the sponsor's choice of local dev `UNLOCK_SECRET` (own value in `.dev.vars` or agent-generated).
 
 ## 2026-09-14 — opened
 
@@ -36,3 +36,13 @@ Choices recorded in the doc's §Decisions: punctuation and symbols become spaces
 Not covered by Appendix B, left alone: yeh-with-hamza typed as ی + U+0654 does not match precomposed ئ U+0626 (NFC composes only from Arabic yeh); Arabic-Indic vs Extended digits; noon ghunna mark U+0658. Revisit only if a real duplicate slips through.
 
 Tooling gotcha: the agent's file-writing path turns `\uXXXX` escapes into literal characters before they reach disk (Biome was wrongly suspected first). `\u{XXXX}` brace escapes survive, so `shared/normalize*.ts` use that form with `u`-flag regexes.
+
+## 2026-09-14 — s03 schema
+
+`migrations/0001_init.sql` written; `test/apply-migrations.ts` (Worker-project `setupFiles`) runs `applyD1Migrations(env.DB, env.TEST_MIGRATIONS)`; `test/env.d.ts` types the `TEST_MIGRATIONS` binding. 29 tests in `test/schema.test.ts`: table list, due-index query plan, defaults, unique `urdu_key` / `airtable_id` (multiple nulls allowed), mastery and enum CHECKs, JSON-array tags, date shape and null-together dates, FK required, cascade on vocab delete, handoff/tag/session constraints. Also ran `pnpm wrangler d1 migrations apply urdu --local`: 9 commands, applied.
+
+First run had 3 failures, all in the tests: D1's migrations table creates `sqlite_sequence` (excluded from the table list); STRICT reports 2.5 as `SQLITE_CONSTRAINT_DATATYPE` ("cannot store REAL value"), not "constraint failed"; STRICT losslessly coerces text `"3"` into INTEGER 3, so that case was dropped. Local D1 enforces the FK and cascade without a PRAGMA.
+
+Schema choices are in the doc's §Decisions (STRICT, nullable optional text, no FK on `handoff_id`, no CHECK on `handoffs.status`, composite due index, tests clear tables in `beforeEach`).
+
+Noticed for s04: `worker/worker-configuration.d.ts` types `OPENAI_API_KEY` and `SPIKE_TOKEN` on `Env` because `wrangler types` reads `.dev.vars`; regenerate after the spike values leave `.dev.vars`.
