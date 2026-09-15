@@ -8,6 +8,7 @@
 ## Log
 *Newest at top.*
 
+- 260914h · f01 urdu-core-foundation · s02 shared rules, s03 schema, s04 auth built (s04 finished after an interrupted session); `pnpm check` green, 130 tests → `features/f01-urdu-core-foundation-journal.md`
 - 260914g · f01 urdu-core-foundation · opened f01 (doc + 8 slices); sponsor answered Q1–Q5 (Hono chosen); s01 scaffold built, `pnpm check` green; sponsor dropped npm lockfile and created D1 `urdu` → `features/f01-urdu-core-foundation-journal.md`
 
 - 260914f · mp02 gpt-live-spike · sponsor deleted spike Worker (curl 000); closed and archived mp02; Phase 0 done, Phase 1 current → `mini-plans/archive/mp02-gpt-live-spike-journal-archive.md`

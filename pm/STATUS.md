@@ -8,10 +8,11 @@
 ## Open Workfronts
 *Work items actively in flight. One line each → its doc/journal. Closed fronts drop off (rosters keep the full list).*
 
-- 🟡 f01 `urdu-core-foundation` (Phase 1) — s01–s03 done (scaffold, shared rules, schema); s04 auth next → `features/f01-urdu-core-foundation.md` · journal `features/f01-urdu-core-foundation-journal.md`
+- 🟡 f01 `urdu-core-foundation` (Phase 1) — s01–s04 done (scaffold, shared rules, schema, auth); s05 vocab next → `features/f01-urdu-core-foundation.md` · journal `features/f01-urdu-core-foundation-journal.md`
 
 ## Next Session Pointers
 *The 1–3 concrete next actions for a cold start.*
 
-1. f01 s04 auth: unlock/lock, session middleware, cookie, JSON guard, last-seen throttle, unlock rate limit. Ask sponsor first: own local `UNLOCK_SECRET` in `.dev.vars` or agent-generated; also make tests set bindings explicitly (spike OpenAI key still in `.dev.vars`).
-2. Then s05 vocab + due and s07 PWA shell (s07 can run in parallel with s05/s06).
+1. f01 s05 vocab + due: `worker/domain/vocab.ts`, `routes/api-vocab.ts`, `GET /api/status`, tag auto-insert.
+2. s07 PWA shell can run in parallel with s05/s06.
+3. Sponsor: drop spike `OPENAI_API_KEY`/`SPIKE_TOKEN` from `.dev.vars`, then `pnpm types`.

@@ -146,6 +146,8 @@ If `secret put` runs before the first deploy, wrangler creates the Worker; eithe
 
 ### Recently Completed
 
+- 2026-09-14 — s04 auth built: `POST /api/unlock` (rate-limit binding `UNLOCK_LIMITER` 5/min per IP, 24-char minimum on the configured secret, hashed timing-safe compare), `POST /api/lock`, `requireSession` on `/api/*` with hourly `last_seen_at` throttle, `__Host-` HttpOnly/Secure/SameSite=Strict one-year cookie, token stored only as SHA-256, JSON content-type guard on non-GET. Tests bind `UNLOCK_SECRET` explicitly. 22 auth tests; `pnpm check` green (130 total).
+
 - 2026-09-14 — s03 schema built: `migrations/0001_init.sql` (five STRICT tables, CHECKs, unique `urdu_key`/`airtable_id`/`token_hash`, due index, cascade FK); Worker test setup applies migrations; 29 schema tests. Also applied cleanly via `wrangler d1 migrations apply urdu --local`. `pnpm check` green (108 total).
 
 - 2026-09-14 — s02 shared rules built: `shared/mastery.ts` (ladder, grades, deltas, labels, `applyGrade`, guards), `dates.ts` (`todayIn`, `addDays`, `nextReviewOn`, `isIsoDate`), `normalize.ts` (`urduKey`, `inferKind`), `ulid.ts` (monotonic factory). 77 unit tests; `pnpm check` green (79 total).
@@ -156,7 +158,8 @@ If `secret put` runs before the first deploy, wrangler creates the Worker; eithe
 
 ### Next Steps
 
-1. Build s04 (auth). Sponsor choice first: put a local `UNLOCK_SECRET` in `.dev.vars`, or let the agent generate a dev-only one.
+1. Build s05 (vocab + due); s07 (PWA shell) can run in parallel.
+2. Sponsor: remove the spike's `OPENAI_API_KEY` and `SPIKE_TOKEN` from `.dev.vars`, then `pnpm types` to drop them from `Env`.
 
 ### Open Questions
 
@@ -191,3 +194,4 @@ If `secret put` runs before the first deploy, wrangler creates the Worker; eithe
 - 2026-09-14 (s03) — Due index is composite `(next_review_on, added_at)` to match FR-A7's ordering; a test asserts the query plan uses it.
 - 2026-09-14 (s03) — Worker tests clear all tables in `beforeEach` rather than relying on the pool's storage isolation, whose behavior in pool 0.22 isn't documented in the package.
 - 2026-09-14 (s02) — ULID factory is injectable (`monotonicUlid(random)`) for tests; the module-level `ulid()` is monotonic per Worker isolate, which is all ordering needs since `added_at` breaks due-order ties.
+- 2026-09-14 (s04) — Cookie is `__Host-urdu_session` (forces Secure, Path=/, no Domain; Chrome treats localhost as secure so `pnpm dev` works). CSRF defence = SameSite=Strict plus requiring `Content-Type: application/json` on every non-GET `/api/*` request (415 otherwise). An unknown cookie gets 401 and is cleared. Session label = User-Agent truncated to 200 chars. Rate-limit key is `CF-Connecting-IP`. Tests override `UNLOCK_SECRET` via a Miniflare binding and assert the override took effect.

@@ -2,7 +2,7 @@
 
 *Verbose per-front record. Hub: `pm/STATUS.md`; doc: `f01-urdu-core-foundation.md`.*
 
-**Current state (2026-09-14):** s01 scaffold, s02 shared rules, s03 schema complete (`pnpm check` green, 108 tests); local D1 migrated to `0001_init`; production D1 `urdu` still has no schema (s08 runbook). Next: s04 auth, which needs the sponsor's choice of local dev `UNLOCK_SECRET` (own value in `.dev.vars` or agent-generated).
+**Current state (2026-09-14):** s01 scaffold, s02 shared rules, s03 schema, s04 auth complete; local D1 migrated to `0001_init`; production D1 `urdu` still has no schema (s08 runbook). s04 auth complete (130 tests). Next: s05 vocab + due, s07 in parallel.
 
 ## 2026-09-14 — opened
 
@@ -46,3 +46,13 @@ First run had 3 failures, all in the tests: D1's migrations table creates `sqlit
 Schema choices are in the doc's §Decisions (STRICT, nullable optional text, no FK on `handoff_id`, no CHECK on `handoffs.status`, composite due index, tests clear tables in `beforeEach`).
 
 Noticed for s04: `worker/worker-configuration.d.ts` types `OPENAI_API_KEY` and `SPIKE_TOKEN` on `Env` because `wrangler types` reads `.dev.vars`; regenerate after the spike values leave `.dev.vars`.
+
+## 2026-09-14 — s04 auth
+
+Built in a session that was interrupted before commit; resumed and verified the next session: `pnpm check` green, 130 tests (22 in `test/auth.test.ts`). `.dev.vars` now has an `UNLOCK_SECRET` alongside the spike's `OPENAI_API_KEY`/`SPIKE_TOKEN`; tests don't read it. The generic JSON-404 test moved from `health.test.ts` into auth tests, since unknown `/api/*` routes now return 401 without a session.
+
+Files: `worker/env.ts` (Hono `AppEnv`), `worker/auth/{cookie,crypto,sessions,middleware}.ts`, `worker/routes/api-auth.ts`, `test/constants.ts`; `wrangler.jsonc` gains the `UNLOCK_LIMITER` ratelimit binding (namespace 1001); types regenerated.
+
+Gotcha: Vite warns that `import "./test/constants"` in `vitest.config.ts` lacks an extension under the future native config loader; adding `.ts` fails tsc (TS5097, `allowImportingTsExtensions` off). Left as-is.
+
+Still open: spike values in `.dev.vars` keep `OPENAI_API_KEY`/`SPIKE_TOKEN` on the generated `Env`; sponsor to remove them, then `pnpm types`.

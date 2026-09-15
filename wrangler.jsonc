@@ -18,6 +18,17 @@
       "migrations_dir": "migrations"
     }
   ],
+  // Brute-force brake on POST /api/unlock (f01 Q1): 5 attempts per minute per client IP.
+  // Counts are per Cloudflare location and approximate; the long secret is the real defence.
+  "ratelimits": [
+    {
+      "name": "UNLOCK_LIMITER",
+      "namespace_id": "1001",
+      "simple": { "limit": 5, "period": 60 }
+    }
+  ],
+  // Secret (not in this file): UNLOCK_SECRET, 24+ chars. Local: .dev.vars; production:
+  // `pnpm wrangler secret put UNLOCK_SECRET`.
   "vars": {
     "HOME_TZ": "America/Vancouver"
   },
