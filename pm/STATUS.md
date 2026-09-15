@@ -8,9 +8,10 @@
 ## Open Workfronts
 *Work items actively in flight. One line each → its doc/journal. Closed fronts drop off (rosters keep the full list).*
 
-- 🟡 f01 `urdu-core-foundation` (Phase 1) — opened 2026-09-14; s01 scaffold next, after sponsor decides Q5 (router) → `features/f01-urdu-core-foundation.md` · journal `features/f01-urdu-core-foundation-journal.md`
+- 🟡 f01 `urdu-core-foundation` (Phase 1) — s01 scaffold done; s02 shared rules + s03 schema next → `features/f01-urdu-core-foundation.md` · journal `features/f01-urdu-core-foundation-journal.md`
 
 ## Next Session Pointers
 *The 1–3 concrete next actions for a cold start.*
 
-1. f01: get sponsor's router decision (Q5; Q1–Q4 answered), then build s01 scaffold.
+1. f01 s02: `shared/` mastery ladder, grade deltas, scheduling (DST tests), Appendix B normalization, ULID, with unit tests.
+2. f01 s03: `migrations/0001_init.sql` for Appendix A plus schema integration tests (Q2: cascade review events on delete).

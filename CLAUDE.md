@@ -8,7 +8,14 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project state
 
-Single-user personal Urdu learning PWA. As of 2026-09-11 the repo contains **no application code yet**: only `pm/` docs, workspace config, and this file. There is no package.json, build, lint, or test setup. When scaffolding begins, add the real commands here (dev server, Worker dev, D1 migrations, tests, deploy).
+Single-user personal Urdu learning PWA. As of 2026-09-14 f01 has scaffolded the repo (pnpm, Vite + React in `src/`, Hono Worker in `worker/`, `shared/`, `migrations/`, `test/`); domain code is still being built. `spikes/` is Phase 0 reference code, excluded from tsc and Biome.
+
+Commands (pnpm; Node 22):
+- `pnpm dev` — Vite dev server with the Worker and a local D1 (secrets from `.dev.vars`, see `.dev.vars.example`).
+- `pnpm check` — tsc, Biome, Vitest (`shared` node project + `worker` Workers-pool project), build, client-bundle secret scan. Run before every commit.
+- `pnpm test` / `pnpm lint` / `pnpm format` / `pnpm typecheck`.
+- `pnpm types` — regenerate `worker/worker-configuration.d.ts` after editing `wrangler.jsonc`.
+- `pnpm wrangler d1 migrations apply urdu --local` — local schema. `--remote`, `wrangler secret put`, and `pnpm run deploy` (not `pnpm deploy`, a pnpm built-in) are run by the sponsor.
 
 Read `pm/VISION.md` (intent, invariants), `pm/PRD.md` (exact v0 scope and requirements, data model, Coach contract), and `pm/PLAN.md` (phases and Features Index) before any design or implementation work. Where PRD and VISION differ on scope, PRD wins. Project management uses the pm work-front regime: start sessions with `/pm-resume`, end with `/pm-wrap`, open work with `/pm-open`; `pm/STATUS.md` is the resume hub.
 
