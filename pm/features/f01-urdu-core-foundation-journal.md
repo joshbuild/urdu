@@ -2,7 +2,7 @@
 
 *Verbose per-front record. Hub: `pm/STATUS.md`; doc: `f01-urdu-core-foundation.md`.*
 
-**Current state (2026-09-17):** s01–s06 complete; s07 shell implemented and committed with `pnpm check` green (194 tests) in Claude Code. The Windows `EPERM`/startup blocker traces to AVG Antivirus scanning this repo's binaries; Biome stays pinned at 2.5.10, which it tolerates. Remaining s07 gap: interactive browser/device-emulation verification (agent HTTP probing is permission-denied). Local D1 migrated to `0001_init`; production remains s08 sponsor work.
+**Current state (2026-09-17):** s01–s06 complete; s07 shell implemented and committed with `pnpm check` green (194 tests) in Claude Code. The Windows `EPERM`/startup blocker was AVG, not Windows permissions: with Hardened Mode and CyberCapture off the worker project runs in 8 s and `pnpm check` is green in 33 s, and AVG exceptions measured harmful. Biome stays pinned at 2.5.10. Remaining s07 gap: interactive browser/device-emulation verification (agent HTTP probing is permission-denied). Local D1 migrated to `0001_init`; production remains s08 sponsor work.
 
 ## 2026-09-17 — s07 verified + toolchain unblocked (260917b)
 

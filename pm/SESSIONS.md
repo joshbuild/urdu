@@ -8,7 +8,7 @@
 ## Log
 *Newest at top.*
 
-- 260917b · f01 urdu-core-foundation · EPERM traced to the Biome 2.5.13 binary (pin 2.5.10 kept); `pnpm check` green (194) and `pnpm dev` boots; s07 committed with browser verification still open; Vitest capped at 2 workers after restart-forcing saturation → `features/f01-urdu-core-foundation-journal.md`
+- 260917b · f01 urdu-core-foundation · runtime blocker resolved: AVG (not Windows permissions) — Hardened Mode + CyberCapture off gives 8 s worker runs and a 33 s green `pnpm check`, while exceptions measured harmful; s07 committed with browser verification still open; Vitest capped at 2 workers after restart-forcing saturation → `features/f01-urdu-core-foundation-journal.md`
 - 260917a · f01 urdu-core-foundation · s07 shell + manifest/icons implemented; typecheck passes, Windows executable denial reproduced in sponsor Git Bash; uncommitted handoff to Claude Code for verification → `features/f01-urdu-core-foundation-journal.md`
 
 - 260916a · f01 / Codex handoff · oriented Codex, installed 12 adapters to canonical Claude PM skills, aligned agent guidance; typecheck passes, full checks/dev blocked by Windows subprocess EPERM; no product slices advanced → `features/f01-urdu-core-foundation-journal.md`
