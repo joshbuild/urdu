@@ -1,8 +1,60 @@
 # Journal — f01 urdu-core-foundation
 
-*Verbose per-front record. Hub: `pm/STATUS.md`; doc: `f01-urdu-core-foundation.md`.*
+*Verbose per-front record. Hub: `pm/STATUS.md`; doc: `f01-urdu-core-foundation-archive.md`.*
 
-**Current state (2026-09-17):** s01–s06 complete; s07 shell implemented and committed with `pnpm check` green (194 tests) in Claude Code. The Windows `EPERM`/startup blocker was AVG, not Windows permissions: with Hardened Mode and CyberCapture off the worker project runs in 8 s and `pnpm check` is green in 33 s, and AVG exceptions measured harmful. Biome stays pinned at 2.5.10. Remaining s07 gap: interactive browser/device-emulation verification (agent HTTP probing is permission-denied). Local D1 migrated to `0001_init`; production remains s08 sponsor work.
+**Final state (2026-09-17):** 🟢 CLOSED. All eight slices shipped. Urdu Core
+is deployed at `urdu.umber-amber.workers.dev` (Worker version `b7585268`) on D1
+`urdu` at `0001_init`, and the PWA is installed and unlocking on the sponsor's
+Android phone. Done-When 1–6 all verified — see the tombstone in the archived
+doc and the run record in `smoke-tests/smoke-test-01.md`.
+
+## 2026-09-17 — s08 deploy + phone; f01 closed (260917c)
+
+Picked up with both STATUS pointers sponsor-gated, so the session started on the
+one agent-side piece of s08 and ended with the whole front closed.
+
+**`scripts/smoke.ts` (s08).** An end-to-end pass over the deployed API: health,
+401-while-locked, wrong secret, unlock, status, create, duplicate 409, due list,
+review, export, delete, lock, and a final 401 proving the session was revoked.
+The review assertions are the point of the script — it imports `nextReviewOn`
+from `shared/dates.ts` and recomputes the expected date rather than trusting the
+server's, so a production scheduling bug cannot pass. The created item is deleted
+in a `finally`, and the unlock secret is read from `URDU_SECRET` only, never an
+argument. AGENTS.md gained the command and its Project state line caught up.
+
+**Deploy went clean.** Sponsor ran `secret put` (which created the Worker —
+expected, no deploy had happened yet), remote migrations, `pnpm run deploy`, and
+the health check. Bindings confirmed at upload: DB, UNLOCK_LIMITER, HOME_TZ.
+
+**A real defect the first production run exposed.** The script created its item
+with `tags: ["smoke"]`, but tag names live in a standalone catalogue table and
+`DELETE FROM vocab` does not cascade to it, so a passing run left a stray `smoke`
+row in production D1 — directly against Done-When 4's "leaving no smoke rows
+behind." The 23 assertions were all sound; only cleanup was wrong. Fixed by
+dropping the tag (it was never load-bearing) and filtering the due check by id.
+The same edit made that check tolerate a full 200-item page, since once f02
+imports the vault the new item can legitimately fall off `MAX_LIMIT`. Sponsor
+cleared the stray row over `--remote`, then re-ran: 23/23 with `tags` empty
+unaided. Done-When 4 is verified by execution, not by inspection.
+
+**Phone gate green.** Installed PWA, maskable icon correct on the launcher,
+unlocked across relaunch and force-close, and Lock genuinely revoked the device.
+That is the year-long `__Host-` cookie and the session-row delete both proven
+against a real process death — the thing no test in `test/` can reach.
+
+**Process.** Sponsor stated a standing preference for bash over PowerShell; the
+smoke-test checklist and the s08 runbook in the doc were both converted, and the
+journal's earlier PowerShell was deliberately left as a historical record. The
+checklist itself (`smoke-tests/smoke-test-01.md`, 27 items across four parts) is
+new and is the durable verification record.
+
+**Carried forward, not lost:** `preview_urls` defaulted on at first deploy, and
+`scripts/scan-bundle.mjs` covers `dist/client` only while the build also writes
+`dist/urdu/.dev.vars` (not uploaded — checked against the asset list — but
+unasserted). Both filed in `pm/TODO.md`.
+
+f01 closed: badge flipped, doc and journal archived in place, roster and hub
+updated, Phase 1 now waiting on f02 alone.
 
 ## 2026-09-17 — s07 verified + toolchain unblocked (260917b)
 

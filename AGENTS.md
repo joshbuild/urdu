@@ -46,7 +46,7 @@ truncate project docs still load all of it.
 
 ## Project state
 
-Single-user personal Urdu learning PWA. See `pm/STATUS.md` for current progress. f01 s01–s07 provide the scaffold, shared rules, D1 schema, auth, vocab, review and export API, and the PWA shell, all committed with `pnpm check` green; s07's browser/device check and s08 (smoke script, deploy, phone) remain. `spikes/` is Phase 0 reference code, excluded from tsc and Biome.
+Single-user personal Urdu learning PWA. See `pm/STATUS.md` for current progress. f01 shipped 2026-09-17: scaffold, shared rules, D1 schema, auth, vocab, review and export API, PWA shell, and the first deployment to `urdu.umber-amber.workers.dev`, verified on the sponsor's phone (`smoke-tests/smoke-test-01.md`). f02 `airtable-import` is next. `spikes/` is Phase 0 reference code, excluded from tsc and Biome.
 
 Commands (pnpm; Node 22):
 - `pnpm dev` — Vite dev server with the Worker and a local D1 (secrets from `.dev.vars`, see `.dev.vars.example`).

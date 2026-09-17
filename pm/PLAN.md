@@ -24,7 +24,7 @@
 
 ### Phase 1 — Foundation (Current)
 **Goal:** A deployed Urdu Core with the sponsor's vocabulary in it.
-- f01 `urdu-core-foundation`: repo layout (`src/`, `worker/`, `shared/`, `migrations/`, `scripts/`), Biome, Vitest, wrangler with D1 + static assets, `pnpm dev` / `pnpm deploy`; `shared/` ladder, deltas, scheduling, normalization with tests; D1 migrations for Appendix A; unlock + session cookie (FR-B1..B4); vocab CRUD, due selection, review recording (FR-A); JSON export; minimal PWA shell with unlock screen and manifest so deploy can be verified on the phone.
+- f01 `urdu-core-foundation` (✅ SHIPPED 2026-09-17): repo layout (`src/`, `worker/`, `shared/`, `migrations/`, `scripts/`), Biome, Vitest, wrangler with D1 + static assets, `pnpm dev` / `pnpm deploy`; `shared/` ladder, deltas, scheduling, normalization with tests; D1 migrations for Appendix A; unlock + session cookie (FR-B1..B4); vocab CRUD, due selection, review recording (FR-A); JSON export; minimal PWA shell with unlock screen and manifest so deploy can be verified on the phone.
 - f02 `airtable-import`: admin import endpoint and CSV import script (FR-H); run it for real; cross-check report reviewed by the sponsor.
 - **Exit:** `urdu.umber-amber.workers.dev` unlocks on the phone; D1 holds the Airtable vocabulary with mastery and dates preserved; domain tests green.
 
@@ -50,7 +50,7 @@
 
 | Handle | Slug / doc | Status | One-line |
 |---|---|---|---|
-| f01 | `features/f01-urdu-core-foundation.md` | 🟡 in progress (s01–s07 built; s07 browser check open) | Repo, shared domain rules, D1 schema, unlock auth, vocab/review API, PWA shell. |
+| f01 | `features/archive/f01-urdu-core-foundation-archive.md` | 🟢 shipped 2026-09-17 | Repo, shared domain rules, D1 schema, unlock auth, vocab/review API, PWA shell. |
 | f02 | `features/f02-airtable-import.md` | planned | One-time idempotent import of the Airtable "Urdu Vocab" base into D1. |
 | f03 | `features/f03-reader.md` | planned | Paste-and-read in Nastaliq with tap-to-speak, selection action bar, add and define. |
 | f04 | `features/f04-vocab-ui.md` | planned | Browse, search, edit, and create vocabulary; settings. |

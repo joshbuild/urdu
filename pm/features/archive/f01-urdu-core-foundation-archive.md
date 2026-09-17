@@ -1,8 +1,8 @@
 # Feature Plan — Urdu Core Foundation
 
-**Status**: 🟡 IN PROGRESS (2026-09-17) — s01–s07 built and committed with `pnpm check` green; s07's browser/device-emulation check outstanding; then s08 deploy + phone
+**Status**: 🟢 SHIPPED (2026-09-17) — all eight slices built, deployed and verified on the phone; Done-When 1–6 met
 **Handle**: `f01`
-**Created**: 2026-09-14 · **Updated**: 2026-09-17
+**Created**: 2026-09-14 · **Updated**: 2026-09-17 · **Closed**: 2026-09-17
 
 **Owner docs it serves**:
 - `pm/PRD.md` FR-A1..A8, FR-B1..B4, Appendix A, Appendix B, §6 Maintainability / Mobile / Portability / Reliability / Security
@@ -10,6 +10,45 @@
 - `AGENTS.md` (real dev / test / deploy commands land there at close)
 
 > **One-line:** Stand up the repo, the shared domain rules, the D1 schema, unlock auth, the vocab and review API, and a minimal installable PWA shell, deployed to `urdu.umber-amber.workers.dev`.
+
+---
+
+## As shipped (tombstone, 2026-09-17)
+
+f01 is closed. Urdu Core runs at `https://urdu.umber-amber.workers.dev` (Worker
+`urdu`, version `b7585268`), backed by D1 `urdu` at migration `0001_init`, and
+the PWA is installed on the sponsor's Android phone.
+
+**Where the live truth now lives** — read these, not the plan below:
+
+| What | Authority |
+|---|---|
+| Mastery ladder, grade deltas, scheduling, normalization, IDs | `shared/mastery.ts`, `dates.ts`, `normalize.ts`, `ulid.ts` + their tests |
+| Schema | `migrations/0001_init.sql` |
+| Auth, vocab, review, export behaviour | `worker/` (routes thin, rules in `worker/domain/`), `test/` |
+| API request/response shapes | `shared/api.ts` |
+| Dev / test / migrate / deploy / smoke commands | `AGENTS.md` “Project state” |
+| Deploy + phone verification record | `smoke-tests/smoke-test-01.md` |
+| Cross-cutting decisions from this front | `pm/DECISIONS.md` 260911a, 260917b |
+
+**Done-When, as verified:** (1) deployed Worker on migrated D1 — `pnpm run deploy`,
+health 200; (2) phone installs, survives relaunch and force-close, lock revokes
+— smoke-test-01 Part D; (3) `pnpm check` green, 194 tests in 9 files, secret
+scan clean; (4) `scripts/smoke.ts` 23/23 against production leaving no rows;
+(5) `wrangler.jsonc` free of `spikes/`; (6) `AGENTS.md` carries the real commands.
+
+**Not built here, by design:** the `/coach/*` bearer group (f06) and
+`POST /api/voice/session` (f07) have their mount points reserved in
+`worker/index.ts` but no code. Phase 1's other exit condition, the Airtable
+vocabulary in D1, is f02.
+
+**Carried forward:** `preview_urls` defaulted on at first deploy, and the bundle
+secret scan covers `dist/client` only — both filed in `pm/TODO.md`.
+
+The phased plan and execution record below are the archaeological record, kept
+as written at the time.
+
+---
 
 ## Intent
 
