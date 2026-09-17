@@ -1,6 +1,6 @@
 # Feature Plan — Airtable Import
 
-**Status**: 🟡 IN PROGRESS — *opened 2026-09-17 at Stage 1 (import endpoint).*
+**Status**: 🟡 IN PROGRESS — *Stage 1 shipped 2026-09-17; Stage 2 (CSV script) next.*
 **Handle**: `f02`
 **Created**: 2026-09-17 · **Updated**: 2026-09-17
 
@@ -51,7 +51,7 @@ Smallest coherent thing: the endpoint + the script + one clean real run whose re
 - **Never silently drops a row.** Every input row is accounted for in the report as created, updated, or rejected-with-reason.
 - **Reuses `shared/`**: `urduKey`, `inferKind`, `nextReviewOn`, mastery clamping. The import must not carry a second copy of any domain rule.
 - **The secret never reaches the CLI.** Like `scripts/smoke.ts`, the script reads `URDU_SECRET` from the environment; never an argument.
-- **Batch sized under D1/Workers limits** — batches must not exceed the subrequest/statement ceiling for a single Worker invocation.
+- **Batch capped** at `MAX_IMPORT_BATCH` (200 records). At 36 rows the real export is a single batch; the cap exists so the endpoint cannot be handed an unbounded body.
 - **Non-destructive**: the endpoint never deletes rows the export does not mention.
 
 
@@ -100,27 +100,34 @@ Edge cases that must be proven: multiline `Meaning` cells, commas inside Urdu te
 
 ### Recently Completed
 
-- *2026-09-17* — Front opened at Stage 1. Nothing built yet.
+- *2026-09-17* — **Stage 1 done** (`5b456d5`). `POST /api/admin/import` behind the session middleware; `worker/domain/import.ts` upserts by `airtable_id`, recomputes `next_review_on`, reports mismatches, rejects per row, upserts tags. 13 tests in `test/import.test.ts`; `pnpm check` green (207 tests).
+- *2026-09-17* — Sponsor supplied the exports in `data/airtable/` (now gitignored) and chose session-cookie auth. Export profiled: 36 vocab rows, 3 tags, 7 mastery levels.
+- *2026-09-17* — Front opened at Stage 1.
 
 ### Next Steps
 
-1. Answer Q1–Q3 below (sponsor), since Q1 gates Stage 2 and Q2 gates the endpoint's auth shape.
-2. Build Stage 1: `worker/domain/import.ts`, `worker/routes/api-admin.ts`, `test/import.test.ts`.
+1. Stage 2: `scripts/airtable-import.ts` — CSV parse (BOM, quoted/multiline cells), Appendix C mapping, `--dry-run`, unlock via `URDU_SECRET`, cross-check report writer.
+2. Ripple the real header names into PRD Appendix C (`_airtable_record_id`, `Tag Name`).
 
 ### Open Questions
 
-- **Q1 — Where is the Airtable export, and in what shape?** (sponsor) One CSV per Airtable table (Vocabulary Terms, Tags), or a combined export? Do the column headers match Appendix C exactly? Blocks Stage 2; does not block Stage 1.
-- **Q2 — Admin auth: session cookie or a separate admin token?** (sponsor/agent) FR-H1 allows either. Recommendation: **session cookie** — the script already needs to unlock (`scripts/smoke.ts` does), it adds no new secret, and the route stays inside the existing `/api/*` middleware. A separate token is warranted only if the import should be runnable without a device session.
-- **Q3 — What should happen to a row rejected as a `urdu_key` duplicate?** (sponsor) Proposal: report it and skip; the sponsor merges in Airtable and re-exports. The alternative (keep the higher mastery, merge notes) makes the import opinionated about the sponsor's data.
-- **Q4 — Is `Added` in the export a date or a datetime?** (agent, resolvable at Stage 2) `added_at` is a timestamp in Appendix A; a date-only Airtable value needs a documented time-of-day convention.
+- ~~**Q1 — Where is the export?**~~ **Answered 2026-09-17**: `data/airtable/` — one CSV per table (`airtable_vocabulary_terms.csv` 36 rows, `airtable_tags.csv` 3, `airtable_mastery_levels.csv` 7, not imported per FR-H3). Headers differ from Appendix C in two places: the record id is `_airtable_record_id`, and the Tags table's name column is `Tag Name`. All three carry a UTF-8 BOM.
+- ~~**Q2 — Admin auth?**~~ **Answered 2026-09-17**: session cookie. See Decisions.
+- ~~**Q3 — `urdu_key` duplicates?**~~ **Answered 2026-09-17**: report and skip; the sponsor merges in Airtable and re-exports. Moot for this export (0 collisions) but implemented and tested.
+- ~~**Q4 — Is `Added` a date or a datetime?**~~ **Answered 2026-09-17**: a bare date. Read as midnight UTC; see Decisions.
+- **Q5 — Does the empty cross-check report need a sponsor review step at all?** (sponsor, Stage 3) The offline pre-check found 0 mismatches across all 36 rows, so Done-When #5 may reduce to confirming the report is empty.
 
 ### Open Discussion
 
-*Nothing yet beyond the questions above.*
+The offline pre-check over the real export found **0 next-review mismatches** across all 36 rows, **0 `urdu_key` collisions**, and no blank required fields; the `mastery_levels` CSV's intervals match `shared/mastery.ts` exactly (0/1/5/25/125/625/3125). The Airtable base was already running our ladder, so the FR-H2 cross-check should come back empty — which makes it a confirmation, not a reconciliation. Tags are barely used: 34 of 36 rows have none.
 
 
 
 ## Decisions
 
+- *2026-09-17* — **No schema change for f02.** Reviewed `migrations/0001_init.sql` now that Airtable is being retired. `airtable_id` and `source = 'airtable'` stay: the first is the import's idempotence key (removing it breaks FR-H1 re-runs) and the second is provenance. Nothing else in the schema is Airtable-shaped. A migration against a already-deployed production D1 for cosmetics is the wrong trade, so the schema is unchanged.
+- *2026-09-17* — **Admin auth is the existing session cookie** (Q2). The script unlocks the way `scripts/smoke.ts` does, so the import adds no second secret and the route stays inside the `/api/*` middleware. A scoped admin token is the answer only if the import ever has to run without a device session.
+- *2026-09-17* — **A bare `Added` date is read as midnight UTC** (Q4). Appendix A types `added_at` as an instant; expanding date-only input keeps one comparable format across imported and app-created rows, and date-only values would otherwise sort inconsistently against ISO datetimes.
+- *2026-09-17* — **A batch is written row by row, not as one D1 batch.** Each row needs its own duplicate lookup against rows written earlier in the same batch; a single batch cannot see its own writes. At 36 rows the cost is irrelevant.
 - *2026-09-17* — **Idempotence is for re-runs, not sync.** The upsert key is `airtable_id` so a failed or wrong run can be corrected and re-run without wiping D1. Airtable is being retired; no recurring sync is planned or designed for.
-- *2026-09-17* — **`urdu_key` collisions are rejected, not merged.** Merging two vocabulary rows is a judgement about the sponsor's own learning data; the import reports and defers to them. *(Pending Q3 confirmation.)*
+- *2026-09-17* — **`urdu_key` collisions are rejected, not merged.** Merging two vocabulary rows is a judgement about the sponsor's own learning data; the import reports the holding row's id and defers to them. *(Confirmed by the sponsor 2026-09-17.)*
