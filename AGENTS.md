@@ -46,7 +46,7 @@ truncate project docs still load all of it.
 
 ## Project state
 
-Single-user personal Urdu learning PWA. See `pm/STATUS.md` for current progress. f01 s01–s06 provide the scaffold, shared rules, D1 schema, auth, vocab, review and export API; s07 PWA shell is implemented pending checks/browser verification, followed by s08 deployment verification. `spikes/` is Phase 0 reference code, excluded from tsc and Biome.
+Single-user personal Urdu learning PWA. See `pm/STATUS.md` for current progress. f01 s01–s07 provide the scaffold, shared rules, D1 schema, auth, vocab, review and export API, and the PWA shell, all committed with `pnpm check` green; s07's browser/device check and s08 (smoke script, deploy, phone) remain. `spikes/` is Phase 0 reference code, excluded from tsc and Biome.
 
 Commands (pnpm; Node 22):
 - `pnpm dev` — Vite dev server with the Worker and a local D1 (secrets from `.dev.vars`, see `.dev.vars.example`).
@@ -54,6 +54,7 @@ Commands (pnpm; Node 22):
 - `pnpm test` / `pnpm lint` / `pnpm format` / `pnpm typecheck`.
 - `pnpm types` — regenerate `worker/worker-configuration.d.ts` after editing `wrangler.jsonc`.
 - `pnpm wrangler d1 migrations apply urdu --local` — local schema. `--remote`, `wrangler secret put`, and `pnpm run deploy` (not `pnpm deploy`, a pnpm built-in) are run by the sponsor.
+- `pnpm tsx scripts/smoke.ts <base-url>` — end-to-end smoke against a running origin (unlock → create → review → export → delete → lock, leaving no rows). Reads the secret from `URDU_SECRET`; never pass it as an argument.
 
 Test-run discipline (this workstation has been wedged by concurrent Vitest runs):
 - Only one agent may run Vitest at a time. Never launch `pnpm test` or `pnpm check`
