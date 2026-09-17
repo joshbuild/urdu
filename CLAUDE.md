@@ -28,6 +28,14 @@ Test-run discipline (this workstation has been wedged by concurrent Vitest runs)
   with a higher `--maxWorkers` on the CLI.
 - If the machine bogs down, check for leftover `node.exe` / `workerd.exe` after a
   run finishes and kill the strays.
+- AVG Antivirus (not Windows permissions) is what makes `workerd` and other
+  binaries fail to launch or crawl here. If Workers-pool runs time out with
+  `[vitest-pool]: Timeout starting cloudflare-pool runner`, ask the sponsor to
+  turn AVG **Hardened Mode** off — that removes the failures; **CyberCapture**
+  off roughly halves the runtime. Re-run before calling such a failure a bug.
+- Worker-pool startup costs about 7 s per test file on this machine, so a single
+  file runs in ~6 s against ~40 s for the whole `worker` project. Prefer
+  `pnpm vitest run --project worker test/<file>.test.ts` while iterating.
 
 Read `pm/VISION.md` (intent, invariants), `pm/PRD.md` (exact v0 scope and requirements, data model, Coach contract), and `pm/PLAN.md` (phases and Features Index) before any design or implementation work. Where PRD and VISION differ on scope, PRD wins. Project management uses the pm work-front regime: start sessions with `/pm-resume`, end with `/pm-wrap`, open work with `/pm-open`; `pm/STATUS.md` is the resume hub.
 

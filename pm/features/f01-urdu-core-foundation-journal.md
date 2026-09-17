@@ -20,7 +20,18 @@ s07 is committed on that evidence rather than held uncommitted a third time — 
 
 **Underlying cause: AVG Antivirus.** After the green check, the toolchain degraded within the same session: `pnpm check` took 21 minutes, then worker-pool runs began failing with `[vitest-pool]: Timeout starting cloudflare-pool runner` — consistently 3 of 5 worker files passing (53 tests) while 2 never started a runner, over 217 s. Two hypotheses were tested and rejected: stale SQLite `-shm`/`-wal` files left by the force-killed dev server (moving `.wrangler` aside changed nothing; it was restored), and the `maxWorkers: 2` cap (the 194-test green run was already under that cap). The tell was a plain `Rename-Item` of `.wrangler` exceeding 120 seconds — filesystem-level throttling, not a project fault. `Get-MpComputerStatus` reports Defender's AM service not running (`0x800106ba`) and `root\SecurityCenter2` lists **AVG Antivirus** as the registered product. One scanner explains every symptom this front has hit across three sessions: `EPERM` on a newly seen `biome.exe`, `spawn EPERM` on Miniflare's runtime, `workerd` launches exceeding the pool's start timeout, and minutes-long file operations. The 2.5.13-vs-2.5.10 result stands as reproducible, but reads as AVG treating one binary as unknown rather than anything wrong with Biome.
 
-Remedy is a sponsor decision, not an agent one: AVG exclusions for the repository, its `node_modules`, and the `workerd`/`biome` executables. Captured in TODO as `#sponsor-decide`. Until then, expect worker-pool runs to be slow or to time out intermittently on this machine; a failure of this shape is environmental and should be re-run before it is treated as a code defect.
+**Confirmed by toggling AVG (same session).** The install is AVG Business Security 26.8 with the Business Console Client, so it is centrally managed and the sponsor reports exclusions do not stick. Two feature toggles were measured against the `worker` project (5 files, 117 tests):
+
+| AVG state | Files | Runner timeouts | Wall |
+|---|---|---|---|
+| Hardened Mode + CyberCapture on | 3 of 5 | 2 | 217 s |
+| Hardened Mode off | 5 of 5 | 0 | 88 s |
+| … + CyberCapture off | 5 of 5 | 0 | 48 s |
+| … warm repeat | 5 of 5 | 0 | 38 s |
+
+**Hardened Mode is the correctness fix** — with it off the `cloudflare-pool` runner timeouts disappear entirely, which settles the diagnosis: AVG was refusing `workerd.exe` launches. CyberCapture is a speed fix, roughly halving the run. The residual is File Shield scanning each launch: a single worker file costs 6 s wall for 2 s of Vitest, so ≈ 7 s of `workerd` startup per file, and only an exclusion would remove it. For contrast the whole suite ran in 9 s earlier the same day, before the dev-server run appears to have made AVG re-examine these binaries.
+
+Working arrangement until exclusions are possible: develop with Hardened Mode off, prefer single-file runs (6 s) over the full worker project (38–48 s), and re-enable the AVG features afterwards. The remedy proper — exclusions for the repository, its `node_modules` and the `workerd`/`biome` executables — stays a sponsor machine-policy decision, captured in TODO as `#sponsor-decide`. A run of this shape remains environmental: re-run before treating it as a code defect.
 
 ## 2026-09-17 — s07 shell implementation (260917a)
 
