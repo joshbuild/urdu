@@ -14,5 +14,5 @@
 *The 1–3 concrete next actions for a cold start.*
 
 1. Finish f01 s07's browser gate: `pnpm dev`, then unlock/reload/lock plus wrong-secret and offline error paths, and Chrome device emulation for the narrow layout and 48 px targets. Agent HTTP probing is permission-denied, so this is a sponsor-run check (journal 260917b).
-2. f01 s08 deploy + phone: `scripts/smoke.ts`, CLAUDE.md commands, then the sponsor runbook in the f01 doc.
+2. f01 s08 deploy + phone: `scripts/smoke.ts`, AGENTS.md commands, then the sponsor runbook in the f01 doc.
 3. Toolchain is healthy when AVG **Hardened Mode** and **CyberCapture** are off (sponsor toggles these per session; never add AVG exceptions — measured harmful). Do not bump Biome without re-testing execution on this machine.

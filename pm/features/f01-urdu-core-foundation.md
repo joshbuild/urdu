@@ -7,7 +7,7 @@
 **Owner docs it serves**:
 - `pm/PRD.md` FR-A1..A8, FR-B1..B4, Appendix A, Appendix B, §6 Maintainability / Mobile / Portability / Reliability / Security
 - `pm/PLAN.md` Phase 1 (with f02)
-- `CLAUDE.md` (real dev / test / deploy commands land there at close)
+- `AGENTS.md` (real dev / test / deploy commands land there at close)
 
 > **One-line:** Stand up the repo, the shared domain rules, the D1 schema, unlock auth, the vocab and review API, and a minimal installable PWA shell, deployed to `urdu.umber-amber.workers.dev`.
 
@@ -108,7 +108,7 @@ All true:
 3. `pnpm check` is green: domain unit tests, Worker integration tests, Biome, tsc, bundle secret scan.
 4. `scripts/smoke.ts` passes against production (sponsor-run), leaving no smoke rows behind.
 5. `wrangler.jsonc` no longer references `spikes/`; `spikes/` still present.
-6. `CLAUDE.md` "Project state" lists the real dev / test / migrate / deploy commands.
+6. `AGENTS.md` "Project state" lists the real dev / test / migrate / deploy commands.
 
 (Phase 1's other exit condition, Airtable vocabulary in D1, is f02.)
 
@@ -125,7 +125,7 @@ Dependencies: s01 → (s02 ∥ s03) → s04 → (s05 → s06) ∥ s07 → s08. E
 | **s05 vocab + due** | `worker/domain/vocab.ts`, `routes/api-vocab.ts`, `GET /api/status`, tag auto-insert | Vocab, due, FR-A8 tests | — |
 | **s06 review + export** | `worker/domain/review.ts` (batch with stale-mastery guard), review route, `GET /api/export` | Review and export tests | — |
 | **s07 PWA shell** | manifest, icons (source art: `design/icon/icon_1254.png`, sponsor-supplied; derive 192/512 `any` icons, plus a `maskable` variant with extra teal padding because the lettering's corners fall outside the 80% safe zone; sample the teal for `theme_color`/`background_color`), unlock screen, status screen, lock; 44 px targets | `pnpm dev` desktop run through Chrome device emulation; bundle secret scan | — |
-| **s08 deploy + phone** | `scripts/smoke.ts`; CLAUDE.md commands; deploy runbook executed | Done-When 1–6 | runs the commands below, then the phone check and smoke |
+| **s08 deploy + phone** | `scripts/smoke.ts`; AGENTS.md commands; deploy runbook executed | Done-When 1–6 | runs the commands below, then the phone check and smoke |
 
 **s08 sponsor runbook** (the classifier blocks the agent from these):
 ```powershell
@@ -167,7 +167,7 @@ If `secret put` runs before the first deploy, wrangler creates the Worker; eithe
 ### Next Steps
 
 1. Close s07's remaining gate: with `pnpm dev` running, check wrong-secret and offline error paths, unlock, reload persistence, and lock, then Chrome device emulation for the narrow layout and 48 px targets. Sponsor-run — agent HTTP probing is permission-denied (journal 260917b).
-2. Then s08 (smoke script, CLAUDE.md commands, sponsor runbook, phone check).
+2. Then s08 (smoke script, AGENTS.md commands, sponsor runbook, phone check).
 
 ### Open Questions
 

@@ -1,17 +1,113 @@
 # AGENTS.md | Urdu PWA
 
-## Primary Agent Instructions
+Primary agent instructions for this repository. Agent-specific entry points
+(`CLAUDE.md`, and any Codex equivalent) point here; keep project guidance in
+this file, not in them.
 
 ## Shared project guidance
 
-All agents: read `CLAUDE.md` for architecture, invariants and development
-commands. Read `pm/VISION.md`, `pm/PRD.md`, and `pm/PLAN.md` before design or
-implementation. PRD wins on scope; VISION owns intent. Code and verified
-checks establish what is actually built. Current work lives in `pm/STATUS.md`.
+All agents: read `pm/VISION.md` (intent, invariants), `pm/PRD.md` (exact v0
+scope and requirements, data model, Coach contract), and `pm/PLAN.md` (phases
+and Features Index) before any design or implementation work. PRD wins on
+scope; VISION owns intent. Code and verified checks establish what is actually
+built. Current work lives in `pm/STATUS.md`.
 
-## PM workflow (Claude Code and Codex)
+## Doc architecture
 
-Use `pm-resume` at session start, `pm-open` to open work, `pm-close` only
+Single-domain project, so the authority catalogue stays inline here. Each row
+names the single source of truth for a domain; when two docs disagree, the
+owner wins — edit the owner first, then ripple to the surfaces named below.
+
+| Authority doc | Authoritative for | Defers to / wins over |
+|---|---|---|
+| `pm/VISION.md` | intent, why we're building this | wins on intent; defers to PRD on scope |
+| `pm/PRD.md` | v0 scope, requirements, data model, Coach contract | **wins on scope over every other doc** |
+| `AGENTS.md` (this file) | architecture shape, invariants, commands, agent process | defers to PRD/VISION on scope and intent |
+| `shared/` (`mastery.ts`, `dates.ts`, `normalize.ts`, `ulid.ts`) | as-built domain rules — mastery ladder, intervals, grading, normalization, IDs | code + its tests win over prose; ripple a rule change into PRD and this file |
+| `pm/DECISIONS.md` | cross-cutting decisions and what was rejected | append/prepend-only; correct by a new dated entry |
+| `pm/pm-glossary.md` | process vocabulary, work types, identifier ladder | process terms defer here |
+| `pm/PLAN.md` | phases and the Features Index | roster mirrors each feature doc's badge |
+| `pm/STATUS.md` | where we are now (thin resume hub) | mirrors feature docs; they are canonical |
+| `pm/workflows/` | how we work (lifecycle, decisions, clean, approach) | `pm-approach.md` owns the worldview |
+
+No architecture/system-map doc and no `pm/adr/` track exist yet; the
+four-component sketch below and the per-feature docs carry that weight. Add
+them here if either appears.
+
+**PRD ↔ as-built boundary.** The PRD owns *what must be true* — planned-but-
+unbuilt scope must be marked planned (`post-v0`, `v1`). As-built content (this
+file's Project state, feature-doc tombstones, code) owns *what is true now* and
+is never aspirational; mark planned-not-built as planned or unknown.
+
+**Keep-in-sync.** A mastery/grading change touches `shared/mastery.ts`, its
+test, PRD Appendix, and the Invariants below. A command change touches
+`package.json` and Project state. Keep this file under 24 KiB so agents that
+truncate project docs still load all of it.
+
+## Project state
+
+Single-user personal Urdu learning PWA. See `pm/STATUS.md` for current progress. f01 s01–s06 provide the scaffold, shared rules, D1 schema, auth, vocab, review and export API; s07 PWA shell is implemented pending checks/browser verification, followed by s08 deployment verification. `spikes/` is Phase 0 reference code, excluded from tsc and Biome.
+
+Commands (pnpm; Node 22):
+- `pnpm dev` — Vite dev server with the Worker and a local D1 (secrets from `.dev.vars`, see `.dev.vars.example`).
+- `pnpm check` — tsc, Biome, Vitest (`shared` node project + `worker` Workers-pool project), build, client-bundle secret scan. Run before every commit.
+- `pnpm test` / `pnpm lint` / `pnpm format` / `pnpm typecheck`.
+- `pnpm types` — regenerate `worker/worker-configuration.d.ts` after editing `wrangler.jsonc`.
+- `pnpm wrangler d1 migrations apply urdu --local` — local schema. `--remote`, `wrangler secret put`, and `pnpm run deploy` (not `pnpm deploy`, a pnpm built-in) are run by the sponsor.
+
+Test-run discipline (this workstation has been wedged by concurrent Vitest runs):
+- Only one agent may run Vitest at a time. Never launch `pnpm test` or `pnpm check`
+  from several agents/sessions concurrently — the pools multiply into dozens of
+  `node`/`workerd` processes and the machine stops responding.
+- Run the smallest relevant test file first: `pnpm test shared/mastery.test.ts`
+  (or `pnpm vitest run --project worker test/auth.test.ts`). Run the full suite
+  only once, after targeted tests pass.
+- `vitest.config.ts` caps `maxWorkers: 2`. Do not raise it, and do not override it
+  with a higher `--maxWorkers` on the CLI.
+- If the machine bogs down, check for leftover `node.exe` / `workerd.exe` after a
+  run finishes and kill the strays.
+- AVG Antivirus (not Windows permissions) is what makes `workerd` and other
+  binaries fail to launch or crawl here. If Workers-pool runs time out with
+  `[vitest-pool]: Timeout starting cloudflare-pool runner`, ask the sponsor to
+  turn AVG **Hardened Mode** and **CyberCapture** off — with both off the
+  worker project runs in ~8 s and `pnpm check` in ~33 s. Re-run before calling
+  a failure of that shape a bug.
+- Never suggest AVG exceptions/exclusions. Tested 2026-09-17: a repo folder
+  exception made the same suite 492 s and reinstated the failures, apparently
+  by triggering a policy re-sync on this console-managed install.
+
+## Intended stack (directional, per VISION.md)
+
+- TypeScript + Vite, lightweight responsive UI (likely React), PWA manifest.
+- Cloudflare Workers for the API/domain layer; Cloudflare D1 for canonical data.
+- Target deployment: `urdu.umber-amber.workers.dev`.
+- Prefer boring, widely understood components. Offline-first is not a v0 goal.
+
+## Architecture: four components
+
+1. **Vocab Vault (D1)** — persistence only. Vocabulary terms/phrases, mastery state, review dates, review-event history, saved reading material. No business rules live here.
+2. **Urdu Core (Cloudflare Worker)** — the domain layer. Owns auth, validation, normalization, duplicate detection, mastery transitions, review scheduling, vocabulary CRUD, due-vocab selection, Coach handoff import, and any AI enrichment. Exposes meaningful learning operations, not generic DB access. All clients go `client → Urdu Core → D1`; neither the PWA nor the Coach touches D1 or SQL directly.
+3. **Coach (planned f06/f07)** — v0 uses in-app GPT-Live-1 voice, chosen by the Phase 0 spike (PRD FR-G Option 2). The Worker brokers WebRTC sessions with server-held credentials; tools use Urdu Core's Coach contract. The external Custom GPT is deferred to v1. Clipboard JSON handoff remains a fallback. Handoffs carry *events and proposals* (e.g. grade `correct`), never absolute mastery values, and include a session/handoff id for duplicate-import detection.
+4. **PWA (this repo's UI)** — paste-and-read Urdu in Nastaliq (RTL), tap word → speak, select phrase → speak, right-click/long-press context menu (Speak / Add to vocab / Define), vocabulary browsing/editing, review UI, handoff import. Talks to Urdu Core over HTTP only. Must remain useful with no LLM call.
+
+## Invariants to preserve
+
+- **Deterministic code owns state transitions; AI only proposes.** Mastery changes, intervals, next-review calculation, IDs, timestamps, validation, and persistence are application logic in Urdu Core. AI may grade free-form answers, define, transliterate, suggest duplicates, or propose metadata.
+- **Mastery ladder is a single source of truth** (do not duplicate in UI and backend): levels 0–6 = New/Learning/Basic/Firm/Strong/Stable/Permanent with intervals 0/1/5/25/125/625/3125 days. `Next Review = Last Reviewed + interval(mastery)`; never-reviewed items are due immediately.
+- **Review grading:** Wrong −2, Partially correct −1, Hesitantly correct 0, Correct +1, Confidently correct +2; clamp to 0–6. A tracked review updates mastery, sets Last Reviewed, recalculates Next Review, and records a review event. Ad-hoc speaking/defining/viewing must **not** alter mastery.
+- **Phrases are first-class vocabulary items**, not annotations on words. Check for duplicates/equivalents before creating an entry.
+- **Auth is a single personal secret** validated server-side in the Worker, establishing a long-lived per-device session. The secret must never appear in frontend JS, the repo, URLs, or readable browser storage. Coach/tool auth to Urdu Core is separate and narrowly scoped.
+- **Language target is everyday Pakistani Urdu**, with practical Roman Urdu transliteration and concise English explanations.
+- v0 targets installed Android Chrome; desktop parity is v1. Keep layouts responsive and design touch, native text selection, and audio deliberately. PRD FR-C specifies the selection action bar rather than a custom long-press menu.
+
+## Explicit non-goals (v0)
+
+Multi-user, accounts/OAuth, offline-first, a dictionary or curriculum, a custom voice tutor built from scratch (the chosen GPT-Live-1 integration is allowed), social/billing/analytics features, or any infrastructure built "in case" a later version needs it. No LLM calls for Define/enrichment; the capped voice path is the exception for API spending.
+
+## PM workflow (all agents)
+
+Project management uses the pm work-front regime; `pm/STATUS.md` is the resume
+hub. Use `pm-resume` at session start, `pm-open` to open work, `pm-close` only
 after Done When gates pass, and `pm-wrap` at session end. Use `pm-triage`,
 `pm-stress-test`, `pm-clean`, and `pm-release` for their named operations.
 An orientation request does not itself start the next product slice.
@@ -22,8 +118,8 @@ Codex adapters at `C:/Users/jlock/.codex/skills/pm-<name>/SKILL.md` read those
 originals. If discovery has not refreshed, read the canonical file directly.
 Resolve skill-relative references from the original directory. Treat slash
 commands, dollar mentions and natural-language requests as skill invocations.
-Map Claude-specific tool names to available equivalents; its permission
-settings do not configure Codex. Do not fork the PM procedures per agent.
+Map agent-specific tool names to available equivalents; one agent's permission
+settings do not configure another's. Do not fork the PM procedures per agent.
 
 Read `pm/workflows/pm-approach.md` for the model,
 `pm/workflows/feature-lifecycle.md` for lifecycle/git rituals,
@@ -47,4 +143,3 @@ establish production readiness. Never print `.dev.vars` secret values.
 If Windows reports `spawn EPERM`, distinguish tool execution restrictions
 from application failures. Use the permitted execution mode and report
 remaining limitations; do not weaken checks to manufacture a green result.
-

@@ -22,9 +22,9 @@ The pass has **three jobs** and ends with **one report**:
 These are the load-bearing invariants. Violating one is worse than leaving drift in place.
 
 - **DECISIONS.md is append/prepend-only.** Never edit a prior entry. A wrong past decision is corrected by a *new* dated entry, proposed for sponsor sign-off — never by rewriting history.
-- **Edit the authority-doc owner first, then ripple.** Never densify normative content out of an authority doc (`#todo` list the project's authority docs) to "save words." Their precision is the point. Trim *their* fluff (intros, dead examples), not their rules, IDs, ranges, or dates. The catalogue is in `AGENTS.md §Doc architecture`.
+- **Edit the authority-doc owner first, then ripple.** Never densify normative content out of an authority doc (catalogued in `AGENTS.md §Doc architecture`) to "save words." Their precision is the point. Trim *their* fluff (intros, dead examples), not their rules, IDs, ranges, or dates.
 - **Never ripple into archival/frozen files.** Anything under an `archive/` folder, and any `-archive` tombstone's below-the-fold journal, are frozen. Don't churn renames or densification into them.
-- **Archive in place.** Superseded file → `-archive` suffix → local `archive/` folder *beside* it, never relocated across the tree (CLAUDE.md convention). Repoint inbound refs to the new path.
+- **Archive in place.** Superseded file → `-archive` suffix → local `archive/` folder *beside* it, never relocated across the tree (AGENTS.md convention). Repoint inbound refs to the new path.
 - **Tombstone shipped feature/issue docs; don't delete them.** A short *as-shipped* digest at the top (status · what shipped · pointers to where live truth now lives); the phased journal stays below the fold (`feature-lifecycle.md §5`).
 - **Deletion is reserved for true dross** — exact duplicates, throwaway scratch, content that exists verbatim elsewhere. Everything with archaeological value is archived, not deleted. Deletion is always gated (Phase 4).
 - **Preserve dates, IDs, commit hashes, status badges, and `→ see` cross-refs verbatim** when moving or densifying. Moves are faithful relocations, not rewrites.
