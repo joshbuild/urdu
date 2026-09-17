@@ -4,6 +4,10 @@ import { TEST_UNLOCK_SECRET } from "./test/constants";
 
 export default defineConfig({
   test: {
+    // Bounded worker pool: Vitest otherwise defaults to all 16 logical cores, and
+    // several agents running the suite at once saturated the workstation.
+    // Keep this in the config (not a CLI flag) so every invocation is capped.
+    maxWorkers: 2,
     projects: [
       {
         test: {

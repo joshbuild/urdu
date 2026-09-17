@@ -8,7 +8,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project state
 
-Single-user personal Urdu learning PWA. See `pm/STATUS.md` for current progress. f01 s01–s06 provide the scaffold, shared rules, D1 schema, auth, vocab, review and export API; the PWA shell and deployment verification are next. `spikes/` is Phase 0 reference code, excluded from tsc and Biome.
+Single-user personal Urdu learning PWA. See `pm/STATUS.md` for current progress. f01 s01–s06 provide the scaffold, shared rules, D1 schema, auth, vocab, review and export API; s07 PWA shell is implemented pending checks/browser verification, followed by s08 deployment verification. `spikes/` is Phase 0 reference code, excluded from tsc and Biome.
 
 Commands (pnpm; Node 22):
 - `pnpm dev` — Vite dev server with the Worker and a local D1 (secrets from `.dev.vars`, see `.dev.vars.example`).
@@ -16,6 +16,18 @@ Commands (pnpm; Node 22):
 - `pnpm test` / `pnpm lint` / `pnpm format` / `pnpm typecheck`.
 - `pnpm types` — regenerate `worker/worker-configuration.d.ts` after editing `wrangler.jsonc`.
 - `pnpm wrangler d1 migrations apply urdu --local` — local schema. `--remote`, `wrangler secret put`, and `pnpm run deploy` (not `pnpm deploy`, a pnpm built-in) are run by the sponsor.
+
+Test-run discipline (this workstation has been wedged by concurrent Vitest runs):
+- Only one agent may run Vitest at a time. Never launch `pnpm test` or `pnpm check`
+  from several agents/sessions concurrently — the pools multiply into dozens of
+  `node`/`workerd` processes and the machine stops responding.
+- Run the smallest relevant test file first: `pnpm test shared/mastery.test.ts`
+  (or `pnpm vitest run --project worker test/auth.test.ts`). Run the full suite
+  only once, after targeted tests pass.
+- `vitest.config.ts` caps `maxWorkers: 2`. Do not raise it, and do not override it
+  with a higher `--maxWorkers` on the CLI.
+- If the machine bogs down, check for leftover `node.exe` / `workerd.exe` after a
+  run finishes and kill the strays.
 
 Read `pm/VISION.md` (intent, invariants), `pm/PRD.md` (exact v0 scope and requirements, data model, Coach contract), and `pm/PLAN.md` (phases and Features Index) before any design or implementation work. Where PRD and VISION differ on scope, PRD wins. Project management uses the pm work-front regime: start sessions with `/pm-resume`, end with `/pm-wrap`, open work with `/pm-open`; `pm/STATUS.md` is the resume hub.
 
