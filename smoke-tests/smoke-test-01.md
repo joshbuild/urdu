@@ -14,7 +14,7 @@ them back on afterwards). Do not add AVG exceptions — measured harmful
 
 Setup:
 
-```powershell
+```bash
 pnpm wrangler d1 migrations apply urdu --local   # only if the local DB is empty
 pnpm dev                                          # note the printed localhost URL
 ```
@@ -42,24 +42,31 @@ Stop the dev server when done.
 
 ## Part B — production deploy (s08)
 
-Run from the repo root. `pnpm deploy` is a pnpm built-in — use `pnpm run deploy`.
+Run from the repo root in Git Bash. `pnpm deploy` is a pnpm built-in — use
+`pnpm run deploy`.
 
 - [x] B1 — `pnpm wrangler secret put UNLOCK_SECRET`
       (generate and store the value in a password manager; ≥ 24 characters).
 - [x] B2 — `pnpm wrangler d1 migrations apply urdu --remote`
 - [x] B3 — `pnpm run deploy`
-- [x] B4 — `curl.exe -s https://urdu.umber-amber.workers.dev/api/health`
+- [x] B4 — `curl -s https://urdu.umber-amber.workers.dev/api/health`
       returns `{"ok":true}`.
 
 ---
 
 ## Part C — production smoke script (Done-When 4)
 
-```powershell
-$env:URDU_SECRET = "<secret>"
+```bash
+read -s -p "secret: " URDU_SECRET && export URDU_SECRET && echo
 pnpm tsx scripts/smoke.ts https://urdu.umber-amber.workers.dev
-Remove-Item Env:URDU_SECRET
+unset URDU_SECRET
 ```
+
+`read -s` echoes nothing as you paste — that is the silent flag, not a hung
+terminal. Paste with **Shift+Insert** or right-click in Git Bash, press Enter
+once, and check the length landed with `echo ${#URDU_SECRET}` (≥ 24) rather
+than printing the value. The secret never goes in as an argument, so it stays
+out of shell history and process listings.
 
 - [x] C1 — the script prints `smoke: N checks passed` and exits 0.
 - [x] C2 — no `cleanup:` line appeared (a run that passes deletes its own item
@@ -72,13 +79,13 @@ Remove-Item Env:URDU_SECRET
       cascade to the `tags` catalogue table, so a stray row was left in
       production. The script no longer sets a tag. Clear the row:
 
-      ```powershell
+      ```bash
       pnpm wrangler d1 execute urdu --remote --command "DELETE FROM tags WHERE name = 'smoke'"
       ```
 
       Then confirm it is gone:
 
-      ```powershell
+      ```bash
       pnpm wrangler d1 execute urdu --remote --command "SELECT name FROM tags"
       ```
 

@@ -128,18 +128,22 @@ Dependencies: s01 → (s02 ∥ s03) → s04 → (s05 → s06) ∥ s07 → s08. E
 | **s08 deploy + phone** | `scripts/smoke.ts`; AGENTS.md commands; deploy runbook executed | Done-When 1–6 | runs the commands below, then the phone check and smoke |
 
 **s08 sponsor runbook** (the classifier blocks the agent from these):
-```powershell
-# 1. Production secret (prompts for the value; use a password manager to generate and store it)
+```bash
+# 1. Production secret (prompts for the value; use a password manager to generate and store it).
+#    Keep it distinct from the .dev.vars dev secret; minimum 24 characters.
 pnpm wrangler secret put UNLOCK_SECRET
 # 2. Schema on the remote D1
 pnpm wrangler d1 migrations apply urdu --remote
 # 3. Build and deploy (note: `pnpm deploy` is a pnpm built-in; the script must be run as `pnpm run deploy`)
 pnpm run deploy
 # 4. Confirm
-curl.exe -s https://urdu.umber-amber.workers.dev/api/health
-# 5. Smoke against production
-$env:URDU_SECRET = "<secret>"; pnpm tsx scripts/smoke.ts https://urdu.umber-amber.workers.dev; Remove-Item Env:URDU_SECRET
+curl -s https://urdu.umber-amber.workers.dev/api/health
+# 5. Smoke against production (read -s keeps the secret out of shell history)
+read -s -p "secret: " URDU_SECRET && export URDU_SECRET && echo
+pnpm tsx scripts/smoke.ts https://urdu.umber-amber.workers.dev
+unset URDU_SECRET
 ```
+The sponsor works in Git Bash; commands here are bash, not PowerShell.
 If `secret put` runs before the first deploy, wrangler creates the Worker; either order works. If the agent is permitted to run local-only D1 commands (`--local`), it will; anything `--remote` is the sponsor's.
 
 ## Status
