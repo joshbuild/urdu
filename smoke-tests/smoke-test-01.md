@@ -4,9 +4,10 @@ Sponsor-run checklist covering the two checks the agent cannot perform: the s07
 browser/device gate (local) and the s08 deploy + phone gate (production). Tick
 as you go; note anything that fails and stop there rather than pushing past it.
 
-**Before you start:** turn AVG **Hardened Mode** and **CyberCapture** off (turn
-them back on afterwards). Do not add AVG exceptions — measured harmful
-(DECISIONS 260917b). Never paste secret values into chat.
+**Before you start:** turn AVG **Hardened Mode** and **CyberCapture** off. No
+need to turn them back on — the console policy re-applies them by itself, about
+twice a day. Do not add AVG exceptions — measured harmful (DECISIONS 260917b).
+Never paste secret values into chat.
 
 ---
 

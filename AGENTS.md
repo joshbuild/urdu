@@ -73,6 +73,13 @@ Test-run discipline (this workstation has been wedged by concurrent Vitest runs)
   turn AVG **Hardened Mode** and **CyberCapture** off — with both off the
   worker project runs in ~8 s and `pnpm check` in ~33 s. Re-run before calling
   a failure of that shape a bug.
+- **The toggles revert on their own**, roughly twice a day: this is a
+  console-managed install and the policy re-syncs. So the sponsor does not turn
+  them back on afterwards, and a long session can degrade from fast to slow with
+  no code change — that is the re-sync, not a regression you introduced. It has
+  already happened once (2026-09-17: a green 33 s `pnpm check` became 21 minutes
+  mid-session, then pool timeouts). If timings collapse mid-session, ask the
+  sponsor to re-check the toggles before investigating the code.
 - Never suggest AVG exceptions/exclusions. Tested 2026-09-17: a repo folder
   exception made the same suite 492 s and reinstated the failures, apparently
   by triggering a policy re-sync on this console-managed install.
