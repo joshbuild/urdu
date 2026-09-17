@@ -2,7 +2,53 @@
 
 *Verbose per-front record. Hub: `pm/STATUS.md`; doc: `f01-urdu-core-foundation.md`.*
 
-**Current state (2026-09-14):** s01–s06 complete (scaffold, shared rules, schema, auth, vocab + due + status, review + export); 194 tests; local D1 migrated to `0001_init`; production D1 `urdu` still has no schema (s08 runbook). Next: s07 PWA shell, then s08 deploy + phone.
+**Current state (2026-09-17):** s01–s06 complete; s07 shell implemented and committed with `pnpm check` green (194 tests) in Claude Code. The Windows `EPERM`/startup blocker traces to AVG Antivirus scanning this repo's binaries; Biome stays pinned at 2.5.10, which it tolerates. Remaining s07 gap: interactive browser/device-emulation verification (agent HTTP probing is permission-denied). Local D1 migrated to `0001_init`; production remains s08 sponsor work.
+
+## 2026-09-17 — s07 verified + toolchain unblocked (260917b)
+
+Claude Code session after a machine restart cut off the previous one. Two things landed: the test-runner saturation fix the restarts kept forcing, and the resolution of the `EPERM` blocker that stalled s07 across two agents.
+
+**Vitest saturation.** Vitest defaults `maxWorkers` to all available parallelism (16 logical cores here), and the `worker` project spawns `workerd` children on top of that, so concurrent agent runs multiplied into machine-wide contention and twice forced a hard restart. `vitest.config.ts` now pins `maxWorkers: 2` at the root `test` block, inherited by both projects; the cap lives in config rather than a CLI flag because agents forget flags and the Workers pool has known bugs ignoring `--maxWorkers`. A `minWorkers: 1` companion was reverted — it is not in vitest 4.1.11's `InlineConfig` type and failed `tsc`. Sampled during a full run: 2 `node` + 2 `workerd` at steady state, 0 after exit. CLAUDE.md gained a test-run discipline block (one agent at a time, smallest file first, don't raise the cap).
+
+**EPERM root cause.** The working tree carried an undocumented downgrade of three dev dependencies against the committed s01 scaffold (Biome 2.5.13→2.5.10, `@cloudflare/vite-plugin` 1.54.9→1.54.4, wrangler 4.131.2→4.129.0). Tested rather than assumed: `pnpm dlx @biomejs/biome@2.5.13 --version` reproduces `spawnSync ... biome.exe EPERM` from a fresh cache path, while the installed 2.5.10 runs. The block is version-specific to that binary, not the Node wrapper, the shell, or the repository — which matches the sponsor's earlier finding that `biome.exe --version` failed directly. The downgrade is therefore causal and kept. Only Biome's causality is established; the vite-plugin and wrangler downgrades came in the same undocumented change and were left alone rather than probed.
+
+**s07 verification.** `pnpm check` green end to end: `tsc -b`, Biome, 194 tests in 9 files, both Vite builds, and `Secret scan: clean (dist/client)`. `pnpm dev` boots — Vite ready in 2.7 s with the Miniflare runtime up, the exact command that failed with `spawn EPERM` for both prior agents. Probing it over HTTP with curl was denied by the permission prompt (same boundary as s01), so no local request/response is claimed and the interactive checks remain undone: wrong-secret error, unlock, reload persistence, lock, and Chrome device emulation of the narrow layout and tap targets. Reviewed the diff by reading instead: unlock/status/lock states, abort-on-cleanup for the initial status fetch, no browser-storage credentials, manifest icon entries matching the three generated PNGs.
+
+s07 is committed on that evidence rather than held uncommitted a third time — two restarts have now destroyed sessions holding this same work. The browser gate is recorded as outstanding, not waived.
+
+**Process hygiene.** Stopping the dev-server task left its `pnpm`/`vite`/`workerd` tree orphaned; the three were identified by command line and killed, leaving zero strays. Worth watching after future interrupted runs.
+
+**Underlying cause: AVG Antivirus.** After the green check, the toolchain degraded within the same session: `pnpm check` took 21 minutes, then worker-pool runs began failing with `[vitest-pool]: Timeout starting cloudflare-pool runner` — consistently 3 of 5 worker files passing (53 tests) while 2 never started a runner, over 217 s. Two hypotheses were tested and rejected: stale SQLite `-shm`/`-wal` files left by the force-killed dev server (moving `.wrangler` aside changed nothing; it was restored), and the `maxWorkers: 2` cap (the 194-test green run was already under that cap). The tell was a plain `Rename-Item` of `.wrangler` exceeding 120 seconds — filesystem-level throttling, not a project fault. `Get-MpComputerStatus` reports Defender's AM service not running (`0x800106ba`) and `root\SecurityCenter2` lists **AVG Antivirus** as the registered product. One scanner explains every symptom this front has hit across three sessions: `EPERM` on a newly seen `biome.exe`, `spawn EPERM` on Miniflare's runtime, `workerd` launches exceeding the pool's start timeout, and minutes-long file operations. The 2.5.13-vs-2.5.10 result stands as reproducible, but reads as AVG treating one binary as unknown rather than anything wrong with Biome.
+
+Remedy is a sponsor decision, not an agent one: AVG exclusions for the repository, its `node_modules`, and the `workerd`/`biome` executables. Captured in TODO as `#sponsor-decide`. Until then, expect worker-pool runs to be slow or to time out intermittently on this machine; a failure of this shape is environmental and should be re-run before it is treated as a code defect.
+
+## 2026-09-17 — s07 shell implementation (260917a)
+
+Resumed with an empty Inbox and clean main. Sponsor authorized the next tranche with a 15-minute maximum, then requested terminal commands when Codex execution restrictions persisted. f01 was already open; no new front or scope added.
+
+Implemented `src/App.tsx` + `src/app.css`: initial cookie-session check, password-manager-friendly unlock form, total/due counts from the existing status endpoint, lock, disabled pending controls, and wrong-secret/rate-limit/network/server error messages. Successful unlock clears the input; no localStorage credentials. Failed lock preserves the current view and reports that the device remains unlocked. Initial status requests abort on effect cleanup.
+
+Added `public/manifest.webmanifest`, HTML manifest/theme/icon links, 192/512 any icons and a padded 512 maskable icon derived from `design/icon/icon_1254.png`. `scripts/make-icons.ps1` reproduces the assets using System.Drawing; sampled corner teal is #054e51. Controls have a 48 px minimum height. No service worker or new dependencies.
+
+Verification: `pnpm typecheck` passes after implementation; `git diff --check` passes. Inspected the maskable icon visually; all three icon dimensions match the manifest, and measured lettering radius is 176.0 px inside the 204.8 px maskable safe radius. `pnpm check` fails launching Biome with `spawnSync ... biome.exe EPERM`, both default and approved execution. Formatter retry also fails with EPERM. `pnpm dev` fails with spawn EPERM (default in Vite path resolution; approved retry reaches Miniflare but cannot launch its runtime). No browser/phone verification or fresh test/build/secret-scan success is claimed. No commit/push because the required green-check gate is unmet.
+
+Sponsor commands, from the repository root (Git Bash; `.cmd` avoids the PowerShell launcher):
+
+```bash
+pnpm.cmd exec biome check --write src/App.tsx src/app.css index.html public/manifest.webmanifest &&
+pnpm.cmd check &&
+pnpm.cmd dev
+```
+
+Browser checks: open the printed localhost URL, try a wrong secret, unlock with the local secret, confirm counts, reload (session retained), lock (unlock form returns), unlock again. In Chrome phone emulation check narrow layout and tap targets; offline/retry and failed-lock messaging should be checked too. Password-manager autofill and installed Android behavior remain the production s08 sponsor gate. Do not paste secret values into chat. If local schema is missing, apply `pnpm wrangler d1 migrations apply urdu --local` before retrying.
+
+### Final wrap / Claude Code handoff
+
+Sponsor reproduced the same Biome `spawnSync ... EPERM` using `pnpm.cmd` in Git Bash. Directly invoking the installed `biome.exe --version` returned `Permission denied`, so the observed failure is not confined to the Node wrapper or PowerShell script launcher. The terminal's isolation context was not independently verified.
+
+Read-only sponsor diagnostics: stream listing showed only `:$DATA` (no Zone.Identifier shown); `icacls` processed the file successfully but printed "The trust relationship between this workstation and the primary domain failed", followed by an unresolved inherited Modify entry and inherited Full Control entries for SYSTEM, Administrators, and `cjinc\JLock`. No CodeIntegrity events appeared in the supplied output; the command suppressed errors, so this does not establish that the log is clear. The trust message alone does not establish the cause of execution denial. Requested follow-up `whoami /user` and raw ACL SDDL was not run/reported before wrap. No permission, domain, or security-setting changes were made.
+
+Sponsor is switching to Claude Code to try verification there. Start with `/pm-resume`, inspect the existing s07 diff, and retry the formatter/check/dev commands above in that environment. Do not rebuild the slice from scratch or mark it complete based only on typechecking. Resolve findings, complete browser verification, then path-scope the s07 commit on main. All session changes remain uncommitted and unpushed because the required green-check gate is unmet; preserve them. s08 (smoke script + production runbook + phone) remains untouched. PM hub/roster and CLAUDE state reflect verification pending; CHANGELOG starts the user-facing unreleased record. No new cross-cutting decision or TODO was introduced by the diagnostics.
 
 ## 2026-09-16 — Codex handoff (260916a)
 

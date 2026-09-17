@@ -13,6 +13,7 @@
 ## Tasks
 *Bullets, each tagged.*
 
+- Decide whether to add AVG Antivirus exclusions for `C:/Users/jlock/dev/pers/urdu`, its `node_modules`, and the `workerd`/`biome` executables. AVG is the machine's active scanner (Defender disabled) and is the attributed cause of `EPERM` launch failures, `cloudflare-pool` runner timeouts, and minute-scale file operations in this repo (DECISIONS 260917b, journal 260917b). Without it, worker-pool test runs stay intermittently unreliable on this machine. Sponsor-only: this is a machine security-policy change, and the sponsor has previously declined machine-level changes on this laptop. #sponsor-decide
 - f07 Coach prompt tuning from mp02's five-minute run: English-explanation requests answered in Urdu, garbled non-correction, barging into learner hesitations, markdown in spoken text; test confirm-after-result with a failing add. Fold into f07's doc when it opens. #agent-research
 - Delete `spikes/speech/` once f03 ships `speak()` (mp01 decision 2026-09-14). #agent-implement
 - Delete `spikes/gpt-live/` once f07 ships the brokered voice session; until then it is the working reference for the SDP route and data-channel tool handling. f01 repoints `wrangler.jsonc` away from it. (mp02 close 2026-09-14) #agent-implement

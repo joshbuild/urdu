@@ -1,8 +1,8 @@
 # Feature Plan — Urdu Core Foundation
 
-**Status**: 🟡 IN PROGRESS (2026-09-14) — s01–s06 done; s07 PWA shell next, then s08 deploy + phone
+**Status**: 🟡 IN PROGRESS (2026-09-17) — s01–s07 built and committed with `pnpm check` green; s07's browser/device-emulation check outstanding; then s08 deploy + phone
 **Handle**: `f01`
-**Created**: 2026-09-14 · **Updated**: 2026-09-14
+**Created**: 2026-09-14 · **Updated**: 2026-09-17
 
 **Owner docs it serves**:
 - `pm/PRD.md` FR-A1..A8, FR-B1..B4, Appendix A, Appendix B, §6 Maintainability / Mobile / Portability / Reliability / Security
@@ -146,6 +146,10 @@ If `secret put` runs before the first deploy, wrangler creates the Worker; eithe
 
 ### Recently Completed
 
+- 2026-09-17 — s07 verified and committed: `pnpm check` green end to end (tsc, Biome, 194 tests in 9 files, both builds, `Secret scan: clean`), and `pnpm dev` boots with the Miniflare runtime up. The `EPERM` that blocked two agents was the Biome 2.5.13 binary; the 2.5.10 pin already in the tree is the fix (see DECISIONS 260917b). Local HTTP probing was permission-denied, so the browser gate below is still open.
+
+- 2026-09-17 — s07 implementation drafted: responsive unlock/status/lock shell, manifest, 192/512 icons and padded maskable icon from sponsor artwork. Typecheck passes; full checks and local server blocked by Windows `EPERM`, including approved execution retries. Not yet committed or accepted as complete; sponsor verification commands are in the journal.
+
 - 2026-09-14 — s06 review + export built: `POST /api/vocab/:id/reviews` (201 `{item, event}`, 404, 409 on a stale read) via `recordReview`/`applyReview` in `worker/domain/review.ts`, which f06 reuses with `source=coach` + handoff id; `GET /api/export` (vocab, review_events, tags, handoffs; no sessions). 19 review/export tests plus export in the FR-A8 test; `pnpm check` green (194 total). Recovered after an interrupted session; commit `f619c9c`.
 
 - 2026-09-14 — s05 vocab + due built: `POST/GET/PATCH/DELETE /api/vocab[/:id]`, `GET /api/vocab` (q, tag, due, sort, limit, offset, filtered total), `GET /api/vocab/due`, `GET /api/status` (total, due, today); duplicate check on normalized key with 409 + existing id (race caught by the unique index); tag rows auto-inserted in the same batch. 45 vocab tests incl. FR-A8; `pnpm check` green (175 total). Commit `6e1efea`.
@@ -162,7 +166,7 @@ If `secret put` runs before the first deploy, wrangler creates the Worker; eithe
 
 ### Next Steps
 
-1. Build s07 (PWA shell: manifest + icons from `design/icon/icon_1254.png`, unlock, status, lock).
+1. Close s07's remaining gate: with `pnpm dev` running, check wrong-secret and offline error paths, unlock, reload persistence, and lock, then Chrome device emulation for the narrow layout and 48 px targets. Sponsor-run — agent HTTP probing is permission-denied (journal 260917b).
 2. Then s08 (smoke script, CLAUDE.md commands, sponsor runbook, phone check).
 
 ### Open Questions
@@ -172,6 +176,8 @@ If `secret put` runs before the first deploy, wrangler creates the Worker; eithe
 ## Decisions
 
 *Agent-resolved at open unless marked sponsor; sponsor can overturn.*
+
+- 2026-09-17 (s07) — Minimal shell uses the supplied icon's sampled teal (#054e51) with a light background and 48 px controls. Derive icons with the dependency-free Windows `scripts/make-icons.ps1`; maskable artwork is scaled to 75% on a teal canvas. Auth remains same-origin HttpOnly cookies; the form uses password-manager autocomplete and clears the input after successful unlock, with no browser-storage credentials.
 
 - 2026-09-14 (sponsor, Q1) — Unlock brute-force protection = long random secret plus a Workers rate-limit binding on `POST /api/unlock` (about 5 attempts/min per IP). No lockout table.
 - 2026-09-14 (sponsor, Q2) — Deleting a vocab item deletes its `review_events` (FK `ON DELETE CASCADE`).
