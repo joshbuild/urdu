@@ -116,7 +116,9 @@ On the Android phone, in Chrome:
 - Date run: 2026-09-17
 - Part A: PASS (local, all 11)
 - Part B: PASS — deployed, version `b7585268-e826-42df-bfeb-83a8f106393f`; bindings DB/UNLOCK_LIMITER/HOME_TZ confirmed at upload
-- Part C: PASS — 23/23 checks, no cleanup line; stray `smoke` tag row from this run cleared per C4
+- Part C: PASS — 23/23 checks, no cleanup line. First run (tag-setting script)
+  left a stray `smoke` tag row, cleared per C4; re-run with the corrected script
+  passed 23/23 and left `tags` empty unaided, so Done-When 4 is verified, not assumed.
 - Part D:
 - Failures / notes:
 
