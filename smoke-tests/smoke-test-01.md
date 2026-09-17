@@ -74,7 +74,7 @@ out of shell history and process listings.
 - [x] C3 — the vault is unchanged afterwards. The script's own
       `total count is back where it started` check covers this; Part D's unlock
       confirms it in the browser.
-- [ ] C4 — **one-off remediation for the 2026-09-17 run only.** That run
+- [x] C4 — **one-off remediation for the 2026-09-17 run only.** That run
       created the item with `tags: ["smoke"]`, and a vocab delete does not
       cascade to the `tags` catalogue table, so a stray row was left in
       production. The script no longer sets a tag. Clear the row:
