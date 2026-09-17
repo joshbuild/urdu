@@ -4,6 +4,36 @@
 
 **Current state (2026-09-14):** s01–s06 complete (scaffold, shared rules, schema, auth, vocab + due + status, review + export); 194 tests; local D1 migrated to `0001_init`; production D1 `urdu` still has no schema (s08 runbook). Next: s07 PWA shell, then s08 deploy + phone.
 
+## 2026-09-16 — Codex handoff (260916a)
+
+Completed orientation across VISION, PRD, PLAN, STATUS, sessions, this front,
+its journal, PM workflows, and the implemented route/tooling layout. No
+product code changed; f01 s07 remains next.
+
+Installed and validated 12 personal Codex PM adapters under
+`C:/Users/jlock/.codex/skills/pm-*/SKILL.md`. They read the canonical skills
+under `C:/Users/jlock/.claude/skills/`, resolving references there, so both
+agents share one procedure. Codex's refreshed skills catalogue confirms
+discovery. These personal adapters are outside the repository and depend
+on the original Claude skill files remaining available on this machine.
+
+AGENTS.md now provides durable PM routing and execution guidance. CLAUDE.md
+now reflects s01–s06 completion, the chosen in-app voice Coach, Android-first
+v0 scope, and the permitted voice API exception.
+
+Verification: Node 22.15.0 and pnpm 10.11.0 available. Typecheck passes.
+Lint passed on the initial September 15 attempt, but subsequent full
+`pnpm check` attempts, including elevated execution on September 16, fail
+launching Biome with `spawnSync ... EPERM`. Separate test attempts encountered
+Vite subprocess EPERM; an elevated test run reached Workers startup but its
+completion was lost on interruption. Local `pnpm dev` failed launching the
+Miniflare runtime with `spawn EPERM`. The previous 194-test green baseline
+is Claude's September 14 result, not a newly verified Codex result.
+
+Runtime execution remains unresolved; no dependency or check was weakened.
+Resolve Windows subprocess permissions and rerun checks plus local HTTP
+verification before treating the Codex development runtime as ready.
+
 ## 2026-09-14 — opened
 
 Opened after Phase 0 closed (mp01 speech PASS, mp02 GPT-Live PASS → FR-G Option 2). Doc written from PLAN Phase 1, PRD FR-A1..A8, FR-B1..B4, Appendices A/B, and §6 NFRs. Eight slices (s01 scaffold → s08 deploy + phone). Five sponsor questions batched in the doc (unlock rate limiting, cascade on delete, secret shape, production smoke, Hono). Build paused until answered, at sponsor request.
