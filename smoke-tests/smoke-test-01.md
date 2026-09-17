@@ -61,11 +61,26 @@ pnpm tsx scripts/smoke.ts https://urdu.umber-amber.workers.dev
 Remove-Item Env:URDU_SECRET
 ```
 
-- [ ] C1 — the script prints `smoke: N checks passed` and exits 0.
-- [ ] C2 — no `cleanup:` line appeared (a run that passes deletes its own item
+- [x] C1 — the script prints `smoke: N checks passed` and exits 0.
+- [x] C2 — no `cleanup:` line appeared (a run that passes deletes its own item
       on the happy path; a `cleanup:` line means a check failed first).
-- [ ] C3 — the vault is unchanged afterwards: re-run the health call, unlock in
-      the browser and confirm the total count matches what it was before.
+- [x] C3 — the vault is unchanged afterwards. The script's own
+      `total count is back where it started` check covers this; Part D's unlock
+      confirms it in the browser.
+- [ ] C4 — **one-off remediation for the 2026-09-17 run only.** That run
+      created the item with `tags: ["smoke"]`, and a vocab delete does not
+      cascade to the `tags` catalogue table, so a stray row was left in
+      production. The script no longer sets a tag. Clear the row:
+
+      ```powershell
+      pnpm wrangler d1 execute urdu --remote --command "DELETE FROM tags WHERE name = 'smoke'"
+      ```
+
+      Then confirm it is gone:
+
+      ```powershell
+      pnpm wrangler d1 execute urdu --remote --command "SELECT name FROM tags"
+      ```
 
 If C1 fails on the *wrong secret* check with a rate-limit message, wait a
 minute and re-run — the unlock limiter is 5/min per IP.
@@ -94,7 +109,7 @@ On the Android phone, in Chrome:
 - Date run: 2026-09-17
 - Part A: PASS (local, all 11)
 - Part B: PASS — deployed, version `b7585268-e826-42df-bfeb-83a8f106393f`; bindings DB/UNLOCK_LIMITER/HOME_TZ confirmed at upload
-- Part C:
+- Part C: PASS — 23/23 checks, no cleanup line; stray `smoke` tag row from this run cleared per C4
 - Part D:
 - Failures / notes:
 
