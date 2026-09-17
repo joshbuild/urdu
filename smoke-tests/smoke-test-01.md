@@ -19,21 +19,21 @@ pnpm wrangler d1 migrations apply urdu --local   # only if the local DB is empty
 pnpm dev                                          # note the printed localhost URL
 ```
 
-- [ ] A1 — the page loads at the printed URL and shows the unlock form.
-- [ ] A2 — a **wrong secret** shows an error message and stays locked.
-- [ ] A3 — the correct `.dev.vars` secret unlocks; the input clears.
-- [ ] A4 — the status screen shows a **total** and a **due** count.
-- [ ] A5 — **reload** the page: still unlocked (session cookie persists).
-- [ ] A6 — **Lock** returns the unlock form; reload confirms it stays locked.
-- [ ] A7 — offline path: stop the dev server (or go offline in DevTools), try
+- [x] A1 — the page loads at the printed URL and shows the unlock form.
+- [x] A2 — a **wrong secret** shows an error message and stays locked.
+- [x] A3 — the correct `.dev.vars` secret unlocks; the input clears.
+- [x] A4 — the status screen shows a **total** and a **due** count.
+- [x] A5 — **reload** the page: still unlocked (session cookie persists).
+- [x] A6 — **Lock** returns the unlock form; reload confirms it stays locked.
+- [x] A7 — offline path: stop the dev server (or go offline in DevTools), try
       unlock → a network error message appears, not a blank screen or a hang.
-- [ ] A8 — failed **lock** while offline reports that the device is still
+- [x] A8 — failed **lock** while offline reports that the device is still
       unlocked and keeps the current view.
-- [ ] A9 — Chrome DevTools device emulation (e.g. Pixel 7, narrow width): the
+- [x] A9 — Chrome DevTools device emulation (e.g. Pixel 7, narrow width): the
       layout holds with no horizontal scroll.
-- [ ] A10 — tap targets (unlock button, lock button, input) are at least 48 px
+- [x] A10 — tap targets (unlock button, lock button, input) are at least 48 px
       tall in emulation.
-- [ ] A11 — the password manager offers to save/fill the secret on the unlock
+- [x] A11 — the password manager offers to save/fill the secret on the unlock
       form.
 
 Stop the dev server when done.
@@ -44,11 +44,11 @@ Stop the dev server when done.
 
 Run from the repo root. `pnpm deploy` is a pnpm built-in — use `pnpm run deploy`.
 
-- [ ] B1 — `pnpm wrangler secret put UNLOCK_SECRET`
+- [x] B1 — `pnpm wrangler secret put UNLOCK_SECRET`
       (generate and store the value in a password manager; ≥ 24 characters).
-- [ ] B2 — `pnpm wrangler d1 migrations apply urdu --remote`
-- [ ] B3 — `pnpm run deploy`
-- [ ] B4 — `curl.exe -s https://urdu.umber-amber.workers.dev/api/health`
+- [x] B2 — `pnpm wrangler d1 migrations apply urdu --remote`
+- [x] B3 — `pnpm run deploy`
+- [x] B4 — `curl.exe -s https://urdu.umber-amber.workers.dev/api/health`
       returns `{"ok":true}`.
 
 ---
@@ -91,9 +91,9 @@ On the Android phone, in Chrome:
 
 ## Result
 
-- Date run:
-- Part A:
-- Part B:
+- Date run: 2026-09-17
+- Part A: PASS (local, all 11)
+- Part B: PASS — deployed, version `b7585268-e826-42df-bfeb-83a8f106393f`; bindings DB/UNLOCK_LIMITER/HOME_TZ confirmed at upload
 - Part C:
 - Part D:
 - Failures / notes:
