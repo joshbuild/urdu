@@ -82,9 +82,9 @@ out of shell history and process listings.
       ```bash
       pnpm wrangler d1 execute urdu --remote --command "DELETE FROM tags WHERE name = 'smoke'"
       ```
-
+      
       Then confirm it is gone:
-
+      
       ```bash
       pnpm wrangler d1 execute urdu --remote --command "SELECT name FROM tags"
       ```
@@ -98,16 +98,16 @@ minute and re-run — the unlock limiter is 5/min per IP.
 
 On the Android phone, in Chrome:
 
-- [ ] D1 — open `https://urdu.umber-amber.workers.dev` and unlock.
-- [ ] D2 — install the PWA (menu → Add to Home screen / Install app).
-- [ ] D3 — the installed icon looks right on the launcher (maskable icon, no
+- [x] D1 — open `https://urdu.umber-amber.workers.dev` and unlock.
+- [x] D2 — install the PWA (menu → Add to Home screen / Install app).
+- [x] D3 — the installed icon looks right on the launcher (maskable icon, no
       clipped lettering).
-- [ ] D4 — launch the installed app: it opens standalone (no browser chrome).
-- [ ] D5 — it is **still unlocked** after the relaunch.
-- [ ] D6 — force-close and relaunch: still unlocked.
-- [ ] D7 — **Lock** in the installed app, then relaunch: the unlock form is
+- [x] D4 — launch the installed app: it opens standalone (no browser chrome).
+- [x] D5 — it is **still unlocked** after the relaunch.
+- [x] D6 — force-close and relaunch: still unlocked.
+- [x] D7 — **Lock** in the installed app, then relaunch: the unlock form is
       shown (the device is revoked).
-- [ ] D8 — unlock once more so the phone is left in a usable state.
+- [x] D8 — unlock once more so the phone is left in a usable state.
 
 ---
 
@@ -119,8 +119,10 @@ On the Android phone, in Chrome:
 - Part C: PASS — 23/23 checks, no cleanup line. First run (tag-setting script)
   left a stray `smoke` tag row, cleared per C4; re-run with the corrected script
   passed 23/23 and left `tags` empty unaided, so Done-When 4 is verified, not assumed.
-- Part D:
-- Failures / notes:
+- Part D: PASS — installed on Android, icon correct, unlocked across relaunch
+  and force-close, lock revoked the device
+- Failures / notes: one — the first production smoke run left a stray `smoke`
+  tag row (script defect, now fixed and re-verified; see Part C and C4).
 
 All four parts green closes f01's Done-When 1, 2 and 4 (3, 5 and 6 are already
 verified in-repo). Record the outcome in the f01 journal at wrap.
