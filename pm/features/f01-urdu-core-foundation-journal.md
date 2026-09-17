@@ -28,10 +28,16 @@ s07 is committed on that evidence rather than held uncommitted a third time — 
 | Hardened Mode off | 5 of 5 | 0 | 88 s |
 | … + CyberCapture off | 5 of 5 | 0 | 48 s |
 | … warm repeat | 5 of 5 | 0 | 38 s |
+| … plus a repo folder exception | 3 of 5 | 2 | **492 s** |
+| exception removed, both features re-toggled off | 5 of 5 | 0 | **8 s** |
 
 **Hardened Mode is the correctness fix** — with it off the `cloudflare-pool` runner timeouts disappear entirely, which settles the diagnosis: AVG was refusing `workerd.exe` launches. CyberCapture is a speed fix, roughly halving the run. The residual is File Shield scanning each launch: a single worker file costs 6 s wall for 2 s of Vitest, so ≈ 7 s of `workerd` startup per file, and only an exclusion would remove it. For contrast the whole suite ran in 9 s earlier the same day, before the dev-server run appears to have made AVG re-examine these binaries.
 
-Working arrangement until exclusions are possible: develop with Hardened Mode off, prefer single-file runs (6 s) over the full worker project (38–48 s), and re-enable the AVG features afterwards. The remedy proper — exclusions for the repository, its `node_modules` and the `workerd`/`biome` executables — stays a sponsor machine-policy decision, captured in TODO as `#sponsor-decide`. A run of this shape remains environmental: re-run before treating it as a code defect.
+**Exceptions are not the remedy here — they are actively harmful.** Adding a folder exception for the repository, with both features still off, took the same suite to 492 s and back to the broken 3-of-5 signature: eight times worse than doing nothing. The signature is the one Hardened Mode produces, so the likely mechanism is that editing settings on a console-managed install provokes a policy re-sync that re-applies the managed policy and discards the local toggles. That also explains the sponsor's prior experience of exceptions "not sticking" — the cost is not just a lost exception, it is losing the toggles that do work. This is inference from the failure signature plus the sponsor's UI check, not a directly observed console event.
+
+Removing the exception and toggling both features off again restored the machine past its earlier state: **8 s** for the worker project and **32.7 s** for a full `pnpm check`, against 38–48 s and minutes before. So the earlier 38–48 s figures were a degraded scan state rather than a floor, and a fresh off/on/off cycle clears it.
+
+Working arrangement: no AVG exceptions; toggle Hardened Mode and CyberCapture off before a work session and back on after. Single-file worker runs (6 s) stay the habit while iterating, though at 8 s the whole project is no longer worth avoiding. The `#sponsor-decide` TODO is closed out by this result rather than left open for an exclusion that measurably backfires. A run of this shape remains environmental: re-run before treating it as a code defect.
 
 ## 2026-09-17 — s07 shell implementation (260917a)
 

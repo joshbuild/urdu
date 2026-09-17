@@ -31,11 +31,12 @@ Test-run discipline (this workstation has been wedged by concurrent Vitest runs)
 - AVG Antivirus (not Windows permissions) is what makes `workerd` and other
   binaries fail to launch or crawl here. If Workers-pool runs time out with
   `[vitest-pool]: Timeout starting cloudflare-pool runner`, ask the sponsor to
-  turn AVG **Hardened Mode** off — that removes the failures; **CyberCapture**
-  off roughly halves the runtime. Re-run before calling such a failure a bug.
-- Worker-pool startup costs about 7 s per test file on this machine, so a single
-  file runs in ~6 s against ~40 s for the whole `worker` project. Prefer
-  `pnpm vitest run --project worker test/<file>.test.ts` while iterating.
+  turn AVG **Hardened Mode** and **CyberCapture** off — with both off the
+  worker project runs in ~8 s and `pnpm check` in ~33 s. Re-run before calling
+  a failure of that shape a bug.
+- Never suggest AVG exceptions/exclusions. Tested 2026-09-17: a repo folder
+  exception made the same suite 492 s and reinstated the failures, apparently
+  by triggering a policy re-sync on this console-managed install.
 
 Read `pm/VISION.md` (intent, invariants), `pm/PRD.md` (exact v0 scope and requirements, data model, Coach contract), and `pm/PLAN.md` (phases and Features Index) before any design or implementation work. Where PRD and VISION differ on scope, PRD wins. Project management uses the pm work-front regime: start sessions with `/pm-resume`, end with `/pm-wrap`, open work with `/pm-open`; `pm/STATUS.md` is the resume hub.
 
