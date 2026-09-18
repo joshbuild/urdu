@@ -1,6 +1,7 @@
 import { type FormEvent, useCallback, useEffect, useState } from "react";
 import type { StatusResponse } from "../shared/api";
 import "./app.css";
+import { useVoice } from "./reader/useVoice";
 import { ReaderScreen } from "./screens/ReaderScreen";
 import { ReviewScreen } from "./screens/ReviewScreen";
 import { SettingsScreen } from "./screens/SettingsScreen";
@@ -15,6 +16,8 @@ export function App() {
   const [tab, setTab] = useState<Tab>(readStoredTab);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+  // One voice for the whole app: the reader speaks with what Settings chose (FR-C4, FR-I1).
+  const voiceState = useVoice();
 
   const loadStatus = useCallback(async (signal?: AbortSignal) => {
     try {
@@ -123,10 +126,12 @@ export function App() {
 
         {ready && status ? (
           <>
-            {tab === "read" && <ReaderScreen />}
+            {tab === "read" && <ReaderScreen voiceState={voiceState} />}
             {tab === "vocab" && <VocabScreen status={status} />}
             {tab === "review" && <ReviewScreen status={status} />}
-            {tab === "settings" && <SettingsScreen onLock={lock} busy={busy} />}
+            {tab === "settings" && (
+              <SettingsScreen onLock={lock} busy={busy} voiceState={voiceState} />
+            )}
             {error && (
               <p id="request-error" className="error" role="alert">
                 {error}

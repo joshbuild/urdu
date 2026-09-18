@@ -1,9 +1,11 @@
-// f03 s02-s03: paste, render in Nastaliq, persist, and split into tappable tokens.
-// Speech behind onWord is s04; the selection action bar is s05.
+// f03 s02-s04: paste, render in Nastaliq, persist, split into tappable tokens, and speak a token
+// on tap. The selection action bar is s05.
 
 import { useEffect, useState } from "react";
+import { speak } from "../reader/speech";
 import { readStoredText, storeText, toParagraphs } from "../reader/text";
 import { tokenize } from "../reader/tokens";
+import type { VoiceState } from "../reader/useVoice";
 
 // Words become spans carrying the token in a data attribute; separators stay bare text. Spans, not
 // buttons: a button would take the text out of the inline flow, fight Nastaliq's shaping, and give
@@ -21,7 +23,7 @@ function renderTokens(paragraph: string) {
   );
 }
 
-export function ReaderScreen() {
+export function ReaderScreen({ voiceState }: { voiceState: VoiceState }) {
   const [text, setText] = useState(readStoredText);
   const [editing, setEditing] = useState(() => readStoredText() === "");
 
@@ -30,6 +32,14 @@ export function ReaderScreen() {
   }, [text]);
 
   const paragraphs = toParagraphs(text);
+
+  function onTokenTap(event: React.MouseEvent<HTMLDivElement>) {
+    // A tap that ends a selection drag must not also speak: the selection is the user's intent,
+    // and s05's action bar owns what happens to it.
+    if (!globalThis.getSelection()?.isCollapsed) return;
+    const token = (event.target as HTMLElement).closest<HTMLElement>("[data-token]")?.dataset.token;
+    if (token) speak(token, voiceState.voice);
+  }
 
   if (editing || paragraphs.length === 0) {
     return (
@@ -62,7 +72,12 @@ export function ReaderScreen() {
           Edit text
         </button>
       </div>
-      <div className="urdu" dir="rtl" lang="ur">
+      {/* One delegated listener rather than a handler per token: a long passage is thousands of
+          tokens, and the token itself carries its text in a data attribute. A tap that lands on a
+          separator or between lines finds no token and does nothing. */}
+      {/* biome-ignore lint/a11y/noStaticElementInteractions: the tappable unit is a token span, not the container */}
+      {/* biome-ignore lint/a11y/useKeyWithClickEvents: v0 targets touch; desktop keyboard support is Phase 4 */}
+      <div className="urdu" dir="rtl" lang="ur" onClick={onTokenTap}>
         {paragraphs.map((paragraph, index) => (
           // Paragraphs and tokens have no identity of their own — position is the only key
           // available, and the whole block re-renders together whenever the text changes.

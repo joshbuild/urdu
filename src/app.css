@@ -263,3 +263,15 @@ button.inline {
 .token:active {
   background: #f2e4d8;
 }
+
+/* f03 s04: the voice picker. Matches the input sizing so the settings panel reads as one form. */
+select {
+  width: 100%;
+  min-height: 48px;
+  border: 1px solid #829b97;
+  border-radius: 10px;
+  padding: 12px 16px;
+  background: white;
+  color: #173e40;
+  font: inherit;
+}
