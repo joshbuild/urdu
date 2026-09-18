@@ -8,11 +8,11 @@
 ## Open Workfronts
 *Work items actively in flight. One line each → its doc/journal. Closed fronts drop off (rosters keep the full list).*
 
-- **f03 `reader`** 🟡 in progress (s08 next, opened 2026-09-17) — paste-and-read Nastaliq, tap-to-speak, selection action bar, add and define (FR-C1..C8 + the FR-I1 voice picker) → `features/f03-reader.md`
+- *(none — f03 closed 2026-09-17; f04 is next to open)*
 
 ## Next Session Pointers
 *The 1–3 concrete next actions for a cold start.*
 
 1. **Phase 1 is done.** f02 closed 2026-09-17: the production import put 36 vocab rows, 3 tags and 0 review events into D1, verified through D1, `GET /api/export` and the phone (total 36 / due 8). Every Phase 1 exit condition is met.
-2. **f03 `reader` is open; s01-s07 are built (2026-09-17).** Paste, Nastaliq render, tokens, tap-to-speak, the voice picker, the selection action bar (docked above the tab bar after the phone showed the floating one colliding with Android's toolbar), Add to vocab and Define pass locally; the docked bar is confirmed on the phone, the rest is not. Next is s08: the sponsor deploys and runs `smoke-tests/smoke-test-03.md` on the phone. LLM field-filling for Add is planned as f08 `vocab-enrich` (after f05, DECISIONS 260917h).
+2. **f03 `reader` shipped 2026-09-17** — smoke-test-03 green on the phone. Sponsor owes E6: delete the `smoke test` row from production D1 (command given in chat). Next is f04 `vocab-ui` (open with `/pm-open`); then f05 `review`, then f08 `vocab-enrich` (LLM field-filling, DECISIONS 260917h).
 3. Toolchain is healthy when AVG **Hardened Mode** and **CyberCapture** are off (sponsor toggles these per session; never add AVG exceptions — measured harmful). Do not bump Biome without re-testing execution on this machine.

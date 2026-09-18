@@ -2,6 +2,20 @@
 
 *Verbose per-session narration for f03. The feature doc (`f03-reader.md`) is canonical for scope, plan and decisions; this file is the story of how it went. Newest session at the top.*
 
+## 260917h — s05–s08; closed
+
+**Current state**: shipped. smoke-test-03 green on the installed PWA; the sponsor still has to delete the E6 `smoke test` row from production D1.
+
+**s05 — the phone decided the bar's position.** The first build floated the bar above the selection, placed by a pure `placeActionBar` function with tests. On the first deploy it overlapped Android Chrome's own copy/share toolbar, which sits in exactly that spot. So I took the fallback the open question had already named: a full-width bar fixed above the tab bar. That deleted the positioning code and its tests outright rather than keeping them unused. `.urdu` gets 72 px of permanent bottom padding so the bar never hides the last line. It is always on rather than toggled so the layout cannot move under a live selection. The bar suppresses pointerdown so pressing a button does not collapse the selection first.
+
+**s06 — Add as a bottom sheet.** A sheet over the reader rather than a separate screen, so the passage and scroll position survive. The source sentence is the first sentence of the selection's paragraph containing the term (split on ۔ ؟ . ? !), falling back to the paragraph when the term crosses a sentence break. It goes in notes, as the PRD says. The duplicate case fetches the existing item by id and shows it inline, because the link FR-C6 asks for would point at f04's unbuilt detail screen.
+
+**Scope turn: LLM enrichment.** Seeing the manual form made the sponsor say manual entry is not really wanted. That reverses 260911a's zero-LLM rule for the Add path. The sponsor chose to build it later in Phase 2 (after f05) rather than straight after f03, and to keep Define LLM-free. Recorded as f08 `vocab-enrich` in PRD §2.2/§6, PLAN, DECISIONS 260917h and AGENTS.md.
+
+**s07 — Define with no new API.** `GET /api/vocab?q=` is a substring search; the client narrows it to an exact `urdu_key` match with the shared `urduKey`, the same equality duplicate detection uses. On a miss (or a failed lookup) it shows the three links plus a hand-off to the Add sheet. The shared `Sheet` component moved into its own file.
+
+**s08.** Wrote `smoke-tests/smoke-test-03.md` and archived smoke-test-02. The sponsor ran it green, A1–E5.
+
 ## 260917g — opened f03; s01–s04
 
 **Current state**: s01–s04 built and committed on `main`, `pnpm check` green at 257 tests. Nothing has been on a device. s05 (selection action bar) is next.

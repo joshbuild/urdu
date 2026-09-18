@@ -1,6 +1,6 @@
 # Feature Plan — Reader
 
-**Status**: 🟡 IN PROGRESS *(opened 2026-09-17 — s01-s07 built, s08 next)*
+**Status**: 🟢 SHIPPED — *closed 2026-09-17. s01–s08 done; phone smoke test green.*
 **Handle**: `f03`
 **Created**: *2026-09-17* · **Updated**: *2026-09-17*
 
@@ -10,6 +10,16 @@
 - `shared/normalize.ts` — `urdu_key` equality drives the Define lookup and duplicate rejection
 
 > **One-line:** Paste Urdu into the phone, read it in Nastaliq, tap any word to hear it, select any phrase to speak, define, or save it to the vault.
+
+## Archived — as shipped (2026-09-17)
+
+**Status:** 🟢 shipped. All six Done-When conditions met; `smoke-tests/smoke-test-03.md` green on the installed Android PWA (A1–E5; E6 test-row cleanup handed to the sponsor).
+
+**What shipped:** tab-bar shell (Read · Vocab · Review · Settings); paste → RTL Nastaliq render with a self-hosted 114 KB subset font, text kept in localStorage; tokenizer with ZWNJ compounds intact; tap-to-speak with cancel-before-speak, pre-warm and the ur-PK voice ladder; Settings voice picker; selection action bar docked above the tab bar (Speak · Add · Define); Add to vocab bottom sheet with prefill, kind inference, source sentence in notes and inline duplicate display; Define as exact `urdu_key` vault lookup then Rekhta / Wiktionary / Google Translate links. `spikes/speech/` deleted.
+
+**Where the truth lives now:** code in `src/reader/` and `src/screens/`; PRD FR-C5 amended (docked bar); DECISIONS 260917g (pure-function client tests, code-point regexes) and 260917h (LLM enrichment planned as f08); this doc's §Decisions for the tab bar, voice picker, docked bar and inline-duplicate calls.
+
+**Carried forward:** f04 can turn the inline duplicate display into a link to vocab detail; f08 `vocab-enrich` replaces manual entry in the Add sheet.
 
 ## Intent
 
