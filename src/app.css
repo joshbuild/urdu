@@ -509,6 +509,27 @@ button.danger:hover:not(:disabled) {
   font-weight: 400;
 }
 
+.spacing {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  padding: 6px 0;
+}
+
+.spacing-rows {
+  display: grid;
+  grid-template-columns: max-content max-content;
+  column-gap: 16px;
+  margin-top: 2px;
+  font-size: 0.85em;
+  color: #526967;
+  font-variant-numeric: tabular-nums;
+}
+
+.spacing-row {
+  display: contents;
+}
+
 .direction input {
   width: 22px;
   min-height: 22px;

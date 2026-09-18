@@ -1,10 +1,30 @@
 import { describe, expect, it } from "vitest";
 import { ladder } from "../../shared/ladders";
-import { spacingSummary } from "./spacing";
+import { spacingMultiplier, spacingRows } from "./spacing";
 
-describe("spacingSummary", () => {
-  it("shows the multiplier, the first rungs and the cap", () => {
-    expect(spacingSummary(ladder(3))).toBe("×2.38 · 3 h, 7 h, 17 h, 2 d, 4 d … 10 y");
-    expect(spacingSummary(ladder(6))).toBe("×4.00 · 3 h, 12 h, 2 d, 8 d, 5 wk … 10 y");
+describe("spacingMultiplier", () => {
+  it("shows the multiplier to two places, none for the legacy ladder", () => {
+    expect(spacingMultiplier(ladder(2))).toBe("×2.00");
+    expect(spacingMultiplier(ladder(3))).toBe("×2.38");
+    expect(spacingMultiplier(ladder(1))).toBeNull();
+  });
+});
+
+describe("spacingRows", () => {
+  it("groups every rung into one row per unit", () => {
+    expect(spacingRows(ladder(2))).toEqual([
+      { unit: "hours", values: [3, 6, 12] },
+      { unit: "days", values: [1, 2, 4, 8, 16] },
+      { unit: "weeks", values: [5, 9, 18] },
+      { unit: "months", values: [8, 17] },
+      { unit: "years", values: [3, 6, 10] },
+    ]);
+    expect(spacingRows(ladder(6))).toEqual([
+      { unit: "hours", values: [3, 12] },
+      { unit: "days", values: [2, 8] },
+      { unit: "weeks", values: [5, 18] },
+      { unit: "months", values: [17] },
+      { unit: "years", values: [6, 10] },
+    ]);
   });
 });

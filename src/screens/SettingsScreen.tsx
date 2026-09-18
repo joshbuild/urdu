@@ -12,7 +12,7 @@ import {
   readSessionLimit,
   storeSessionLimit,
 } from "../settings/sessionLimit";
-import { spacingSummary } from "../settings/spacing";
+import { spacingMultiplier, spacingRows } from "../settings/spacing";
 
 const SAMPLE = "السلام علیکم، آپ کیسے ہیں؟";
 
@@ -141,8 +141,18 @@ export function SettingsScreen({
               checked={l.id === activeLadderId}
               onChange={() => void chooseLadder(l.id)}
             />
-            <span>
-              <strong>{l.name}</strong> {spacingSummary(l)}
+            <span className="spacing">
+              <span>
+                <strong>{l.name}</strong> {spacingMultiplier(l)}
+              </span>
+              <span className="spacing-rows">
+                {spacingRows(l).map((row) => (
+                  <span key={row.unit} className="spacing-row">
+                    <span>{row.values.join(" > ")}</span>
+                    <span>{row.unit}</span>
+                  </span>
+                ))}
+              </span>
             </span>
           </label>
         ))}
