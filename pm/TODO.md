@@ -8,7 +8,7 @@
 ## Inbox
 *Untriaged captures. Drain via `/pm-triage`.*
 
-- Complete the missing fields on existing vault items (Roman, English, notes, examples): `ٹیسٹ` from smoke-test-04 E2 (kept on purpose, English only) and several imported rows. Candidate: an f08 `vocab-enrich` backfill mode over incomplete rows, or a manual pass via the f04 edit form; list the incomplete rows first. (smoke-test-04, 2026-09-18) #agent-triage
+- Complete the missing fields on existing vault items (Roman, English, notes, examples): `ٹیسٹ` from smoke-test-04 E2 (kept on purpose, English only) and several imported rows. Candidate: an f08 `vocab-enrich` backfill mode over incomplete rows, or a manual pass via the f04 edit form; list the incomplete rows first. (smoke-test-04, 2026-09-18) → Decided 2026-09-18: ChatGPT fill-in round trip, PRD FR-F7 (DECISIONS 260918g), built with f06's paste path. #agent-implement
 
 ## Tasks
 *Bullets, each tagged.*

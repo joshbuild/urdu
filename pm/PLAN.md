@@ -33,13 +33,13 @@
 - f03 `reader` (🟢 shipped 2026-09-17): FR-C1..C8 including the selection action bar, Add to vocab form, Define ladder, voice picker.
 - f04 `vocab-ui` (🟢 shipped 2026-09-18): FR-D1..D3 and Settings (FR-I1 minus voice spend).
 - f05 `review`: FR-E1..E4.
-- f08 `vocab-enrich` (planned, added 2026-09-17): an LLM drafts every field of a new vocab item from the Add form (reader and FR-D3), the sponsor reviews before save. Server-side through Urdu Core, capped spend, same OpenAI key as f07. Manual entry stays as the fallback. Handle is f08 because f06/f07 were already taken.
+- f08 `vocab-enrich` (planned, added 2026-09-17): an LLM drafts every field of a new vocab item from the Add form (reader and FR-D3), the sponsor reviews before save. Server-side through Urdu Core, capped spend, same OpenAI key as f07. Manual entry stays as the fallback. Handle is f08 because f06/f07 were already taken. **On hold 2026-09-18** (DECISIONS 260918f) in favour of the ChatGPT paste path.
 - f09 `srs-ladder` (added 2026-09-18): the SRS redesign from `research/urdu-vocabulary-srs-research-and-design.md` (DECISIONS 260918c/d/e). Built right after f05; needs remote migration 0002 before its deploy.
 - **Exit:** Sponsor uses the app for reading and review on the phone for several consecutive days without needing Airtable.
 
 ### Phase 3 — Coach connection
 **Goal:** Words from conversation reach the vault with near-zero friction; v0 done.
-- f06 `coach-contract`: FR-F1..F5 (Coach routes, bearer auth, handoff idempotency, OpenAPI description, PWA paste-handoff screen).
+- f06 `coach-contract`: FR-F1..F6; its paste path (FR-F2, F4, F6, F7: Copy prompt → ChatGPT chat → paste JSON, for new items and for filling in incomplete ones) is built first, straight after f05/f09, ahead of the rest of Phase 3 (DECISIONS 260918f). Full scope: (Coach routes, bearer auth, handoff idempotency, OpenAPI description, PWA paste-handoff screen).
 - f07 `coach-client`: FR-G Option 2 (chosen by mp02). Voice screen, Worker-brokered GPT-Live-1 WebRTC session (FR-B5), Coach prompt in-repo (start from `mini-plans/mp02-coach-instructions.md` and the TODO tuning notes), tools bound to f06, spend display and caps.
 - **Exit:** After a Voice session, new vocabulary and quiz results are in D1 via the Coach client, with the clipboard handoff verified as a working fallback. v0 is complete; amend `VISION.md` §16 line on custom voice tutors to match the shipped option.
 
@@ -57,7 +57,7 @@
 | f03 | `features/archive/f03-reader-archive.md` | 🟢 shipped 2026-09-17 | Paste-and-read in Nastaliq with tap-to-speak, selection action bar, add and define. |
 | f04 | `features/archive/f04-vocab-ui-archive.md` | 🟢 shipped 2026-09-18 | Browse, search, edit, and create vocabulary; settings. |
 | f05 | `features/f05-review.md` | 🟡 in progress (s01) | Due-item review session with five-grade self-scoring. |
-| f06 | `features/f06-coach-contract.md` | planned | Coach tool routes, bearer auth, clipboard handoff import, OpenAPI description. |
+| f06 | `features/f06-coach-contract.md` | planned (paste path next) | Coach tool routes, bearer auth, clipboard handoff import with Copy prompt, OpenAPI description. |
 | f07 | `features/f07-coach-client.md` | planned | In-app GPT-Live-1 voice Coach (FR-G Option 2, chosen by mp02). |
-| f08 | `features/f08-vocab-enrich.md` | planned | LLM drafts all fields of a new vocab item for review before save (Phase 2, after f05). |
+| f08 | `features/f08-vocab-enrich.md` | on hold | LLM drafts all fields of a new vocab item for review before save (Phase 2, after f05). |
 | f09 | `features/f09-srs-ladder.md` | 🟡 in progress (built) | Versioned geometric review ladders, timestamp scheduling, richer review events (DECISIONS 260918c/e). |
