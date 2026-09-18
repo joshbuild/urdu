@@ -148,7 +148,7 @@ export function SettingsScreen({
               <span className="spacing-rows">
                 {spacingRows(l).map((row) => (
                   <span key={row.unit} className="spacing-row">
-                    <span>{row.values.join(" > ")}</span>
+                    <span>{row.values.join(" → ")}</span>
                     <span>{row.unit}</span>
                   </span>
                 ))}

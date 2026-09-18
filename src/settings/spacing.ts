@@ -1,5 +1,5 @@
 // f09: how the Settings picker describes a ladder: a "×2.00" multiplier, then its rungs grouped
-// one row per unit ("1 > 2 > 4 > 8 > 16  days"). Display only; the units here are coarser than
+// one row per unit ("1 → 2 → 4 → 8 → 16  days"). Display only; the units here are coarser than
 // formatInterval's so each row reads as a short run of whole numbers.
 
 import { type Ladder, multiplier } from "../../shared/ladders";
