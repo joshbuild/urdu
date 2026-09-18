@@ -13,6 +13,6 @@
 ## Next Session Pointers
 *The 1–3 concrete next actions for a cold start.*
 
-1. **Phase 1 is done.** f02 closed 2026-09-17: the production import put 36 vocab rows, 3 tags and 0 review events into D1, verified through D1, `GET /api/export` and the phone (total 36 / due 8). Every Phase 1 exit condition is met.
+1. **Phase 2: f03 done, f04 `vocab-ui` next** — open it with `/pm-open` (FR-D1..D3 + Settings minus voice spend). Then f05 `review`, then f08 `vocab-enrich`. Phase 1 closed 2026-09-17 (f02 import: 36 rows in production).
 2. **f03 `reader` shipped 2026-09-17** — smoke-test-03 green on the phone. Sponsor owes E6: delete the `smoke test` row from production D1 (command given in chat). Next is f04 `vocab-ui` (open with `/pm-open`); then f05 `review`, then f08 `vocab-enrich` (LLM field-filling, DECISIONS 260917h).
 3. Toolchain is healthy when AVG **Hardened Mode** and **CyberCapture** are off (sponsor toggles these per session; never add AVG exceptions — measured harmful). Do not bump Biome without re-testing execution on this machine.
