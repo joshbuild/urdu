@@ -8,6 +8,7 @@
 ## Log
 *Newest at top.*
 
+- 260917d · f02 airtable-import · opened f02 and shipped Stage 1: `POST /api/admin/import` (session-cookie auth, idempotent by `airtable_id`, per-row rejection, FR-H2 mismatch reporting), 13 tests, `pnpm check` green at 207; sponsor supplied the CSVs (now gitignored) — offline pre-check found 0 next-review mismatches and 0 key collisions across 36 rows; schema reviewed and deliberately left unchanged → `features/f02-airtable-import-journal.md`
 - 260917c · f01 urdu-core-foundation · s08 shipped and f01 closed: `scripts/smoke.ts` written, deployed to `urdu.umber-amber.workers.dev`, 23/23 smoke against production, phone install verified; a first run leaked a `smoke` tag row (no cascade from vocab delete) — fixed, cleared and re-verified; sponsor commands converted to bash → `features/archive/f01-urdu-core-foundation-journal-archive.md`
 - 260917b · f01 urdu-core-foundation · runtime blocker resolved: AVG (not Windows permissions) — Hardened Mode + CyberCapture off gives 8 s worker runs and a 33 s green `pnpm check`, while exceptions measured harmful; s07 committed with browser verification still open; Vitest capped at 2 workers after restart-forcing saturation → `features/f01-urdu-core-foundation-journal.md`
 - 260917a · f01 urdu-core-foundation · s07 shell + manifest/icons implemented; typecheck passes, Windows executable denial reproduced in sponsor Git Bash; uncommitted handoff to Claude Code for verification → `features/f01-urdu-core-foundation-journal.md`
