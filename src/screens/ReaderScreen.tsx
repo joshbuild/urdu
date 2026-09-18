@@ -1,7 +1,25 @@
-// f03 s02: paste, render in Nastaliq, persist. Tokens and taps are s03/s04; the action bar is s05.
+// f03 s02-s03: paste, render in Nastaliq, persist, and split into tappable tokens.
+// Speech behind onWord is s04; the selection action bar is s05.
 
 import { useEffect, useState } from "react";
 import { readStoredText, storeText, toParagraphs } from "../reader/text";
+import { tokenize } from "../reader/tokens";
+
+// Words become spans carrying the token in a data attribute; separators stay bare text. Spans, not
+// buttons: a button would take the text out of the inline flow, fight Nastaliq's shaping, and give
+// Android its own press behaviour to argue with native selection. s04 attaches speech here.
+function renderTokens(paragraph: string) {
+  return tokenize(paragraph).map((piece, index) =>
+    piece.word ? (
+      // biome-ignore lint/suspicious/noArrayIndexKey: tokens are positional, not entities
+      <span key={index} className="token" data-token={piece.text}>
+        {piece.text}
+      </span>
+    ) : (
+      piece.text
+    ),
+  );
+}
 
 export function ReaderScreen() {
   const [text, setText] = useState(readStoredText);
@@ -46,10 +64,10 @@ export function ReaderScreen() {
       </div>
       <div className="urdu" dir="rtl" lang="ur">
         {paragraphs.map((paragraph, index) => (
-          // Paragraphs have no identity of their own — position is the only key available,
-          // and the whole block re-renders together whenever the text changes.
+          // Paragraphs and tokens have no identity of their own — position is the only key
+          // available, and the whole block re-renders together whenever the text changes.
           // biome-ignore lint/suspicious/noArrayIndexKey: paragraphs are positional, not entities
-          <p key={index}>{paragraph}</p>
+          <p key={index}>{renderTokens(paragraph)}</p>
         ))}
       </div>
     </section>

@@ -249,3 +249,17 @@ button.inline {
 .urdu p:last-child {
   margin-bottom: 0;
 }
+
+/* f03 s03: tokens. The 2.2 line height already gives each line a ~60 px box, so the tap target
+   is tall enough without padding that would disturb the line layout. No user-select override:
+   native selection across tokens is FR-C3's hard requirement. */
+.token {
+  border-radius: 6px;
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: rgb(185 101 40 / 18%);
+}
+
+.token:active {
+  background: #f2e4d8;
+}
