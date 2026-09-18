@@ -142,12 +142,13 @@ export function VocabList({
         {items.map((item) => (
           <li key={item.id}>
             <button type="button" className="vocab-row" onClick={() => onOpen(item.id)}>
-              <span className="urdu-inline" dir="rtl" lang="ur">
-                {item.urdu}
+              <span className="vocab-row-head">
+                <span className="vocab-row-roman">{item.roman}</span>
+                <span className="urdu-inline" dir="rtl" lang="ur">
+                  {item.urdu}
+                </span>
               </span>
-              <span className="vocab-row-gloss">
-                {[item.roman, item.english].filter(Boolean).join(" · ") || "—"}
-              </span>
+              <span className="vocab-row-gloss">{item.english || "—"}</span>
               <span className="vocab-row-meta">
                 <MasteryPill item={item} /> {reviewLabel(item, now)}
               </span>

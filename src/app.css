@@ -444,8 +444,22 @@ button.vocab-row:hover:not(:disabled) {
   background: #e8f0ec;
 }
 
+/* Roman left, Urdu right with 0.6 of the width; each wraps within its own column. */
+.vocab-row-head {
+  display: grid;
+  grid-template-columns: 2fr 3fr;
+  align-items: center;
+  gap: 12px;
+}
+
+.vocab-row-roman,
 .vocab-row .urdu-inline {
-  justify-self: end;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.vocab-row .urdu-inline {
+  text-align: right;
 }
 
 .vocab-row-meta {
