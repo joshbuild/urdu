@@ -50,7 +50,7 @@ Single-user personal Urdu learning PWA. See `pm/STATUS.md` for current progress.
 
 Commands (pnpm; Node 22):
 - `pnpm dev` — Vite dev server with the Worker and a local D1 (secrets from `.dev.vars`, see `.dev.vars.example`).
-- `pnpm check` — tsc, Biome, Vitest (`shared` and `scripts` node projects + `worker` Workers-pool project), build, build-output secret scan (`dist/client` names and values, `dist/urdu` values only — DECISIONS 260917c). Run before every commit.
+- `pnpm check` — tsc, Biome, Vitest (`shared`, `scripts` and `client` node projects + `worker` Workers-pool project), build, build-output secret scan (`dist/client` names and values, `dist/urdu` values only — DECISIONS 260917c). Run before every commit.
 - `pnpm test` / `pnpm lint` / `pnpm format` / `pnpm typecheck`.
 - `pnpm types` — regenerate `worker/worker-configuration.d.ts` after editing `wrangler.jsonc`.
 - `pnpm wrangler d1 migrations apply urdu --local` — local schema. `--remote`, `wrangler secret put`, and `pnpm run deploy` (not `pnpm deploy`, a pnpm built-in) are run by the sponsor.

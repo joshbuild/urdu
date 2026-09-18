@@ -11,6 +11,10 @@
 - Full JSON export of the vault.
 - First deployment to `urdu.umber-amber.workers.dev`, installable on Android.
 - One-time import of the Airtable vocabulary into the vault, preserving mastery and review dates, with a cross-check report of any row where Airtable's schedule disagrees with the ladder.
+- Read, Vocab, Review and Settings tabs.
+- Reader: paste Urdu and read it right-to-left in a self-hosted Nastaliq font; the text is kept across reloads.
+- Tap any word in the reader to hear it spoken in an Urdu voice.
+- Voice picker in Settings, defaulting to Pakistani Urdu and listing Urdu voices first, with a sample to listen to.
 
 ### Changed
 
