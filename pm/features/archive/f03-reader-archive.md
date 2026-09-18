@@ -13,7 +13,7 @@
 
 ## Archived — as shipped (2026-09-17)
 
-**Status:** 🟢 shipped. All six Done-When conditions met; `smoke-tests/smoke-test-03.md` green on the installed Android PWA (A1–E5; E6 test-row cleanup handed to the sponsor).
+**Status:** 🟢 shipped. All six Done-When conditions met; `smoke-tests/archive/smoke-test-03_archive.md` green on the installed Android PWA (A1–E5; E6 test-row cleanup handed to the sponsor).
 
 **What shipped:** tab-bar shell (Read · Vocab · Review · Settings); paste → RTL Nastaliq render with a self-hosted 114 KB subset font, text kept in localStorage; tokenizer with ZWNJ compounds intact; tap-to-speak with cancel-before-speak, pre-warm and the ur-PK voice ladder; Settings voice picker; selection action bar docked above the tab bar (Speak · Add · Define); Add to vocab bottom sheet with prefill, kind inference, source sentence in notes and inline duplicate display; Define as exact `urdu_key` vault lookup then Rekhta / Wiktionary / Google Translate links. `spikes/speech/` deleted.
 

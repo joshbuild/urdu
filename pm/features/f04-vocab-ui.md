@@ -1,6 +1,6 @@
 # Feature Plan — Vocab UI
 
-**Status**: 🟡 IN PROGRESS — *opened 2026-09-18; s01 next.*
+**Status**: 🟡 IN PROGRESS — *s01–s06 built 2026-09-18; s07 (deploy + smoke-test-04) with the sponsor.*
 **Handle**: `f04`
 **Created**: *2026-09-18* · **Updated**: *2026-09-18*
 
@@ -76,17 +76,21 @@ f02 put 36 items in the vault and f03 lets the sponsor add more from reading, bu
 
 ### Recently Completed
 
+- 2026-09-18 — s06: Settings "Items per review session" (1–200, default 20, localStorage `urdu.sessionLimit`; `src/settings/sessionLimit.ts` for f05 to read). `pnpm check` green at 293.
+- 2026-09-18 — s02–s05: `src/vocab/` list (debounced search, tag, due-only, sort, load more), detail (speak, two-step delete), edit (changed fields only, kind + mastery pickers); manual add reuses `AddVocabSheet` with source `manual`; form fields extracted to `src/reader/DraftFields.tsx`; reader duplicate → **Open it** → Vocab detail. Not yet viewed in any browser.
+- 2026-09-18 — s01: `GET /api/tags` (reads the `tags` table, which every write keeps in step).
 - 2026-09-18 — opened; plan written from PRD FR-D/FR-I1 and the existing `/api/vocab*` routes.
 
 ### Next Steps
 
-- s01 `GET /api/tags`.
+- s07: sponsor deploys and runs `smoke-tests/smoke-test-04.md` on the phone (its G3 also clears the smoke-test-03 E6 leftover row). Then `/pm-close`.
 
 ### Open Questions
 
-- None blocking. Detail as a full-screen view within the Vocab tab (not a bottom sheet) is the default unless the sponsor objects.
+- None blocking.
 
 ## Decisions
 
 - 2026-09-18 — Mastery edits go through the existing PATCH (no review event), per FR-A8: a correction is not a review.
+- 2026-09-18 — Detail and edit replace the list inside the Vocab tab (not a bottom sheet); filters survive Back. Delete confirms inline (two-step), not with `window.confirm`.
 - 2026-09-18 — Session limit lives in localStorage (per device), like the voice choice; no server setting in v0.

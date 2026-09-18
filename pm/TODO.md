@@ -13,7 +13,7 @@
 ## Tasks
 *Bullets, each tagged.*
 
-- Sponsor: finish smoke-test-03 E6 — delete the test row from production D1: `pnpm wrangler d1 execute urdu --remote --command "DELETE FROM vocab WHERE english = 'smoke test' AND source = 'reading'"` (run the matching SELECT first; expect 1 row). #sponsor-respond
+- Sponsor: finish smoke-test-03 E6 — delete the `smoke test` row. Easiest now: smoke-test-04 step G does it in the app. Fallback: `pnpm wrangler d1 execute urdu --remote --command "DELETE FROM vocab WHERE english = 'smoke test' AND source = 'reading'"` (run the matching SELECT first; expect 1 row). #sponsor-respond
 - Before a work session, turn AVG **Hardened Mode** and **CyberCapture** off; turn them back on after. Measured 2026-09-17: off = 8 s for the worker test project and 32.7 s for `pnpm check`; on = runner timeouts and minutes. Do **not** add AVG exceptions — a repo folder exception measured 492 s and reinstated the failures, apparently by triggering a console policy re-sync (DECISIONS 260917b). #agent-implement
 - f07 Coach prompt tuning from mp02's five-minute run: English-explanation requests answered in Urdu, garbled non-correction, barging into learner hesitations, markdown in spoken text; test confirm-after-result with a failing add. Fold into f07's doc when it opens. #agent-research
 - Delete `spikes/gpt-live/` once f07 ships the brokered voice session; until then it is the working reference for the SDP route and data-channel tool handling. f01 repoints `wrangler.jsonc` away from it. (mp02 close 2026-09-14) #agent-implement
