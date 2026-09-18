@@ -1,6 +1,6 @@
 # Feature Plan — Reader
 
-**Status**: 🟡 IN PROGRESS *(opened 2026-09-17 — s01-s05 built, s06 next)*
+**Status**: 🟡 IN PROGRESS *(opened 2026-09-17 — s01-s06 built, s07 next)*
 **Handle**: `f03`
 **Created**: *2026-09-17* · **Updated**: *2026-09-17*
 
@@ -99,6 +99,7 @@ s01–s03 are independent of the Worker entirely. s06 is the only slice that nee
 
 ### Recently Completed
 
+- *2026-09-17* — **s06 Add to vocab (FR-C6).** Add on the action bar opens a bottom sheet over the passage (scroll position survives). Prefilled with the selection; kind inferred from the final Urdu via `shared/normalize.ts` `inferKind`; the source sentence (first sentence of the selection's paragraph holding the term, split on ۔ ؟ . ? !) goes in notes per the PRD; comma or Urdu-comma tags. Saves through `POST /api/vocab` with `source: "reading"`. A 409 shows the existing entry inline, fetched by id. Pure logic in `src/reader/addVocab.ts`. 277 tests. Untested against a live origin or phone.
 - *2026-09-17* — **s05 selection action bar (FR-C5).** `src/reader/actionBar.ts` places the bar from the selection rect as a pure function: above when it fits, else below, never under the tab bar, clamped to the screen edges. The screen follows `selectionchange` (plus scroll/resize), only for selections inside the reader, and suppresses pointerdown on the bar so a press does not collapse the selection. Speak is wired; Add and Define render disabled for s06/s07. 266 tests. Collision with Android's own selection toolbar is still unverified on the phone.
 - *2026-09-17* — **s04 speech and the voice picker (FR-C4, FR-I1).** `src/reader/speech.ts` ports the spike's `speak()` — cancel-before-speak, pre-warm on silence — with the resolution ladder as a pure function over a narrow `VoiceLike` shape (saved choice, ur-PK, any ur-*, else null; never the browser default). `useVoice` holds the one voice for the app; Settings picks it, Urdu voices first, with a sample and an honest "no Urdu voice installed" state. Reader taps go through one delegated listener and do not fire when the tap merely ends a selection drag. `spikes/speech/` deleted, its TODO item dropped and `spike:check` narrowed to the remaining spike. 257 tests.
 - *2026-09-17* — **s03 tokenizer (FR-C3).** `src/reader/tokens.ts` splits a paragraph into word and separator pieces, keeping ZWNJ compounds and tashkeel inside the word; the separator set is code-point ranges, not a regex class, because the class carried invisible characters the formatter rewrote into literal bytes. Words render as spans (not buttons) so native selection keeps flowing across them. 248 tests.
@@ -108,7 +109,7 @@ s01–s03 are independent of the Worker entirely. s06 is the only slice that nee
 
 ### Next Steps
 
-1. Start **s06**, Add to vocab (FR-C6). A sponsor deploy is worth doing first so the s05 bar can be checked against Android's selection toolbar.
+1. Start **s07**, Define (FR-C7), once the sponsor confirms the link set. A sponsor deploy is worth doing first to check the s05 bar and the s06 sheet on the phone.
 2. Unverified on a device: everything from s02 onward has only been typechecked, tested and built locally. The font weight, Nastaliq rendering, tap latency and selection behaviour are all phone questions (s08).
 
 ### Open Questions
@@ -119,6 +120,8 @@ s01–s03 are independent of the Worker entirely. s06 is the only slice that nee
 ## Decisions
 
 *Dated, append-only. Promote project-wide decisions to `pm/DECISIONS.md`.*
+
+- *2026-09-17* — **Duplicate shows the existing entry inline, not a link (s06).** FR-C6 asks for a link to the existing item, but its destination (f04 vocab detail) does not exist, so a link would be a dead end. The sheet fetches `GET /api/vocab/:id` and shows Urdu · Roman · English in place. f04 can turn it into a link.
 
 - *2026-09-17* — **Tab bar, not a router (s01).** Phase 2 adds three screens and none of them are deep-linked or shareable — this is a single-user installed PWA. A four-item tab bar with the selection in localStorage covers it; a router would add a dependency and a URL surface for nothing. Revisit if a screen ever needs to be linked to (e.g. the duplicate link from FR-C6 into f04's vocab detail), which is f04's call to make.
 - *2026-09-17* — **No component-test stack in f03.** The repo has no jsdom or testing-library and adding one is a real cost on this machine (AVG, bounded Vitest workers). Instead the reader's decidable logic — tokenizer, voice resolution, kind inference, action-bar positioning from a selection rect — is written as pure functions in `shared/` and tested in the existing node project; the rendered UI is verified on the phone at s08, as f01 and f02 were. If a slice produces UI logic that cannot be pulled into a pure function, reopen this.

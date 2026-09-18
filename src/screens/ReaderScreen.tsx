@@ -1,8 +1,10 @@
 // f03 s02-s05: paste, render in Nastaliq, persist, split into tappable tokens, speak a token on
-// tap, and act on a selection through the floating action bar.
+// tap, and act on a selection through the floating action bar (Speak, and s06's Add to vocab).
 
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { AddVocabSheet } from "../reader/AddVocabSheet";
 import { type Placement, placeActionBar, selectedTerm } from "../reader/actionBar";
+import { sourceSentence } from "../reader/addVocab";
 import { speak } from "../reader/speech";
 import { readStoredText, storeText, toParagraphs } from "../reader/text";
 import { tokenize } from "../reader/tokens";
@@ -35,7 +37,12 @@ export function ReaderScreen({ voiceState }: { voiceState: VoiceState }) {
   const paragraphs = toParagraphs(text);
   const readerRef = useRef<HTMLDivElement>(null);
   const barRef = useRef<HTMLDivElement>(null);
-  const [selection, setSelection] = useState<{ term: string; rect: DOMRect } | null>(null);
+  const [selection, setSelection] = useState<{
+    term: string;
+    paragraph: string;
+    rect: DOMRect;
+  } | null>(null);
+  const [adding, setAdding] = useState<{ term: string; sentence: string } | null>(null);
   const [placement, setPlacement] = useState<Placement | null>(null);
 
   // FR-C5: follow the native selection rather than intercepting touches. Only selections inside
@@ -54,7 +61,11 @@ export function ReaderScreen({ voiceState }: { voiceState: VoiceState }) {
         setSelection(null);
         return;
       }
-      setSelection({ term, rect: range.getBoundingClientRect() });
+      // The paragraph the selection starts in supplies FR-C6's source sentence.
+      const start = range.startContainer;
+      const element = start instanceof Element ? start : start.parentElement;
+      const paragraph = element?.closest("p")?.textContent ?? "";
+      setSelection({ term, paragraph, rect: range.getBoundingClientRect() });
     }
     document.addEventListener("selectionchange", sync);
     // The bar is position: fixed, so a scroll moves the selection out from under it.
@@ -156,14 +167,30 @@ export function ReaderScreen({ voiceState }: { voiceState: VoiceState }) {
           <button type="button" onClick={() => speak(selection.term, voiceState.voice)}>
             Speak
           </button>
-          {/* s06 and s07 wire these. */}
-          <button type="button" disabled>
+          <button
+            type="button"
+            onClick={() => {
+              setAdding({
+                term: selection.term,
+                sentence: sourceSentence(selection.paragraph, selection.term),
+              });
+              globalThis.getSelection()?.removeAllRanges();
+            }}
+          >
             Add
           </button>
+          {/* s07 wires Define. */}
           <button type="button" disabled>
             Define
           </button>
         </div>
+      )}
+      {adding && (
+        <AddVocabSheet
+          term={adding.term}
+          sentence={adding.sentence}
+          onClose={() => setAdding(null)}
+        />
       )}
     </section>
   );

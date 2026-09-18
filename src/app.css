@@ -297,3 +297,68 @@ select {
   margin-top: 0;
   padding: 8px 12px;
 }
+
+/* f03 s06: Add to vocab as a bottom sheet, so the passage and its scroll position survive it.
+   Sits above the tab bar; scrolls internally because the full form is taller than a phone. */
+.sheet-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+}
+
+.sheet-scrim {
+  flex: 1;
+  min-height: 48px;
+  margin: 0;
+  border: 0;
+  border-radius: 0;
+  background: rgb(23 62 64 / 35%);
+}
+
+.sheet-scrim:hover:not(:disabled) {
+  background: rgb(23 62 64 / 35%);
+}
+
+.sheet {
+  max-height: 85vh;
+  overflow-y: auto;
+  padding-bottom: calc(28px + env(safe-area-inset-bottom));
+  border-radius: 20px 20px 0 0;
+}
+
+textarea {
+  width: 100%;
+  border: 1px solid #829b97;
+  border-radius: 10px;
+  padding: 12px 16px;
+  background: white;
+  color: #173e40;
+  font: inherit;
+  resize: vertical;
+}
+
+.urdu-field,
+.urdu-inline {
+  font-family: "Noto Nastaliq Urdu", system-ui, sans-serif;
+  font-size: 1.25rem;
+  line-height: 2.2;
+}
+
+.sheet form button[type="submit"] {
+  margin-top: 24px;
+}
+
+.duplicate {
+  margin-top: 20px;
+  padding: 12px;
+  border-radius: 8px;
+  background: #fdf3e2;
+  color: #6b4513;
+}
+
+.duplicate p {
+  margin: 0;
+}
