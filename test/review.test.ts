@@ -80,23 +80,37 @@ describe("POST /api/vocab/:id/reviews", () => {
     expect(await events()).toEqual([body.event]);
   });
 
-  it("applies every grade's delta with clamping at 0 and 6", async () => {
+  it("softens an English → Urdu miss: Wrong at level 3 drops one level, not two", async () => {
     const item = await create({ urdu: KITAB });
-    for (const start of [0, 1, 5, 6] as Mastery[]) {
-      for (const grade of GRADES) {
-        await setMastery(item.id, start, null, null);
-        const body = await json<ReviewResponse>(
-          await api("POST", `/api/vocab/${item.id}/reviews`, { grade, direction: "ur_en" }),
-          201,
-        );
-        const expected = applyGrade(start, grade);
-        expect(body.item.mastery, `${start} ${grade}`).toBe(expected);
-        expect(body.event.mastery_before).toBe(start);
-        expect(body.event.mastery_after).toBe(expected);
-      }
-    }
-    expect(await events()).toHaveLength(4 * GRADES.length);
+    await setMastery(item.id, 3, null, null);
+    const body = await json<ReviewResponse>(
+      await api("POST", `/api/vocab/${item.id}/reviews`, { grade: "wrong", direction: "en_ur" }),
+      201,
+    );
+    expect(body.item.mastery).toBe(2);
+    expect(body.event.direction).toBe("en_ur");
   });
+
+  it.each(["ur_en", "en_ur"] as const)(
+    "applies every %s grade's delta with clamping at 0 and 6",
+    async (direction) => {
+      const item = await create({ urdu: KITAB });
+      for (const start of [0, 1, 5, 6] as Mastery[]) {
+        for (const grade of GRADES) {
+          await setMastery(item.id, start, null, null);
+          const body = await json<ReviewResponse>(
+            await api("POST", `/api/vocab/${item.id}/reviews`, { grade, direction }),
+            201,
+          );
+          const expected = applyGrade(start, grade, direction);
+          expect(body.item.mastery, `${start} ${grade}`).toBe(expected);
+          expect(body.event.mastery_before).toBe(start);
+          expect(body.event.mastery_after).toBe(expected);
+        }
+      }
+      expect(await events()).toHaveLength(4 * GRADES.length);
+    },
+  );
 
   it("makes a never-reviewed item due again today at mastery 0", async () => {
     const item = await create({ urdu: KITAB });

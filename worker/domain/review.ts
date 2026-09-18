@@ -44,7 +44,7 @@ export async function applyReview(
   today: string,
 ): Promise<ReviewResult> {
   const at = now.toISOString();
-  const mastery = applyGrade(current.mastery, input.grade);
+  const mastery = applyGrade(current.mastery, input.grade, input.direction);
   const item: VocabItem = {
     ...current,
     mastery,

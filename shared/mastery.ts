@@ -1,6 +1,8 @@
 // Mastery ladder and review grades (PRD FR-A2). The only implementation: the Worker
 // computes with these, the UI imports them for display.
 
+import type { ReviewDirection } from "./api";
+
 export const MASTERY_LEVELS = [
   { level: 0, name: "New", intervalDays: 0 },
   { level: 1, name: "Learning", intervalDays: 1 },
@@ -38,6 +40,7 @@ export const GRADES = ["wrong", "partial", "hesitant", "correct", "confident"] a
 
 export type Grade = (typeof GRADES)[number];
 
+// Recognition (Urdu → English): the original ladder deltas.
 export const GRADE_DELTAS: Readonly<Record<Grade, number>> = {
   wrong: -2,
   partial: -1,
@@ -45,6 +48,20 @@ export const GRADE_DELTAS: Readonly<Record<Grade, number>> = {
   correct: 1,
   confident: 2,
 };
+
+// Production (English → Urdu, and oral Coach answers): failing to produce a word is weak evidence
+// it has been forgotten, so misses cost less; successes gain the same (DECISIONS 260918b).
+export const PRODUCTION_GRADE_DELTAS: Readonly<Record<Grade, number>> = {
+  wrong: -1,
+  partial: 0,
+  hesitant: 0,
+  correct: 1,
+  confident: 2,
+};
+
+export function gradeDeltas(direction: ReviewDirection): Readonly<Record<Grade, number>> {
+  return direction === "ur_en" ? GRADE_DELTAS : PRODUCTION_GRADE_DELTAS;
+}
 
 export const GRADE_LABELS: Readonly<Record<Grade, string>> = {
   wrong: "Wrong",
@@ -58,7 +75,7 @@ export function isGrade(value: unknown): value is Grade {
   return typeof value === "string" && (GRADES as readonly string[]).includes(value);
 }
 
-export function applyGrade(mastery: Mastery, grade: Grade): Mastery {
-  const next = mastery + GRADE_DELTAS[grade];
+export function applyGrade(mastery: Mastery, grade: Grade, direction: ReviewDirection): Mastery {
+  const next = mastery + gradeDeltas(direction)[grade];
   return Math.min(MAX_MASTERY, Math.max(MIN_MASTERY, next)) as Mastery;
 }
