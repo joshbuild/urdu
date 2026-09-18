@@ -82,12 +82,12 @@ The sponsor already learns Urdu with (a) a ChatGPT "Urdu Coach" project used mai
 - **FR-C8** Current text persists in localStorage across reloads. No server persistence of texts in v0.
 
 ### FR-D Vocabulary UI
-- **FR-D1** List with search (Urdu/Roman/English), tag filter, due-only toggle, sort by added/next review/mastery.
+- **FR-D1** List with search (Urdu/Roman/English), tag filter, due-only toggle, sort by added/next review/mastery (the chosen sort is remembered per device). Mastery shows as a colour-coded pill, "0 • New" to "6 • Permanent" (added 2026-09-18).
 - **FR-D2** Item view shows all fields, mastery level name, last/next review, and a speak button; edit any field including mastery (which recomputes next review); delete with confirmation.
 - **FR-D3** Manual "new item" entry from the vocab screen using the same form as FR-C6.
 
 ### FR-E Review
-- **FR-E1** Session start: choose direction (Urdu to English default, English to Urdu) and see the due count; queue per FR-A7 capped at a per-session limit (default 20, adjustable in Settings).
+- **FR-E1** Session start: choose direction (Urdu to English default, English to Urdu) and see the due count; queue per FR-A7 capped at a per-session limit (default 20, adjustable in Settings). Optional **review ahead by N days** (0-365, default 0) also queues items with `next_review_on` up to today + N; grades still count from today (added 2026-09-18, sponsor request during smoke-test-05).
 - **FR-E2** Card front shows the prompt side with a speak button whenever Urdu is showing; Reveal shows Urdu, Roman, English, notes, example.
 - **FR-E3** Five grade buttons in ladder order (Wrong, Partially correct, Hesitantly correct, Correct, Confidently correct); tapping records via FR-A4 and advances. Skip advances without recording.
 - **FR-E4** End of session shows counts graded and skipped. No streaks or statistics.

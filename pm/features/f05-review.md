@@ -24,7 +24,9 @@ The vault is only worth keeping if items come back at the right time. f01 built 
 - **FR-E3** After reveal, five grade buttons in ladder order; a tap POSTs `/api/vocab/:id/reviews` `{grade, direction}` and advances. Skip advances without recording (available before or after reveal).
 - **FR-E4** End panel: counts graded and skipped; back to start (which refreshes the due count).
 - Ending early: an End button shows the same tally.
-- **Worker changes:** none expected. Both routes exist with tests (f01 s05/s06).
+- **Review ahead** (added 2026-09-18, sponsor): a days field on the start panel; `GET /api/vocab/due?ahead=N` (0–365) moves the cutoff to today + N.
+- **Vocab list add-ons** (added 2026-09-18, sponsor, during smoke-test-05): the chosen sort is remembered per device; mastery shows as a colour-coded pill ("0 • New") in the list and the item detail.
+- **Worker changes:** only the `ahead` parameter on the due route. Recording is unchanged (f01 s05/s06).
 
 ### Exclusions
 
@@ -74,6 +76,7 @@ The vault is only worth keeping if items come back at the right time. f01 built 
 
 ### Recently Completed
 
+- 2026-09-18 — Sponsor add-ons mid smoke-test: review ahead (Worker `ahead` param + test, start-panel days field), remembered vocab sort, mastery pills. Smoke-test-05 gained Part F.
 - 2026-09-18 — s05: `smoke-tests/smoke-test-05.md` written for the phone.
 - 2026-09-18 — s01–s04: `src/review/session.ts` reducer (14 tests); `src/screens/ReviewScreen.tsx` start panel, card, grade bar, skip, end early, tally; 404 on grade counts as skip, 401 hands off to the lock screen. `pnpm check` green at 307. Not yet seen in a browser or on the phone.
 - 2026-09-18 — Doc written and front opened.
@@ -88,6 +91,8 @@ The vault is only worth keeping if items come back at the right time. f01 built 
 
 ## Decisions
 
-- 2026-09-18 — **Client only.** The due and review routes shipped in f01 and already meet FR-A4/A7; f05 adds no Worker surface.
+- 2026-09-18 — **Client only.** The due and review routes shipped in f01 and already meet FR-A4/A7; f05 adds no Worker surface. *Superseded in part the same day by the `ahead` parameter below.*
+- 2026-09-18 — **Review ahead folded into f05, not a new feature.** It's the same screen and route, with one query parameter. Early reviews count from today (`last_reviewed_on` = today), so the ladder is untouched. Ahead days are per session, not remembered.
+- 2026-09-18 — **Vocab sort remembered, other filters not.** A stale search, tag or due-only filter would silently hide items; a stale sort only reorders them.
 - 2026-09-18 — **Grades need a reveal first; Skip does not.** Grading an unseen answer makes no sense, and Skip must stay a free exit.
 - 2026-09-18 — **Queue fetched once at start.** Items graded in the session drop out of the due set anyway; refetching per card would add latency for no gain.

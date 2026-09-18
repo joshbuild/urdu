@@ -20,35 +20,35 @@ git pull
 pnpm run deploy
 ```
 
-- [ ] A1 — the deploy ends with a line naming `urdu.umber-amber.workers.dev`.
-- [ ] A2 — swipe the installed app away and reopen it. **Review** shows the due
+- [x] A1 — the deploy ends with a line naming `urdu.umber-amber.workers.dev`.
+- [x] A2 — swipe the installed app away and reopen it. **Review** shows the due
       count, a **Direction** choice (Urdu → English selected), **Start review**,
       and "Up to N items per session", where N is your Settings value.
 
 ## Part B — Urdu → English (FR-E1..E3)
 
-- [ ] B1 — **Start review**: a card shows "1 OF n", the Urdu in Nastaliq,
+- [x] B1 — **Start review**: a card shows "1 OF n", the Urdu in Nastaliq,
       **Speak**, **Reveal**, **Skip**, and **End session** at the top. n is the
       due count or your session limit, whichever is smaller.
-- [ ] B2 — **Speak** says the word before you reveal it.
-- [ ] B3 — **Reveal** shows Roman, English, and any notes or example. The five
+- [x] B2 — **Speak** says the word before you reveal it.
+- [x] B3 — **Reveal** shows Roman, English, and any notes or example. The five
       grade buttons replace Reveal, Wrong at the top and Confidently correct at
       the bottom. **Skip** stays below them.
-- [ ] B4 — before grading, note the word and its level. Grade it **Correct**.
+- [x] B4 — before grading, note the word and its level. Grade it **Correct**.
       The next card appears with its answer hidden.
-- [ ] B5 — grade a second word **Wrong**, and skip a third.
-- [ ] B6 — **End session**: the tally shows Graded 2, Skipped 1.
+- [x] B5 — grade a second word **Wrong**, and skip a third.
+- [x] B6 — **End session**: the tally shows Graded 2, Skipped 1.
       **Back to review**: the due count has dropped by 2 (the skipped word is
       still due).
 
 ## Part C — check the grades landed (Vocab tab)
 
-- [ ] C1 — open the **Correct** word: mastery is one level higher, "last" is
+- [x] C1 — open the **Correct** word: mastery is one level higher, "last" is
       today, and next review is today plus that level's interval (1/5/25/125…
       days).
-- [ ] C2 — the **Wrong** word is two levels lower (never below 0), with "last"
+- [x] C2 — the **Wrong** word is two levels lower (never below 0), with "last"
       today.
-- [ ] C3 — the skipped word is unchanged and still due.
+- [x] C3 — the skipped word is unchanged and still due.
 
 ## Part D — English → Urdu
 
@@ -68,6 +68,18 @@ pnpm run deploy
       tally appears by itself after the last card.
 - [ ] E3 — if nothing is due, **Start review** is greyed out. You can't
       force this case, so skip E3 if items are still due.
+
+## Part F — add-ons from this run (redeploy first: `git pull && pnpm run deploy`)
+
+- [ ] F1 — **Review** shows a **Review ahead (days)** box set to 0. Set it to
+      7: the hint says it also includes items due in the next 7 days, and
+      **Start review** works even when nothing is due today. Items due soonest
+      come first. Grade one, then check in Vocab that "last" is today.
+- [ ] F2 — **Vocab**: each row shows a coloured pill such as "2 • Basic",
+      warm colours for low levels and teal for high ones. The item detail shows
+      the same pill next to Mastery.
+- [ ] F3 — set **Sort** to Mastery, swipe the app away and reopen it: the Vocab
+      list is still sorted by Mastery. Search and the other filters start empty.
 
 ## Result
 
