@@ -72,7 +72,7 @@ Automated (Workers pool, `test/import.test.ts`):
 Unit (node project): the CSV → import-record mapping function, including quoting/multiline cells, empty cells, and the Airtable date formats.
 
 Manual:
-- Dry-run mode against the real export, report reviewed before any write.
+- Dry-run mode against the real export; the report is checked before any write, and only a non-empty one needs the sponsor.
 - The real run, then `GET /api/export` compared against the export row count.
 
 Edge cases that must be proven: multiline `Meaning` cells, commas inside Urdu text, a term that is whitespace-only after normalization (`empty_key`), an Airtable row with no `Urdu Term`, and DST-boundary `Last Reviewed` dates.
@@ -83,14 +83,14 @@ Edge cases that must be proven: multiline `Meaning` cells, commas inside Urdu te
 2. `scripts/airtable-import.ts` runs end-to-end from the sponsor's CSV export with a `--dry-run` mode and writes a cross-check report.
 3. `pnpm check` is green.
 4. The real import has run against production D1.
-5. Production `GET /api/export` row count matches the export, and the sponsor has reviewed and accepted the cross-check report.
+5. Production `GET /api/export` row count matches the export, and the cross-check report is **empty** — no next-review mismatches and no rejected rows. An empty report needs no sponsor review (Q5, answered 2026-09-17); a non-empty one goes back to the sponsor.
 6. PLAN Phase 1 exit re-read: D1 holds the Airtable vocabulary with mastery and dates preserved.
 
 ### Roadmap
 
 - **Stage 1 — Import endpoint.** `worker/domain/import.ts` + `worker/routes/api-admin.ts`, mounted behind the session middleware. Upsert-by-`airtable_id`, per-row outcome in the response, tags upsert. Tests. *(No dependency; starts now.)*
 - **Stage 2 — CSV mapping + script.** `scripts/airtable-import.ts`: CSV parse, Appendix C mapping, batching, `--dry-run`, report writer. Depends on Stage 1's response shape.
-- **Stage 3 — Dry run + sponsor review.** Run against the real export (local D1 first), hand the sponsor the cross-check report, resolve rejected rows.
+- **Stage 3 — Dry run.** Run against the real export (local D1 first) and check the report. Empty → straight to Stage 4. Non-empty → hand it to the sponsor and resolve the rows before proceeding.
 - **Stage 4 — Real run.** Sponsor runs it against production, verifies on the phone.
 - **Fold-in (any stage):** the two carried-forward f01 TODOs — `"preview_urls": false` in `wrangler.jsonc`, and extending `scripts/scan-bundle.mjs` to cover `dist/urdu`.
 
@@ -115,7 +115,7 @@ Edge cases that must be proven: multiline `Meaning` cells, commas inside Urdu te
 - ~~**Q2 — Admin auth?**~~ **Answered 2026-09-17**: session cookie. See Decisions.
 - ~~**Q3 — `urdu_key` duplicates?**~~ **Answered 2026-09-17**: report and skip; the sponsor merges in Airtable and re-exports. Moot for this export (0 collisions) but implemented and tested.
 - ~~**Q4 — Is `Added` a date or a datetime?**~~ **Answered 2026-09-17**: a bare date. Read as midnight UTC; see Decisions.
-- **Q5 — Does the empty cross-check report need a sponsor review step at all?** (sponsor, Stage 3) The offline pre-check found 0 mismatches across all 36 rows, so Done-When #5 may reduce to confirming the report is empty.
+- ~~**Q5 — Does an empty cross-check report need a sponsor review step?**~~ **Answered 2026-09-17**: no. An empty report is sufficient on its own; see Decisions and Done-When #5.
 
 ### Open Discussion
 
@@ -125,6 +125,7 @@ The offline pre-check over the real export found **0 next-review mismatches** ac
 
 ## Decisions
 
+- *2026-09-17* — **An empty cross-check report self-certifies** (Q5). The offline pre-check showed the Airtable base was already running our exact ladder, so a report with no mismatches and no rejected rows carries no information a sponsor review would add. A non-empty report still goes to the sponsor — the gate is on the report's contents, not on the run having happened.
 - *2026-09-17* — **No schema change for f02.** Reviewed `migrations/0001_init.sql` now that Airtable is being retired. `airtable_id` and `source = 'airtable'` stay: the first is the import's idempotence key (removing it breaks FR-H1 re-runs) and the second is provenance. Nothing else in the schema is Airtable-shaped. A migration against a already-deployed production D1 for cosmetics is the wrong trade, so the schema is unchanged.
 - *2026-09-17* — **Admin auth is the existing session cookie** (Q2). The script unlocks the way `scripts/smoke.ts` does, so the import adds no second secret and the route stays inside the `/api/*` middleware. A scoped admin token is the answer only if the import ever has to run without a device session.
 - *2026-09-17* — **A bare `Added` date is read as midnight UTC** (Q4). Appendix A types `added_at` as an instant; expanding date-only input keeps one comparable format across imported and app-created rows, and date-only values would otherwise sort inconsistently against ISO datetimes.
