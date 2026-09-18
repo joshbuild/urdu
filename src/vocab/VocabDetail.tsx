@@ -60,7 +60,12 @@ export function VocabDetail({
     setBusy(true);
     setError("");
     try {
-      const response = await fetch(`/api/vocab/${encodeURIComponent(id)}`, { method: "DELETE" });
+      // The CSRF guard wants JSON on every write, bodyless DELETE included (415 otherwise).
+      const response = await fetch(`/api/vocab/${encodeURIComponent(id)}`, {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: "{}",
+      });
       // Already gone is the outcome the sponsor asked for.
       if (!response.ok && response.status !== 404) throw new Error("delete failed");
       onDeleted();
