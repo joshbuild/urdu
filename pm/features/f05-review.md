@@ -1,6 +1,6 @@
 # Feature Plan — Review
 
-**Status**: 🟡 IN PROGRESS — *opened 2026-09-18; s01 next.*
+**Status**: 🟡 IN PROGRESS — *s01–s04 built 2026-09-18; smoke-test-05 awaiting the sponsor.*
 **Handle**: `f05`
 **Created**: *2026-09-18* · **Updated**: *2026-09-18*
 
@@ -74,11 +74,13 @@ The vault is only worth keeping if items come back at the right time. f01 built 
 
 ### Recently Completed
 
+- 2026-09-18 — s05: `smoke-tests/smoke-test-05.md` written for the phone.
+- 2026-09-18 — s01–s04: `src/review/session.ts` reducer (14 tests); `src/screens/ReviewScreen.tsx` start panel, card, grade bar, skip, end early, tally; 404 on grade counts as skip, 401 hands off to the lock screen. `pnpm check` green at 307. Not yet seen in a browser or on the phone.
 - 2026-09-18 — Doc written and front opened.
 
 ### Next Steps
 
-- Build s01, then s02–s04 in order.
+- Sponsor: deploy and run `smoke-tests/smoke-test-05.md` on the phone. Fix anything it finds, then `/pm-close`.
 
 ### Open Questions
 
