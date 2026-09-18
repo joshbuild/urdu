@@ -275,3 +275,25 @@ select {
   color: #173e40;
   font: inherit;
 }
+
+/* f03 s05: the selection action bar (FR-C5). Fixed, so it is placed in viewport coordinates
+   straight from the selection rect; src/reader/actionBar.ts decides where. */
+.action-bar {
+  position: fixed;
+  z-index: 10;
+  display: flex;
+  gap: 4px;
+  padding: 4px;
+  border: 1px solid #b7cdc5;
+  border-radius: 14px;
+  background: #fffef9;
+  box-shadow: 0 6px 20px rgb(23 62 64 / 18%);
+}
+
+.action-bar button {
+  width: auto;
+  min-width: 64px;
+  min-height: 44px;
+  margin-top: 0;
+  padding: 8px 12px;
+}

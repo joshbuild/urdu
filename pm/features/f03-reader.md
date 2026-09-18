@@ -1,6 +1,6 @@
 # Feature Plan — Reader
 
-**Status**: 🟡 IN PROGRESS *(opened 2026-09-17 — s01-s04 built, s05 next)*
+**Status**: 🟡 IN PROGRESS *(opened 2026-09-17 — s01-s05 built, s06 next)*
 **Handle**: `f03`
 **Created**: *2026-09-17* · **Updated**: *2026-09-17*
 
@@ -99,6 +99,7 @@ s01–s03 are independent of the Worker entirely. s06 is the only slice that nee
 
 ### Recently Completed
 
+- *2026-09-17* — **s05 selection action bar (FR-C5).** `src/reader/actionBar.ts` places the bar from the selection rect as a pure function: above when it fits, else below, never under the tab bar, clamped to the screen edges. The screen follows `selectionchange` (plus scroll/resize), only for selections inside the reader, and suppresses pointerdown on the bar so a press does not collapse the selection. Speak is wired; Add and Define render disabled for s06/s07. 266 tests. Collision with Android's own selection toolbar is still unverified on the phone.
 - *2026-09-17* — **s04 speech and the voice picker (FR-C4, FR-I1).** `src/reader/speech.ts` ports the spike's `speak()` — cancel-before-speak, pre-warm on silence — with the resolution ladder as a pure function over a narrow `VoiceLike` shape (saved choice, ur-PK, any ur-*, else null; never the browser default). `useVoice` holds the one voice for the app; Settings picks it, Urdu voices first, with a sample and an honest "no Urdu voice installed" state. Reader taps go through one delegated listener and do not fire when the tap merely ends a selection drag. `spikes/speech/` deleted, its TODO item dropped and `spike:check` narrowed to the remaining spike. 257 tests.
 - *2026-09-17* — **s03 tokenizer (FR-C3).** `src/reader/tokens.ts` splits a paragraph into word and separator pieces, keeping ZWNJ compounds and tashkeel inside the word; the separator set is code-point ranges, not a regex class, because the class carried invisible characters the formatter rewrote into literal bytes. Words render as spans (not buttons) so native selection keeps flowing across them. 248 tests.
 - *2026-09-17* — **s02 paste, render, persist (FR-C1, C2, C8).** Noto Nastaliq Urdu Regular self-hosted, subset to the Arabic block by `scripts/subset-font.sh` — 114 KB woff2 against 172 KB full — with a matching `unicode-range` so Latin falls back to system-ui by design. RTL paste area, paragraphs at 2.2 line height, current text in localStorage. `toParagraphs` tested in a new `client` node Vitest project. 237 tests.
@@ -107,7 +108,7 @@ s01–s03 are independent of the Worker entirely. s06 is the only slice that nee
 
 ### Next Steps
 
-1. Start **s05** — the selection action bar (FR-C5): floating above the native selection, with Speak wired and Add/Define as the s06/s07 hooks. Positioning from the selection rect goes in `src/reader/` as a pure function.
+1. Start **s06**, Add to vocab (FR-C6). A sponsor deploy is worth doing first so the s05 bar can be checked against Android's selection toolbar.
 2. Unverified on a device: everything from s02 onward has only been typechecked, tested and built locally. The font weight, Nastaliq rendering, tap latency and selection behaviour are all phone questions (s08).
 
 ### Open Questions
