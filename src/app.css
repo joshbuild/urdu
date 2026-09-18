@@ -555,3 +555,58 @@ button.grade--hesitant {
   background: #6b6a3a;
   border-color: #6b6a3a;
 }
+
+/* Mastery pill: a warm-to-cool ramp up the ladder, New (rose) to Permanent (deep teal).
+   Light fills with dark text keep every level readable at 0.8rem. */
+.mastery-pill {
+  display: inline-block;
+  padding: 1px 10px;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  line-height: 1.5;
+  white-space: nowrap;
+}
+
+.mastery-pill--0 {
+  border-color: #e3b9b2;
+  background: #fbe9e5;
+  color: #7a2a20;
+}
+
+.mastery-pill--1 {
+  border-color: #eac39c;
+  background: #fcefe0;
+  color: #7a4212;
+}
+
+.mastery-pill--2 {
+  border-color: #e3d18f;
+  background: #fbf5da;
+  color: #6a5508;
+}
+
+.mastery-pill--3 {
+  border-color: #c7d59a;
+  background: #f1f6df;
+  color: #45560f;
+}
+
+.mastery-pill--4 {
+  border-color: #a6d2b4;
+  background: #e5f4ea;
+  color: #1f5a33;
+}
+
+.mastery-pill--5 {
+  border-color: #98cbc8;
+  background: #e0f2f1;
+  color: #0f5553;
+}
+
+.mastery-pill--6 {
+  border-color: #054e51;
+  background: #054e51;
+  color: #fffef9;
+}

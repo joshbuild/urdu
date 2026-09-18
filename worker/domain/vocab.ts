@@ -267,14 +267,15 @@ export async function listVocab(
   return { items: items.map(toItem), total };
 }
 
+// `cutoff` is today, or a later day when reviewing ahead.
 export async function dueVocab(
   db: D1Database,
-  today: string,
+  cutoff: string,
   limit: number,
   tag?: string,
 ): Promise<VocabItem[]> {
   const where = [DUE];
-  const params: unknown[] = [today];
+  const params: unknown[] = [cutoff];
   if (tag !== undefined) {
     where.push(HAS_TAG);
     params.push(tag);

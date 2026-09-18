@@ -1,10 +1,10 @@
 // f04: the Vocab tab — list (FR-D1), item detail and edit (FR-D2), manual entry (FR-D3).
 // One view at a time inside the tab; the list's filters live here so Back returns to the same list.
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import type { StatusResponse, VocabItem } from "../../shared/api";
 import { AddVocabSheet } from "../reader/AddVocabSheet";
-import { DEFAULT_FILTERS, type ListFilters } from "../vocab/list";
+import { DEFAULT_FILTERS, type ListFilters, readStoredSort, storeSort } from "../vocab/list";
 import { VocabDetail } from "../vocab/VocabDetail";
 import { VocabEdit } from "../vocab/VocabEdit";
 import { VocabList } from "../vocab/VocabList";
@@ -29,8 +29,16 @@ export function VocabScreen({
   const [view, setView] = useState<View>(() =>
     openId ? { kind: "detail", id: openId } : { kind: "list" },
   );
-  const [filters, setFilters] = useState<ListFilters>(DEFAULT_FILTERS);
+  const [filters, setFilters] = useState<ListFilters>(() => ({
+    ...DEFAULT_FILTERS,
+    sort: readStoredSort(),
+  }));
   const [adding, setAdding] = useState(false);
+
+  const changeFilters = useCallback((next: ListFilters) => {
+    storeSort(next.sort);
+    setFilters(next);
+  }, []);
 
   useEffect(() => {
     if (!openId) return;
@@ -50,7 +58,12 @@ export function VocabScreen({
           <button type="button" onClick={() => setAdding(true)}>
             New item
           </button>
-          <VocabList filters={filters} onFilters={setFilters} today={status.today} onOpen={open} />
+          <VocabList
+            filters={filters}
+            onFilters={changeFilters}
+            today={status.today}
+            onOpen={open}
+          />
         </>
       )}
 

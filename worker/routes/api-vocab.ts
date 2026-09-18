@@ -11,7 +11,7 @@ import {
   type VocabListResponse,
   type VocabSort,
 } from "../../shared/api";
-import { todayIn } from "../../shared/dates";
+import { addDays, todayIn } from "../../shared/dates";
 import {
   createVocab,
   deleteVocab,
@@ -29,6 +29,7 @@ import type { AppEnv } from "../env";
 export const DEFAULT_LIST_LIMIT = 50;
 export const DEFAULT_DUE_LIMIT = 20;
 export const MAX_LIMIT = 200;
+export const MAX_AHEAD_DAYS = 365;
 
 type Ctx = Context<AppEnv>;
 
@@ -137,9 +138,12 @@ vocabRoutes.get("/api/vocab", async (c) => {
 vocabRoutes.get("/api/vocab/due", async (c) => {
   const limit = intParam(c, "limit", DEFAULT_DUE_LIMIT, 1, MAX_LIMIT);
   if (isError(limit)) return invalid(c, limit);
+  // f05 review ahead: also take items falling due within the next `ahead` days.
+  const ahead = intParam(c, "ahead", 0, 0, MAX_AHEAD_DAYS);
+  if (isError(ahead)) return invalid(c, ahead);
   const day = today(c);
   const body: DueResponse = {
-    items: await dueVocab(c.env.DB, day, limit, tagParam(c)),
+    items: await dueVocab(c.env.DB, addDays(day, ahead), limit, tagParam(c)),
     today: day,
   };
   return c.json(body);

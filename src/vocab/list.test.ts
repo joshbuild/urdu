@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { DEFAULT_FILTERS, isDue, listQuery, reviewLabel } from "./list";
+import { DEFAULT_FILTERS, isDue, listQuery, parseSort, reviewLabel } from "./list";
 
 describe("listQuery", () => {
   it("is the bare route for default filters", () => {
@@ -44,5 +44,15 @@ describe("isDue / reviewLabel", () => {
   it("shows the date for future reviews", () => {
     expect(isDue({ next_review_on: "2026-09-19" }, today)).toBe(false);
     expect(reviewLabel({ next_review_on: "2026-09-19" }, today)).toBe("Next 2026-09-19");
+  });
+});
+
+describe("parseSort", () => {
+  it("keeps a known sort and falls back to added otherwise", () => {
+    expect(parseSort("mastery")).toBe("mastery");
+    expect(parseSort("next_review")).toBe("next_review");
+    expect(parseSort(null)).toBe("added");
+    expect(parseSort("random")).toBe("added");
+    expect(parseSort("toString")).toBe("added");
   });
 });

@@ -92,3 +92,18 @@ export function promptSide(
   if (direction === "en_ur" && english) return { side: "english", text: english };
   return { side: "urdu", text: item.urdu };
 }
+
+// Review ahead (f05, sponsor request 2026-09-18): the Worker accepts 0..365 days.
+export const MAX_AHEAD_DAYS = 365;
+
+export function parseAheadDays(raw: string): number {
+  const text = raw.trim();
+  if (!/^\d+$/.test(text)) return 0;
+  return Math.min(Number(text), MAX_AHEAD_DAYS);
+}
+
+export function dueQuery(limit: number, ahead: number): string {
+  const params = new URLSearchParams({ limit: String(limit) });
+  if (ahead > 0) params.set("ahead", String(ahead));
+  return `/api/vocab/due?${params}`;
+}

@@ -3,9 +3,9 @@
 
 import { useEffect, useState } from "react";
 import type { VocabItem } from "../../shared/api";
-import { masteryName } from "../../shared/mastery";
 import { speak } from "../reader/speech";
 import { reviewLabel } from "./list";
+import { MasteryPill } from "./MasteryPill";
 
 type Load =
   | { kind: "loading" }
@@ -111,7 +111,7 @@ export function VocabDetail({
       <dl className="entry">
         <dt>Mastery</dt>
         <dd>
-          {item.mastery} · {masteryName(item.mastery)}
+          <MasteryPill mastery={item.mastery} />
         </dd>
         <dt>Review</dt>
         <dd>

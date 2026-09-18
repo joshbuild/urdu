@@ -2,8 +2,8 @@
 
 import { useEffect, useState } from "react";
 import type { TagsResponse, VocabItem, VocabListResponse, VocabSort } from "../../shared/api";
-import { masteryName } from "../../shared/mastery";
 import { type ListFilters, listQuery, reviewLabel, SORT_LABELS } from "./list";
+import { MasteryPill } from "./MasteryPill";
 
 const SEARCH_DELAY_MS = 250;
 
@@ -149,7 +149,7 @@ export function VocabList({
                 {[item.roman, item.english].filter(Boolean).join(" · ") || "—"}
               </span>
               <span className="vocab-row-meta">
-                {masteryName(item.mastery)} · {reviewLabel(item, today)}
+                <MasteryPill mastery={item.mastery} /> {reviewLabel(item, today)}
               </span>
             </button>
           </li>

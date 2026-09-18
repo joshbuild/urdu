@@ -2,7 +2,9 @@ import { describe, expect, it } from "vitest";
 import type { VocabItem } from "../../shared/api";
 import {
   currentItem,
+  dueQuery,
   initialSession,
+  parseAheadDays,
   promptSide,
   type SessionAction,
   type SessionState,
@@ -135,5 +137,20 @@ describe("promptSide", () => {
   it("falls back to Urdu when the item has no English", () => {
     expect(promptSide(item("a", null), "en_ur").side).toBe("urdu");
     expect(promptSide(item("a", "  "), "en_ur").side).toBe("urdu");
+  });
+});
+
+describe("review ahead", () => {
+  it("parses the days field, treating junk as 0 and capping at 365", () => {
+    expect(parseAheadDays("")).toBe(0);
+    expect(parseAheadDays(" 7 ")).toBe(7);
+    expect(parseAheadDays("-3")).toBe(0);
+    expect(parseAheadDays("2.5")).toBe(0);
+    expect(parseAheadDays("9999")).toBe(365);
+  });
+
+  it("adds ahead to the due query only when set", () => {
+    expect(dueQuery(20, 0)).toBe("/api/vocab/due?limit=20");
+    expect(dueQuery(20, 3)).toBe("/api/vocab/due?limit=20&ahead=3");
   });
 });

@@ -42,3 +42,27 @@ export function reviewLabel(item: Pick<VocabItem, "next_review_on">, today: stri
   if (isDue(item, today)) return "Due now";
   return `Next ${item.next_review_on}`;
 }
+
+// The chosen sort survives reloads on this device (sponsor request 2026-09-18). Search, tag and
+// due-only stay per visit: they narrow the list, and a stale narrowing would hide items.
+const SORT_KEY = "urdu.vocabSort";
+
+export function parseSort(raw: string | null | undefined): VocabSort {
+  return raw != null && Object.hasOwn(SORT_LABELS, raw) ? (raw as VocabSort) : DEFAULT_FILTERS.sort;
+}
+
+export function readStoredSort(): VocabSort {
+  try {
+    return parseSort(localStorage.getItem(SORT_KEY));
+  } catch {
+    return DEFAULT_FILTERS.sort;
+  }
+}
+
+export function storeSort(sort: VocabSort): void {
+  try {
+    localStorage.setItem(SORT_KEY, sort);
+  } catch {
+    // Non-fatal: the sort simply does not persist on this device.
+  }
+}

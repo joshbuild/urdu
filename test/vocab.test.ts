@@ -387,6 +387,26 @@ describe("GET /api/vocab/due", () => {
     expect(limited.items.map((i) => i.id)).toEqual([a.id]);
     expect((await api("GET", "/api/vocab/due?limit=0")).status).toBe(400);
   });
+
+  it("reviews ahead: includes items due within the next N days, still in due order", async () => {
+    const now = await create({ urdu: KITAB });
+    const inTwo = await create({ urdu: PANI });
+    const inFive = await create({ urdu: GHAR });
+    await setReviewDates(now.id, addDays(today, -1), today);
+    await setReviewDates(inTwo.id, today, addDays(today, 2));
+    await setReviewDates(inFive.id, today, addDays(today, 5));
+
+    const ids = async (query: string) =>
+      (await json<{ items: VocabItem[] }>(await api("GET", `/api/vocab/due${query}`))).items.map(
+        (i) => i.id,
+      );
+    expect(await ids("")).toEqual([now.id]);
+    expect(await ids("?ahead=2")).toEqual([now.id, inTwo.id]);
+    expect(await ids("?ahead=5")).toEqual([now.id, inTwo.id, inFive.id]);
+    for (const bad of ["-1", "366", "abc"]) {
+      expect((await api("GET", `/api/vocab/due?ahead=${bad}`)).status).toBe(400);
+    }
+  });
 });
 
 describe("GET /api/status", () => {

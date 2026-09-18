@@ -11,7 +11,15 @@ import type {
 } from "../../shared/api";
 import { GRADE_LABELS, GRADES, type Grade } from "../../shared/mastery";
 import { speak } from "../reader/speech";
-import { currentItem, initialSession, promptSide, sessionReducer } from "../review/session";
+import {
+  currentItem,
+  dueQuery,
+  initialSession,
+  MAX_AHEAD_DAYS,
+  parseAheadDays,
+  promptSide,
+  sessionReducer,
+} from "../review/session";
 import { readSessionLimit } from "../settings/sessionLimit";
 
 const DIRECTION_LABELS: Record<Exclude<ReviewDirection, "oral">, string> = {
@@ -31,6 +39,8 @@ export function ReviewScreen({
 }) {
   const [state, dispatch] = useReducer(sessionReducer, initialSession);
   const [direction, setDirection] = useState<ReviewDirection>("ur_en");
+  const [aheadText, setAheadText] = useState("0");
+  const ahead = parseAheadDays(aheadText);
   const [loading, setLoading] = useState(false);
   const [startError, setStartError] = useState("");
 
@@ -38,9 +48,7 @@ export function ReviewScreen({
     setLoading(true);
     setStartError("");
     try {
-      const response = await fetch(`/api/vocab/due?limit=${readSessionLimit()}`, {
-        cache: "no-store",
-      });
+      const response = await fetch(dueQuery(readSessionLimit(), ahead), { cache: "no-store" });
       if (response.status === 401) return onChanged();
       if (!response.ok) throw new Error("due failed");
       const data: DueResponse = await response.json();
@@ -111,7 +119,27 @@ export function ReviewScreen({
             </label>
           ))}
         </fieldset>
-        <button type="button" onClick={start} disabled={loading || status.due === 0}>
+        <label htmlFor="review-ahead">Review ahead (days)</label>
+        <input
+          id="review-ahead"
+          type="number"
+          inputMode="numeric"
+          min={0}
+          max={MAX_AHEAD_DAYS}
+          value={aheadText}
+          onChange={(event) => setAheadText(event.target.value)}
+          aria-describedby="review-ahead-hint"
+        />
+        <p id="review-ahead-hint" className="hint">
+          {ahead === 0
+            ? "0 reviews only what is due today."
+            : `Also includes items due in the next ${ahead} ${ahead === 1 ? "day" : "days"}. Grades count from today.`}
+        </p>
+        <button
+          type="button"
+          onClick={start}
+          disabled={loading || (status.due === 0 && ahead === 0)}
+        >
           {loading ? "Loading…" : "Start review"}
         </button>
         <p className="hint">
