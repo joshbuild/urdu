@@ -18,7 +18,9 @@
 
 **Toolchain.** AVG was in its fast state throughout: `pnpm check` at 27-49 s, 232 tests. Killed the `pnpm dev` node/workerd processes afterwards; the three from 13:52 predate the session and were left alone.
 
-**Left at**: Stage 4 is the sponsor's — deploy, then run the script against production. Everything below it is verified.
+**Smoke test 02 written, and writing it caught a wrong assumption.** smoke-test-01 was complete, so it went to `smoke-tests/archive/smoke-test-01_archive.md` with its three references repointed. The new `smoke-tests/smoke-test-02.md` covers Stage 4 in five parts. Two things about it are worth keeping: the first part is the *secret-free* dry run, which makes the gate free to repeat and means nothing touches production before the report is known clean; and I drafted a phone section with "start a review, grade an item" before checking — the review UI is **f05 and not built**. The shipped app is unlock/status/lock. Corrected to status counts only, and the checklist says why. Expected values are stated up front (36 total, 8 due on 2026-09-17, 10 phrases, 3 tags) so a wrong number is recognisable rather than merely unexpected. Also added the `GET /api/export` check, which is what Done-When #5 actually names and which the D1 queries alone would not have covered. PLAN's f02 roster row still read "Stage 2"; corrected.
+
+**Left at**: Stage 4 is the sponsor's — `smoke-tests/smoke-test-02.md`, start to finish. Everything below it is verified.
 
 ## 260917d — open + Stage 1
 
