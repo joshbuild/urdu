@@ -30,4 +30,3 @@
 
 - 260914f · mp02 gpt-live-spike · sponsor deleted spike Worker (curl 000); closed and archived mp02; Phase 0 done, Phase 1 current → `mini-plans/archive/mp02-gpt-live-spike-journal-archive.md`
 - 260914e · mp02 gpt-live-spike · s06 verdict: Option 2 written into PRD FR-G/FR-B5/FR-I1/App D and PLAN; s05 skipped as moot; no key in repo; Worker delete blocked by classifier, sponsor to run → `mini-plans/mp02-gpt-live-spike-journal.md`
-- 260914d · mp02 gpt-live-spike · phone runs: tab smoke, installed (crit 1), real Coach prompt swapped in, five-minute installed run "pretty comparable", $0.40 dashboard for the day; all four criteria pass, sponsor accepted five minutes; s06 verdict next → `mini-plans/mp02-gpt-live-spike-journal.md`

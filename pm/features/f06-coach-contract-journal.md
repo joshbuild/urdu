@@ -1,5 +1,7 @@
 # f06 coach-contract — journal
 
+**Current state (2026-09-18):** Stages 1–2 built and committed (`145f36e`); awaiting the sponsor's deploy and `smoke-tests/smoke-test-06.md`. Stage 3 waits for f07.
+
 ## 2026-09-18 (260918e session) — Stages 1–2 built
 
 Resumed with "implement f06". Built both paste-path stages in one go, since they share the handoff table, the panel and the prompt conventions.
