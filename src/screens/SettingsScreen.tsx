@@ -1,8 +1,16 @@
-// f03 s01/s04. Carries "lock this device" forward from the f01 shell and holds the voice picker
-// (FR-I1). The rest of FR-I1 — review session limit, voice spend — belongs to f04 and f07.
+// f03 s01/s04, f04 s06. Lock this device (from the f01 shell), the voice picker, and the review
+// session limit (FR-I1). Voice spend belongs to f07.
 
+import { useState } from "react";
 import { isUrdu, speak } from "../reader/speech";
 import type { VoiceState } from "../reader/useVoice";
+import {
+  MAX_SESSION_LIMIT,
+  MIN_SESSION_LIMIT,
+  parseSessionLimit,
+  readSessionLimit,
+  storeSessionLimit,
+} from "../settings/sessionLimit";
 
 const SAMPLE = "السلام علیکم، آپ کیسے ہیں؟";
 
@@ -16,6 +24,7 @@ export function SettingsScreen({
   voiceState: VoiceState;
 }) {
   const { voices, voice, select, supported } = voiceState;
+  const [limitText, setLimitText] = useState(() => String(readSessionLimit()));
 
   // Urdu voices first: a phone can carry dozens, and the two that matter should not be buried.
   // The rest stay listed, because an explicit choice is the sponsor's to make.
@@ -67,6 +76,30 @@ export function SettingsScreen({
           </button>
         </>
       )}
+
+      <h2>Review</h2>
+      <label htmlFor="session-limit">Items per review session</label>
+      <input
+        id="session-limit"
+        type="number"
+        inputMode="numeric"
+        min={MIN_SESSION_LIMIT}
+        max={MAX_SESSION_LIMIT}
+        value={limitText}
+        onChange={(event) => {
+          setLimitText(event.target.value);
+          const limit = parseSessionLimit(event.target.value);
+          if (String(limit) === event.target.value.trim()) storeSessionLimit(limit);
+        }}
+        onBlur={() => {
+          // Leaving the field settles on what was actually stored.
+          setLimitText(String(readSessionLimit()));
+        }}
+      />
+      <p className="hint">
+        A whole number from {MIN_SESSION_LIMIT} to {MAX_SESSION_LIMIT}. Due items beyond it wait for
+        the next session.
+      </p>
 
       <h2>This device</h2>
       <p className="hint">
