@@ -1,7 +1,7 @@
 // Vocab service (FR-A5..A8). D1 access for vocab lives here; routes stay thin. Reads never
 // write (FR-A8): only create, update and delete touch rows.
 
-import type { UpdateVocabRequest, VocabItem, VocabSort } from "../../shared/api";
+import type { Tag, UpdateVocabRequest, VocabItem, VocabSort } from "../../shared/api";
 import { nextReviewOn } from "../../shared/dates";
 import type { Mastery } from "../../shared/mastery";
 import { inferKind, urduKey } from "../../shared/normalize";
@@ -295,4 +295,12 @@ export async function vocabCounts(
     .bind(today)
     .first<{ total: number; due: number }>();
   return { total: row?.total ?? 0, due: row?.due ?? 0 };
+}
+
+// Every tag ever used, name order (f04 tag filter). The tags table is kept in step by insertTags.
+export async function listTags(db: D1Database): Promise<Tag[]> {
+  const { results } = await db
+    .prepare("SELECT name, description FROM tags ORDER BY name ASC")
+    .all<Tag>();
+  return results;
 }

@@ -82,6 +82,7 @@ export type ReviewRequest = { grade: Grade; direction: ReviewDirection };
 export type ReviewResponse = { item: VocabItem; event: ReviewEvent };
 
 export type Tag = { name: string; description: string | null };
+export type TagsResponse = { tags: Tag[] };
 
 // payload and outcome are stored as JSON text and exported parsed.
 export type Handoff = {

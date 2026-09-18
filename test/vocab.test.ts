@@ -405,6 +405,25 @@ describe("GET /api/status", () => {
   });
 });
 
+describe("GET /api/tags", () => {
+  it("lists every tag used on create and update, in name order", async () => {
+    const item = await create({ urdu: KITAB, tags: ["verbs", "nouns"] });
+    await json(await api("PATCH", `/api/vocab/${item.id}`, { tags: ["adjectives"] }));
+
+    expect(await json(await api("GET", "/api/tags"))).toEqual({
+      tags: [
+        { name: "adjectives", description: null },
+        { name: "nouns", description: null },
+        { name: "verbs", description: null },
+      ],
+    });
+  });
+
+  it("is empty for an empty vault", async () => {
+    expect(await json(await api("GET", "/api/tags"))).toEqual({ tags: [] });
+  });
+});
+
 describe("FR-A8: reads never write", () => {
   it("leaves updated_at, mastery and review dates unchanged", async () => {
     const item = await create({ urdu: KITAB, tags: ["t"] });
@@ -423,6 +442,7 @@ describe("FR-A8: reads never write", () => {
       `/api/vocab?q=${encodeURIComponent(KITAB)}&due=true&tag=t&sort=mastery`,
       "/api/vocab/due",
       "/api/status",
+      "/api/tags",
       "/api/export",
     ]) {
       expect((await api("GET", path)).status).toBe(200);
@@ -436,6 +456,7 @@ describe("auth", () => {
   it("protects every vocab route", async () => {
     for (const [method, path] of [
       ["GET", "/api/status"],
+      ["GET", "/api/tags"],
       ["GET", "/api/vocab"],
       ["GET", "/api/vocab/due"],
       ["GET", "/api/vocab/x"],

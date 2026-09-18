@@ -6,6 +6,7 @@ import {
   type DuplicateResponse,
   type InvalidRequestResponse,
   type StatusResponse,
+  type TagsResponse,
   VOCAB_SORTS,
   type VocabListResponse,
   type VocabSort,
@@ -16,6 +17,7 @@ import {
   deleteVocab,
   dueVocab,
   getVocab,
+  listTags,
   listVocab,
   updateVocab,
   vocabCounts,
@@ -93,6 +95,11 @@ vocabRoutes.get("/api/status", async (c) => {
   const day = today(c);
   const counts = await vocabCounts(c.env.DB, day);
   const body: StatusResponse = { ...counts, today: day };
+  return c.json(body);
+});
+
+vocabRoutes.get("/api/tags", async (c) => {
+  const body: TagsResponse = { tags: await listTags(c.env.DB) };
   return c.json(body);
 });
 
