@@ -133,9 +133,13 @@ The sponsor already learns Urdu with (a) a ChatGPT "Urdu Coach" project used mai
 NFC normalize; strip tashkeel (U+064B to U+0652, U+0670) and tatweel (U+0640); map Arabic yeh U+064A to Urdu yeh U+06CC, Arabic kaf U+0643 to U+06A9, Arabic heh U+0647 to U+06C1, teh marbuta U+0629 to U+06C1; remove ZWNJ/ZWJ (U+200C/U+200D) and other format characters; strip punctuation; collapse whitespace to single spaces; trim. Equality on the result is "duplicate". Fuzzy matching is out of scope.
 
 ## Appendix C — Airtable to D1 field mapping
+Header names below are the real export's (confirmed f02, 2026-09-17): the record id
+column is `_airtable_record_id`, the Tags table's name column is `Tag Name`, and all
+exported files carry a UTF-8 BOM.
+
 | Airtable (Vocabulary Terms) | D1 `vocab` |
 |---|---|
-| record id | airtable_id |
+| `_airtable_record_id` | airtable_id |
 | Urdu Term | urdu (urdu_key computed) |
 | Urdu Transliteration | roman |
 | English Term | english |
@@ -146,7 +150,12 @@ NFC normalize; strip tashkeel (U+064B to U+0652, U+0670) and tatweel (U+0640); m
 | Mastery Score (e.g. "1-Learning") | mastery = leading digit |
 | Last Reviewed | last_reviewed_on |
 | Next Review, Review Interval Days | not imported; recomputed and cross-checked |
-| (none) | kind = phrase if term contains whitespace else word; favourite = 0; source = airtable |
+| (none) | kind = phrase if term contains whitespace else word; favourite = 0; source = airtable; example_english = null (the export has no English-example column) |
+
+| Airtable (Tags) | D1 `tags` |
+|---|---|
+| `Tag Name` | name |
+| Description | description |
 
 ## Appendix D — GPT-Live-1 spike pass criteria
 1. A throwaway page on Android Chrome (installed PWA context) establishes a WebRTC session to GPT-Live-1 using a Worker-minted client secret.

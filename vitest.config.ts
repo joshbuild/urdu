@@ -17,6 +17,15 @@ export default defineConfig({
         },
       },
       {
+        // Node-side scripts: the Airtable CSV mapping is pure and needs no Workers runtime,
+        // so it runs here rather than paying the pool's startup cost.
+        test: {
+          name: "scripts",
+          environment: "node",
+          include: ["scripts/**/*.test.ts"],
+        },
+      },
+      {
         plugins: [
           cloudflareTest(async () => ({
             wrangler: { configPath: "./wrangler.jsonc" },

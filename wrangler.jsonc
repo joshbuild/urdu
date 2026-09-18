@@ -5,6 +5,10 @@
   // Urdu Core Worker. Built and served through @cloudflare/vite-plugin; `pnpm run deploy`
   // deploys the Vite build output (client assets + Worker) using this config.
   "main": "./worker/index.ts",
+  // Preview URLs are on unless disabled, which publishes every deployed version at its own
+  // <version>-urdu.umber-amber.workers.dev. Still secret-gated, but a single-user app has
+  // no use for that extra surface (f01 carry-forward).
+  "preview_urls": false,
   "assets": {
     "not_found_handling": "single-page-application",
     "run_worker_first": ["/api/*"]
