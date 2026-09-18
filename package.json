@@ -15,7 +15,7 @@
     "test": "vitest run",
     "check": "pnpm typecheck && pnpm lint && pnpm test && pnpm build && node scripts/scan-bundle.mjs",
     "deploy": "vite build && wrangler deploy",
-    "spike:check": "node spikes/speech/check.js && node spikes/gpt-live/check.js"
+    "spike:check": "node spikes/gpt-live/check.js"
   },
   "dependencies": {
     "hono": "4.13.7",

@@ -1,6 +1,6 @@
 # Feature Plan — Reader
 
-**Status**: 🟡 IN PROGRESS *(opened 2026-09-17 — Stage 1)*
+**Status**: 🟡 IN PROGRESS *(opened 2026-09-17 — s01-s04 built, s05 next)*
 **Handle**: `f03`
 **Created**: *2026-09-17* · **Updated**: *2026-09-17*
 
@@ -99,16 +99,19 @@ s01–s03 are independent of the Worker entirely. s06 is the only slice that nee
 
 ### Recently Completed
 
+- *2026-09-17* — **s04 speech and the voice picker (FR-C4, FR-I1).** `src/reader/speech.ts` ports the spike's `speak()` — cancel-before-speak, pre-warm on silence — with the resolution ladder as a pure function over a narrow `VoiceLike` shape (saved choice, ur-PK, any ur-*, else null; never the browser default). `useVoice` holds the one voice for the app; Settings picks it, Urdu voices first, with a sample and an honest "no Urdu voice installed" state. Reader taps go through one delegated listener and do not fire when the tap merely ends a selection drag. `spikes/speech/` deleted, its TODO item dropped and `spike:check` narrowed to the remaining spike. 257 tests.
+- *2026-09-17* — **s03 tokenizer (FR-C3).** `src/reader/tokens.ts` splits a paragraph into word and separator pieces, keeping ZWNJ compounds and tashkeel inside the word; the separator set is code-point ranges, not a regex class, because the class carried invisible characters the formatter rewrote into literal bytes. Words render as spans (not buttons) so native selection keeps flowing across them. 248 tests.
+- *2026-09-17* — **s02 paste, render, persist (FR-C1, C2, C8).** Noto Nastaliq Urdu Regular self-hosted, subset to the Arabic block by `scripts/subset-font.sh` — 114 KB woff2 against 172 KB full — with a matching `unicode-range` so Latin falls back to system-ui by design. RTL paste area, paragraphs at 2.2 line height, current text in localStorage. `toParagraphs` tested in a new `client` node Vitest project. 237 tests.
 - *2026-09-17* — **s01 shell and navigation.** `src/App.tsx` keeps the unlock gate and grows a fixed bottom tab bar (Read · Vocab · Review · Settings) shown only once unlocked; screens split into `src/screens/`. Reader is a stub; Vocab and Review carry the vault counts the f01 home screen used to show; Settings carries "lock this device" forward and will hold the s04 voice picker. Selected tab persists in localStorage inside try/catch. `pnpm check` green, 232 tests.
 - *2026-09-17* — Front opened; doc written from the PRD FR-C block and PLAN Phase 2.
 
 ### Next Steps
 
-1. Start **s02** — self-hosted subset Noto Nastaliq Urdu, the paste area, RTL paragraph rendering and localStorage persistence of the current text (FR-C1, C2, C8), filling in the `ReaderScreen` stub.
+1. Start **s05** — the selection action bar (FR-C5): floating above the native selection, with Speak wired and Add/Define as the s06/s07 hooks. Positioning from the selection rect goes in `src/reader/` as a pure function.
+2. Unverified on a device: everything from s02 onward has only been typechecked, tested and built locally. The font weight, Nastaliq rendering, tap latency and selection behaviour are all phone questions (s08).
 
 ### Open Questions
 
-- **Font delivery (agent call, resolve in s02).** Noto Nastaliq Urdu is heavy. Subset to the Urdu block plus Latin digits and measure; if it is still punishing on the phone, fall back to a wider subset served with `font-display: swap` and accept a flash.
 - **Action bar vs. the OS selection toolbar (sponsor may need to weigh in at s05).** Android Chrome shows its own copy/share bar on selection. If the two collide unusably on the phone, the fallback is a fixed bar at the bottom of the viewport rather than a floating one.
 - **Define link set (sponsor).** PRD names Rekhta, Wiktionary and Google Translate. Confirm those three are the ones actually wanted before s07.
 
