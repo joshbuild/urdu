@@ -1,6 +1,16 @@
 # Journal — f02 `airtable-import`
 
-*Verbose per-session narration for f02. The feature doc (`f02-airtable-import.md`) is canonical for scope, plan and decisions; this file is the story of how it went. Newest session at the top.*
+*Verbose per-session narration for f02. The feature doc (`f02-airtable-import-archive.md`) is canonical for scope, plan and decisions; this file is the story of how it went. Newest session at the top.*
+
+## 260917f — Stage 4: the production run
+
+**The sponsor ran `smoke-tests/smoke-test-02.md` start to finish and every step passed on the first attempt.** Dry run clean (36 rows, 3 tags, 0 mapping errors, exit 0); deploy at version `811f5245-5998-4947-bdc9-ef9729e7ab93`; the import reported **created 36, updated 0, rejected 0** into an empty vault with a clean report and exit 0. Production D1 confirms 36 vocab, 36 distinct `airtable_id`, **0 `review_events`**, 3 tags, and 10 `phrase` + 26 `word`. `GET /api/export` agrees: `vocab 36 events 0 tags 3`. The phone shows total 36, due 8, with today's Vancouver review date — exactly the numbers the checklist predicted, which is the point of having stated them in advance.
+
+**Done-When #4 and #5 close on that, and #5 closes without a sponsor review step** — the report was empty, which by the Q5 decision is self-certifying. The dry run in Part A did its job too: nothing touched production until the report was known clean.
+
+**One box needed a judgement call.** B2 asks that `.dev.vars` not appear in the uploaded file list, and the sponsor left it unticked because the vite output plainly shows `dist/urdu/.dev.vars 0.04 kB`. Reading the deploy log settles it: wrangler read **10 files from `dist/client`** and the total upload was **93.38 KiB**, which is the Worker bundle (`index.js`, 95.6 kB raw). The sidecar is written next to the bundle by the vite plugin for local dev and is not part of what wrangler sends — the same file the secret scan exempts by name (DECISIONS 260917c). Ticked with that reasoning recorded in the Result block rather than silently. The tempting cheap check — curling `/.dev.vars` on production for a 404 — would have been weaker evidence anyway, since a 404 proves only that the asset router does not serve it.
+
+**Left at**: f02 done. Phase 1's exit condition — D1 holds the Airtable vocabulary with mastery and dates preserved — is met in production, not just locally. Front closed.
 
 ## 260917e — Stage 2 + Stage 3
 

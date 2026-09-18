@@ -22,13 +22,13 @@
 - Repo skeleton is allowed here only as far as the spikes need it (wrangler config, a Worker with one route).
 - **Exit:** Speech verdict recorded; FR-G option chosen and recorded in `DECISIONS.md`; `PRD.md` FR-G updated to name the chosen option.
 
-### Phase 1 — Foundation (Current)
+### Phase 1 — Foundation (✅ Done 2026-09-17)
 **Goal:** A deployed Urdu Core with the sponsor's vocabulary in it.
 - f01 `urdu-core-foundation` (✅ SHIPPED 2026-09-17): repo layout (`src/`, `worker/`, `shared/`, `migrations/`, `scripts/`), Biome, Vitest, wrangler with D1 + static assets, `pnpm dev` / `pnpm deploy`; `shared/` ladder, deltas, scheduling, normalization with tests; D1 migrations for Appendix A; unlock + session cookie (FR-B1..B4); vocab CRUD, due selection, review recording (FR-A); JSON export; minimal PWA shell with unlock screen and manifest so deploy can be verified on the phone.
-- f02 `airtable-import` (🟡 in progress, opened 2026-09-17): admin import endpoint and CSV import script (FR-H); run it for real; cross-check report reviewed by the sponsor.
-- **Exit:** `urdu.umber-amber.workers.dev` unlocks on the phone; D1 holds the Airtable vocabulary with mastery and dates preserved; domain tests green.
+- f02 `airtable-import` (🟢 shipped 2026-09-17): admin import endpoint and CSV import script (FR-H); the production run imported 36 rows with an empty cross-check report.
+- **Exit (met 2026-09-17):** `urdu.umber-amber.workers.dev` unlocks on the phone; D1 holds the Airtable vocabulary with mastery and dates preserved (36 rows, 3 tags, 0 review events); domain tests green.
 
-### Phase 2 — Learning surfaces
+### Phase 2 — Learning surfaces (Current)
 **Goal:** The daily loop works on the phone: paste, read, hear, save, review.
 - f03 `reader`: FR-C1..C8 including the selection action bar, Add to vocab form, Define ladder, voice picker.
 - f04 `vocab-ui`: FR-D1..D3 and Settings (FR-I1 minus voice spend).
@@ -51,7 +51,7 @@
 | Handle | Slug / doc | Status | One-line |
 |---|---|---|---|
 | f01 | `features/archive/f01-urdu-core-foundation-archive.md` | 🟢 shipped 2026-09-17 | Repo, shared domain rules, D1 schema, unlock auth, vocab/review API, PWA shell. |
-| f02 | `features/f02-airtable-import.md` | 🟡 in progress (Stage 4) | One-time idempotent import of the Airtable "Urdu Vocab" base into D1. |
+| f02 | `features/archive/f02-airtable-import-archive.md` | 🟢 shipped 2026-09-17 | One-time idempotent import of the Airtable "Urdu Vocab" base into D1. |
 | f03 | `features/f03-reader.md` | planned | Paste-and-read in Nastaliq with tap-to-speak, selection action bar, add and define. |
 | f04 | `features/f04-vocab-ui.md` | planned | Browse, search, edit, and create vocabulary; settings. |
 | f05 | `features/f05-review.md` | planned | Due-item review session with five-grade self-scoring. |

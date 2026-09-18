@@ -1,6 +1,6 @@
 # Feature Plan — Airtable Import
 
-**Status**: 🟡 IN PROGRESS — *Stages 1–3 done 2026-09-17; Stage 4 (the production run) is the sponsor's.*
+**Status**: 🟢 SHIPPED — *closed 2026-09-17. All four stages done; the production import ran clean.*
 **Handle**: `f02`
 **Created**: 2026-09-17 · **Updated**: 2026-09-17
 
@@ -11,6 +11,26 @@
 
 > **One-line:** a one-time, idempotent import of the sponsor's Airtable "Urdu Vocab" base into D1, preserving mastery and review history and reporting every row where Airtable's scheduling disagrees with ours.
 
+
+---
+
+## Archived — as shipped (2026-09-17)
+
+**What shipped.** A one-time, idempotent Airtable → D1 import, run for real against production on 2026-09-17: **36 vocab rows created, 0 updated, 0 rejected**, 36 distinct `airtable_id`, **0 `review_events`**, 3 tags, 10 `phrase` + 26 `word`. `GET /api/export` agrees (`vocab 36 events 0 tags 3`) and the phone shows total 36 / due 8. The cross-check report was **empty** — no mapping errors, no next-review mismatches, no `urdu_key` collisions — which by the Q5 decision closes Done-When #5 without a sponsor review step. All six Done-When items are met, and with them **PLAN Phase 1's exit condition**: D1 holds the Airtable vocabulary with mastery and dates preserved.
+
+**Where the live truth is now.**
+- Import endpoint: `worker/domain/import.ts`, `worker/routes/api-admin.ts`, tests in `test/import.test.ts`.
+- Import script: `scripts/airtable-csv.ts` (pure mapping, unit-tested) + `scripts/airtable-import.ts` (IO, batching, report); command documented in `AGENTS.md`.
+- Field mapping and the FR-H requirements: `pm/PRD.md` FR-H and Appendix C.
+- The build secret-scan rule the fold-in produced: `pm/DECISIONS.md` 260917c.
+- The sponsor's production run, step by step with its results: `smoke-tests/smoke-test-02.md`.
+- Narration: `f02-airtable-import-journal-archive.md`.
+
+**Carried forward.** Nothing. Both f01 carry-forwards were folded in and closed here.
+
+Everything below this line is the execution record as it stood during the build.
+
+---
 
 
 ## Intent
@@ -108,6 +128,8 @@ Edge cases that must be proven: multiline `Meaning` cells, commas inside Urdu te
 - *2026-09-17* — Front opened at Stage 1.
 
 ### Next Steps
+
+*Closed 2026-09-17 — Stage 4 ran clean; see the tombstone at the top. Retained as the record of what was outstanding at the time.*
 
 1. **Stage 4 — the sponsor's production run**, written up as `smoke-tests/smoke-test-02.md`: dry run (no secret), deploy, import, verify through both D1 and `GET /api/export`, then the phone. Exit 0 with a clean report closes Done-When #4 and #5; exit 1 means the report comes back here.
 2. Close the front once that checklist comes back green.

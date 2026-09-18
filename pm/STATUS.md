@@ -8,11 +8,11 @@
 ## Open Workfronts
 *Work items actively in flight. One line each → its doc/journal. Closed fronts drop off (rosters keep the full list).*
 
-- f02 `airtable-import` — 🟡 IN PROGRESS (Stages 1–3 done; Stage 4 is the sponsor's production run). Phase 1's remaining exit condition. → `features/f02-airtable-import.md`
+*None — f02 closed 2026-09-17 and Phase 1 is complete. Next front opens from the PLAN Phase 2 roster.*
 
 ## Next Session Pointers
 *The 1–3 concrete next actions for a cold start.*
 
-1. **f02 Stage 4 is the sponsor's**: work through `smoke-tests/smoke-test-02.md` — dry run, deploy, import, verify, phone. Exit 0 with a clean report closes Done-When #4/#5; exit 1 brings the report back. Verified locally already: 36 rows in, idempotent on re-run, report clean.
-2. When that checklist comes back green, record it in the f02 journal and close the front — that is Phase 1's exit condition.
+1. **Phase 1 is done.** f02 closed 2026-09-17: the production import put 36 vocab rows, 3 tags and 0 review events into D1, verified through D1, `GET /api/export` and the phone (total 36 / due 8). Every Phase 1 exit condition is met.
+2. **Open the next front from PLAN Phase 2 — f03 `reader` is the roster's next row.** Paste-and-read in Nastaliq with tap-to-speak, the selection action bar, add and define. `spikes/speech/` is the working reference for `speak()` and is deleted once f03 ships it (TODO).
 3. Toolchain is healthy when AVG **Hardened Mode** and **CyberCapture** are off (sponsor toggles these per session; never add AVG exceptions — measured harmful). Do not bump Biome without re-testing execution on this machine.
