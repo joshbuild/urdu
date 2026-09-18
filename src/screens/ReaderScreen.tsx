@@ -27,7 +27,13 @@ function renderTokens(paragraph: string) {
   );
 }
 
-export function ReaderScreen({ voiceState }: { voiceState: VoiceState }) {
+export function ReaderScreen({
+  voiceState,
+  onOpenVocab,
+}: {
+  voiceState: VoiceState;
+  onOpenVocab: (id: string) => void;
+}) {
   const [text, setText] = useState(readStoredText);
   const [editing, setEditing] = useState(() => readStoredText() === "");
 
@@ -167,6 +173,7 @@ export function ReaderScreen({ voiceState }: { voiceState: VoiceState }) {
           term={adding.term}
           sentence={adding.sentence}
           onClose={() => setAdding(null)}
+          onOpenExisting={onOpenVocab}
         />
       )}
     </section>

@@ -70,4 +70,9 @@ describe("buildCreateRequest", () => {
       tags: ["a", "b"],
     });
   });
+
+  it("marks manual entry from the Vocab tab (FR-D3) as manual", () => {
+    const draft = { ...initialDraft("", ""), urdu: "پانی" };
+    expect(buildCreateRequest(draft, "manual").source).toBe("manual");
+  });
 });

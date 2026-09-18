@@ -4,6 +4,8 @@
 import type { CreateVocabRequest } from "../../shared/api";
 import { inferKind } from "../../shared/normalize";
 
+export type CreateSource = NonNullable<CreateVocabRequest["source"]>;
+
 // Sentence ends in running Urdu: full stop (U+06D4), Arabic question mark (U+061F), and the Latin
 // . ? ! that turn up in chat text. The terminator stays with its sentence.
 const SENTENCE = /[^\u{06D4}\u{061F}.?!]+[\u{06D4}\u{061F}.?!]*/gu;
@@ -56,9 +58,12 @@ export function initialDraft(term: string, sentence: string): AddDraft {
 
 // Kind is inferred from the final Urdu, not the original selection, so an edited term is judged
 // on what is actually saved. Blank optional fields are left out rather than sent as nulls.
-export function buildCreateRequest(draft: AddDraft): CreateVocabRequest {
+export function buildCreateRequest(
+  draft: AddDraft,
+  source: CreateSource = "reading",
+): CreateVocabRequest {
   const urdu = draft.urdu.trim();
-  const request: CreateVocabRequest = { urdu, kind: inferKind(urdu), source: "reading" };
+  const request: CreateVocabRequest = { urdu, kind: inferKind(urdu), source };
   for (const field of ["roman", "english", "notes", "example_urdu", "example_english"] as const) {
     const value = draft[field].trim();
     if (value) request[field] = value;

@@ -1,13 +1,103 @@
-// f03 s01 placeholder. Browsing, search and editing are f04.
+// f04: the Vocab tab — list (FR-D1), item detail and edit (FR-D2), manual entry (FR-D3).
+// One view at a time inside the tab; the list's filters live here so Back returns to the same list.
 
-import type { StatusResponse } from "../../shared/api";
+import { useEffect, useState } from "react";
+import type { StatusResponse, VocabItem } from "../../shared/api";
+import { AddVocabSheet } from "../reader/AddVocabSheet";
+import { DEFAULT_FILTERS, type ListFilters } from "../vocab/list";
+import { VocabDetail } from "../vocab/VocabDetail";
+import { VocabEdit } from "../vocab/VocabEdit";
+import { VocabList } from "../vocab/VocabList";
 
-export function VocabScreen({ status }: { status: StatusResponse }) {
+type View = { kind: "list" } | { kind: "detail"; id: string } | { kind: "edit"; item: VocabItem };
+
+export function VocabScreen({
+  status,
+  voice,
+  openId,
+  onOpened,
+  onChanged,
+}: {
+  status: StatusResponse;
+  voice: SpeechSynthesisVoice | null;
+  // An item another screen asked to show (the reader's duplicate link).
+  openId: string | null;
+  onOpened: () => void;
+  // The vault changed; App refreshes the counts.
+  onChanged: () => void;
+}) {
+  const [view, setView] = useState<View>(() =>
+    openId ? { kind: "detail", id: openId } : { kind: "list" },
+  );
+  const [filters, setFilters] = useState<ListFilters>(DEFAULT_FILTERS);
+  const [adding, setAdding] = useState(false);
+
+  useEffect(() => {
+    if (!openId) return;
+    setView({ kind: "detail", id: openId });
+    onOpened();
+  }, [openId, onOpened]);
+
+  const open = (id: string) => setView({ kind: "detail", id });
+  const toList = () => setView({ kind: "list" });
+
   return (
     <section className="panel">
       <p className="eyebrow">VOCABULARY</p>
-      <h2>{status.total.toLocaleString()} items in your vault.</h2>
-      <p className="hint">Browsing, search and editing arrive with the vocabulary screen.</p>
+
+      {view.kind === "list" && (
+        <>
+          <button type="button" onClick={() => setAdding(true)}>
+            New item
+          </button>
+          <VocabList filters={filters} onFilters={setFilters} today={status.today} onOpen={open} />
+        </>
+      )}
+
+      {view.kind === "detail" && (
+        <VocabDetail
+          id={view.id}
+          today={status.today}
+          voice={voice}
+          onBack={toList}
+          onEdit={(item) => setView({ kind: "edit", item })}
+          onDeleted={() => {
+            onChanged();
+            toList();
+          }}
+        />
+      )}
+
+      {view.kind === "edit" && (
+        <VocabEdit
+          item={view.item}
+          onCancel={() => open(view.item.id)}
+          onSaved={(item) => {
+            onChanged();
+            open(item.id);
+          }}
+          onOpenExisting={open}
+        />
+      )}
+
+      {adding && (
+        <AddVocabSheet
+          term=""
+          sentence=""
+          source="manual"
+          doneLabel="Back to vocabulary"
+          onClose={() => {
+            setAdding(false);
+            onChanged();
+            // A fresh filters object refetches the list, so a new item shows up.
+            setFilters((current) => ({ ...current }));
+          }}
+          onOpenExisting={(id) => {
+            setAdding(false);
+            open(id);
+          }}
+        />
+      )}
     </section>
   );
 }

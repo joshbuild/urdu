@@ -16,6 +16,7 @@ export function App() {
   const [tab, setTab] = useState<Tab>(readStoredTab);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+  const [openVocabId, setOpenVocabId] = useState<string | null>(null);
   // One voice for the whole app: the reader speaks with what Settings chose (FR-C4, FR-I1).
   const voiceState = useVoice();
 
@@ -51,6 +52,15 @@ export function App() {
     setTab(next);
     storeTab(next);
   }
+
+  // The reader's duplicate link opens that item on the Vocab tab.
+  function openVocab(id: string) {
+    setOpenVocabId(id);
+    selectTab("vocab");
+  }
+
+  const clearOpenVocab = useCallback(() => setOpenVocabId(null), []);
+  const refreshStatus = useCallback(() => void loadStatus(), [loadStatus]);
 
   async function unlock(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -126,8 +136,16 @@ export function App() {
 
         {ready && status ? (
           <>
-            {tab === "read" && <ReaderScreen voiceState={voiceState} />}
-            {tab === "vocab" && <VocabScreen status={status} />}
+            {tab === "read" && <ReaderScreen voiceState={voiceState} onOpenVocab={openVocab} />}
+            {tab === "vocab" && (
+              <VocabScreen
+                status={status}
+                voice={voiceState.voice}
+                openId={openVocabId}
+                onOpened={clearOpenVocab}
+                onChanged={refreshStatus}
+              />
+            )}
             {tab === "review" && <ReviewScreen status={status} />}
             {tab === "settings" && (
               <SettingsScreen onLock={lock} busy={busy} voiceState={voiceState} />
