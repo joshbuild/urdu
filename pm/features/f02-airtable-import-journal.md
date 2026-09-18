@@ -2,6 +2,24 @@
 
 *Verbose per-session narration for f02. The feature doc (`f02-airtable-import.md`) is canonical for scope, plan and decisions; this file is the story of how it went. Newest session at the top.*
 
+## 260917e — Stage 2 + Stage 3
+
+**Stage 2 split in two on purpose.** `scripts/airtable-csv.ts` is pure — no fs, no fetch — so the Appendix C mapping is unit-testable; `scripts/airtable-import.ts` is the IO wrapper. That split needed somewhere to run node-side unit tests, so `vitest.config.ts` gained a third project, `scripts` (node environment, `scripts/**/*.test.ts`). It costs nothing: 25 tests in 0.8 s with no Workers pool startup.
+
+**Wrote the CSV parser rather than taking a dependency.** RFC 4180 is a small grammar and the export exercises only part of it; a hand-rolled parse with tests for the BOM, quoted commas, doubled quotes, embedded newlines, CRLF, short rows and the trailing-newline phantom record is ~60 lines and adds no supply chain. The real export needs almost none of it — no multiline cells, no quoted commas in the columns we read — but the parser is what makes the *next* export safe, and the tests are the specification.
+
+**The report is the product, not the import.** `buildReport` emits markdown with a Summary table and four sections (mapping errors, next-review mismatches, `urdu_key` collisions within the export, rejected rows) and a one-line verdict. The script exits 0 **only** when all four are empty, which turns Done-When #5 into an exit code the sponsor can read without interpreting anything. A non-empty report exits 1 and says to bring it back.
+
+**The offline cross-check runs in both modes**, not just in the dry run. In a live run the report shows the endpoint's mismatch count *beside* the locally recomputed one, so if the two ever disagree that is visible on its face — the script and the Worker both call `nextReviewOn`, and a divergence would mean one of them is not.
+
+**Stage 3 ran clean, twice over.** Dry run over the real export: 36 rows, 0 mapping errors, 0 mismatches, 0 collisions — reproducing the offline Python pre-check from the previous session exactly, which is the useful part: two independent implementations of the same cross-check agreeing. Then live against local D1 through `pnpm dev`: 36 created. Re-ran it: 36 updated, and D1 confirmed 36 rows, 36 distinct `airtable_id`, **0 `review_events`**. Idempotence is now demonstrated end to end and not just unit-tested.
+
+**Folded in both f01 carry-forwards, and the second one was more interesting than it looked.** `preview_urls: false` was a one-liner. Extending the secret scan to `dist/urdu` failed immediately — the Worker bundle contains the string `UNLOCK_SECRET`, because the Worker *reads* `c.env.UNLOCK_SECRET`. The naive extension would have been a false positive on every build, and the temptation is to allow-list the string and move on. The honest rule is that the two directories carry different risks: in `dist/client` a secret *name* is itself the bug, because it means the frontend is reaching for a binding it must never see; in the Worker bundle names are expected and only a baked-in *value* is a leak. The scan now applies names-plus-values to `dist/client` and values-only to `dist/urdu`, exempting the non-uploaded `dist/urdu/.dev.vars` sidecar. Then I verified the value scan actually fires by appending the dev secret to the built bundle and re-running: it failed, as it should. A guard nobody has seen fail is not a guard.
+
+**Toolchain.** AVG was in its fast state throughout: `pnpm check` at 27-49 s, 232 tests. Killed the `pnpm dev` node/workerd processes afterwards; the three from 13:52 predate the session and were left alone.
+
+**Left at**: Stage 4 is the sponsor's — deploy, then run the script against production. Everything below it is verified.
+
 ## 260917d — open + Stage 1
 
 **Opened the front.** f01 closed the session before, so f02 was next by PLAN Phase 1. Wrote the feature doc from the template with a four-stage roadmap and four open questions, flipped the roster row and the STATUS workfront. `7e01826`.

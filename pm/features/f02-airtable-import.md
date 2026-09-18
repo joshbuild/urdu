@@ -1,6 +1,6 @@
 # Feature Plan — Airtable Import
 
-**Status**: 🟡 IN PROGRESS — *Stage 1 shipped 2026-09-17; Stage 2 (CSV script) next.*
+**Status**: 🟡 IN PROGRESS — *Stages 1–3 done 2026-09-17; Stage 4 (the production run) is the sponsor's.*
 **Handle**: `f02`
 **Created**: 2026-09-17 · **Updated**: 2026-09-17
 
@@ -100,14 +100,20 @@ Edge cases that must be proven: multiline `Meaning` cells, commas inside Urdu te
 
 ### Recently Completed
 
+- *2026-09-17* — **Stages 2 and 3 done** (`b18f741`). `scripts/airtable-csv.ts` (RFC 4180 parse + Appendix C mapping, 25 unit tests in a new node-project `scripts` Vitest project) and `scripts/airtable-import.ts` (unlock, batch, report; `--dry-run`). Dry run over the real export is **clean** — 36 rows, 0 mapping errors, 0 next-review mismatches, 0 `urdu_key` collisions. Live run against local D1: 36 created, re-run 36 updated, 36 distinct `airtable_id`, 0 `review_events` — idempotence proven end to end. `pnpm check` green at 232 tests.
+- *2026-09-17* — **Both f01 carry-forwards folded in**: `"preview_urls": false` in `wrangler.jsonc`, and `scripts/scan-bundle.mjs` extended to `dist/urdu`. The Worker bundle is scanned for secret *values* only — it legitimately references the binding *names* — and the value scan was confirmed by planting the dev secret in the bundle. `dist/urdu/.dev.vars` is exempt as a non-uploaded dev sidecar.
+- *2026-09-17* — PRD Appendix C rippled: real header names, the UTF-8 BOM, `example_english = null`, and the Tags-table mapping.
 - *2026-09-17* — **Stage 1 done** (`5b456d5`). `POST /api/admin/import` behind the session middleware; `worker/domain/import.ts` upserts by `airtable_id`, recomputes `next_review_on`, reports mismatches, rejects per row, upserts tags. 13 tests in `test/import.test.ts`; `pnpm check` green (207 tests).
 - *2026-09-17* — Sponsor supplied the exports in `data/airtable/` (now gitignored) and chose session-cookie auth. Export profiled: 36 vocab rows, 3 tags, 7 mastery levels.
 - *2026-09-17* — Front opened at Stage 1.
 
 ### Next Steps
 
-1. Stage 2: `scripts/airtable-import.ts` — CSV parse (BOM, quoted/multiline cells), Appendix C mapping, `--dry-run`, unlock via `URDU_SECRET`, cross-check report writer.
-2. Ripple the real header names into PRD Appendix C (`_airtable_record_id`, `Tag Name`).
+1. **Stage 4 — the sponsor's production run.** Deploy (`pnpm run deploy`, which now also turns preview URLs off), then:
+   `URDU_SECRET="<secret>" pnpm tsx scripts/airtable-import.ts https://urdu.umber-amber.workers.dev`
+   Exit 0 with a clean report closes Done-When #4 and #5; exit 1 means the report comes back here.
+2. Check production `GET /api/export` returns 36 rows, then verify the review queue on the phone (Done-When #5, #6).
+3. Close the front once Stage 4 passes.
 
 ### Open Questions
 

@@ -8,11 +8,11 @@
 ## Open Workfronts
 *Work items actively in flight. One line each → its doc/journal. Closed fronts drop off (rosters keep the full list).*
 
-- f02 `airtable-import` — 🟡 IN PROGRESS (Stage 1 done; Stage 2, CSV script). Phase 1's remaining exit condition. → `features/f02-airtable-import.md`
+- f02 `airtable-import` — 🟡 IN PROGRESS (Stages 1–3 done; Stage 4 is the sponsor's production run). Phase 1's remaining exit condition. → `features/f02-airtable-import.md`
 
 ## Next Session Pointers
 *The 1–3 concrete next actions for a cold start.*
 
-1. f02 Stage 2: `scripts/airtable-import.ts` — CSV parse (BOM, quoted/multiline cells), Appendix C mapping, `--dry-run`, cross-check report. Exports are in `data/airtable/` (gitignored); Stage 1's endpoint is shipped and tested.
-2. Two carried-forward items from f01 are in `TODO.md`: `preview_urls` defaulted on at deploy, and the bundle secret scan covers `dist/client` only. Small; fold into the next slice rather than a front of their own.
+1. **f02 Stage 4 is the sponsor's**: deploy, then `URDU_SECRET="<secret>" pnpm tsx scripts/airtable-import.ts https://urdu.umber-amber.workers.dev`. Exit 0 with a clean report closes Done-When #4/#5; exit 1 brings the report back. Verified locally already: 36 rows in, idempotent on re-run, report clean.
+2. Then check production `GET /api/export` returns 36 rows, verify the queue on the phone, and close f02 — that is Phase 1's exit condition.
 3. Toolchain is healthy when AVG **Hardened Mode** and **CyberCapture** are off (sponsor toggles these per session; never add AVG exceptions — measured harmful). Do not bump Biome without re-testing execution on this machine.

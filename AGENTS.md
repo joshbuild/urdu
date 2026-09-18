@@ -46,14 +46,15 @@ truncate project docs still load all of it.
 
 ## Project state
 
-Single-user personal Urdu learning PWA. See `pm/STATUS.md` for current progress. f01 shipped 2026-09-17: scaffold, shared rules, D1 schema, auth, vocab, review and export API, PWA shell, and the first deployment to `urdu.umber-amber.workers.dev`, verified on the sponsor's phone (`smoke-tests/smoke-test-01.md`). f02 `airtable-import` is next. `spikes/` is Phase 0 reference code, excluded from tsc and Biome.
+Single-user personal Urdu learning PWA. See `pm/STATUS.md` for current progress. f01 shipped 2026-09-17: scaffold, shared rules, D1 schema, auth, vocab, review and export API, PWA shell, and the first deployment to `urdu.umber-amber.workers.dev`, verified on the sponsor's phone (`smoke-tests/smoke-test-01.md`). f02 `airtable-import` is in flight: the import endpoint and `scripts/airtable-import.ts` are shipped and verified against local D1; the production run is the sponsor's. `spikes/` is Phase 0 reference code, excluded from tsc and Biome.
 
 Commands (pnpm; Node 22):
 - `pnpm dev` — Vite dev server with the Worker and a local D1 (secrets from `.dev.vars`, see `.dev.vars.example`).
-- `pnpm check` — tsc, Biome, Vitest (`shared` node project + `worker` Workers-pool project), build, client-bundle secret scan. Run before every commit.
+- `pnpm check` — tsc, Biome, Vitest (`shared` and `scripts` node projects + `worker` Workers-pool project), build, build-output secret scan (`dist/client` names and values, `dist/urdu` values only — DECISIONS 260917c). Run before every commit.
 - `pnpm test` / `pnpm lint` / `pnpm format` / `pnpm typecheck`.
 - `pnpm types` — regenerate `worker/worker-configuration.d.ts` after editing `wrangler.jsonc`.
 - `pnpm wrangler d1 migrations apply urdu --local` — local schema. `--remote`, `wrangler secret put`, and `pnpm run deploy` (not `pnpm deploy`, a pnpm built-in) are run by the sponsor.
+- `pnpm tsx scripts/airtable-import.ts [--dry-run | <base-url>]` — f02 Airtable import (FR-H). `--dry-run` maps and cross-checks the CSVs in `data/airtable/` with no origin contact; a base URL unlocks and writes. Exits 0 only when the cross-check report is empty. Reads `URDU_SECRET` from the environment.
 - `pnpm tsx scripts/smoke.ts <base-url>` — end-to-end smoke against a running origin (unlock → create → review → export → delete → lock, leaving no rows). Reads the secret from `URDU_SECRET`; never pass it as an argument.
 
 Test-run discipline (this workstation has been wedged by concurrent Vitest runs):
