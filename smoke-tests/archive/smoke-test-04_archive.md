@@ -77,16 +77,22 @@ pnpm run deploy
 
 - [x] G1 — Settings → **Items per review session** shows 20. Change it to 15,
       swipe the app away, reopen: still 15. Set it back to 20 if you prefer.
-- [ ] G2 — open the `smoke test 04` item → **Delete…** → **Keep it**: nothing
+
+- [x] G2 — open the `smoke test 04` item → **Delete…** → **Keep it**: nothing
       happens. **Delete…** → **Delete**: back on the list, the item is gone and
       the count dropped by one.
-  - [x] bug? hit delete -> delete, I get: “Could not delete. Check your connection and try again.” #agent-todo
-    - Agent 2026-09-18: real bug. The client's DELETE sent no `Content-Type`; the Worker's CSRF guard answers 415 to any write that is not JSON. Fixed in `src/vocab/VocabDetail.tsx`. **Redeploy (`git pull && pnpm run deploy`), then do G3**, which re-tests delete end to end.
-- [ ] G3 — search `smoke test` (the leftover from smoke-test-03 E2) → open it
+
+- [x] bug? hit delete -> delete, I get: “Could not delete. Check your connection and try again.” #agent-todo
+  - Agent 2026-09-18: real bug. The client's DELETE sent no `Content-Type`; the Worker's CSRF guard answers 415 to any write that is not JSON. Fixed in `src/vocab/VocabDetail.tsx`. **Redeploy (`git pull && pnpm run deploy`), then do G3**, which re-tests delete end to end.
+
+  - [x] fixed
+
+- [x] G3 — search `smoke test` (the leftover from smoke-test-03 E2) → open it
       → **Delete…** → **Delete**. That clears TODO's E6 item.
+  - [x] keeping. and delete works, per above.
 
 ## Result
 
-- [ ] All of A–G pass.
+- [x] All of A–G pass.
 
 Notes (anything slow, cramped, or confusing):

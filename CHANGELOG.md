@@ -18,6 +18,11 @@
 - Select text in the reader to get a Speak · Add · Define bar above the tab bar.
 - Add a selected word or phrase to the vault from the reader, with the sentence it came from saved in notes; an existing entry is shown instead of creating a duplicate.
 - Define a selection: shows your saved entry if you have one, otherwise links to Rekhta, Wiktionary and Google Translate.
+- Vocab tab: search your vault by Urdu, Roman or English, filter by tag or due items, and sort by date added, next review or mastery.
+- Open any vocab item to hear it, see its mastery and review dates, edit any field (including mastery), or delete it.
+- Add vocab by hand from the Vocab tab.
+- When Add finds an existing entry, an Open it button takes you to that item.
+- Review session size setting (default 20).
 
 ### Changed
 
