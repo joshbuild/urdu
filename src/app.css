@@ -276,10 +276,14 @@ select {
   font: inherit;
 }
 
-/* f03 s05: the selection action bar (FR-C5). Fixed, so it is placed in viewport coordinates
-   straight from the selection rect; src/reader/actionBar.ts decides where. */
+/* f03 s05: the selection action bar (FR-C5), docked just above the tab bar. Floating it over
+   the selection collided with Android Chrome's own toolbar on the phone, so it lives where the
+   thumb already is instead. */
 .action-bar {
   position: fixed;
+  right: max(8px, env(safe-area-inset-right));
+  bottom: calc(81px + env(safe-area-inset-bottom));
+  left: max(8px, env(safe-area-inset-left));
   z-index: 10;
   display: flex;
   gap: 4px;
@@ -291,8 +295,7 @@ select {
 }
 
 .action-bar button {
-  width: auto;
-  min-width: 64px;
+  flex: 1;
   min-height: 44px;
   margin-top: 0;
   padding: 8px 12px;
@@ -361,4 +364,10 @@ textarea {
 
 .duplicate p {
   margin: 0;
+}
+
+/* Room below the last line so the docked action bar never hides text the user wants to select.
+   Always on, not toggled with the bar, so the layout cannot shift under a live selection. */
+.urdu {
+  padding-bottom: 72px;
 }

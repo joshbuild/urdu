@@ -26,7 +26,7 @@ FR-C1..C8 in full, plus the FR-I1 voice picker (the piece of Settings that FR-C4
 - Paste area, RTL Nastaliq render, newlines to paragraphs, self-hosted Noto Nastaliq Urdu.
 - Whitespace/punctuation tokenization with ZWNJ-joined compounds intact; tokens tappable; native selection preserved across them.
 - `speak(text)` over SpeechSynthesis with the ur-PK voice-resolution ladder, cancel-before-speak, and voice pre-warm.
-- Selection action bar (Speak · Add to vocab · Define) floating above the native selection.
+- Selection action bar (Speak · Add to vocab · Define), docked above the tab bar.
 - Add-to-vocab form prefilled from the selection/token, kind inferred, source sentence into notes; saves through the existing vocab endpoint; inline duplicate rejection linking the existing item.
 - Define: `urdu_key` vault lookup first, external dictionary links second.
 - Current text persisted to localStorage.
@@ -114,12 +114,13 @@ s01–s03 are independent of the Worker entirely. s06 is the only slice that nee
 
 ### Open Questions
 
-- **Action bar vs. the OS selection toolbar (sponsor may need to weigh in at s05).** Android Chrome shows its own copy/share bar on selection. If the two collide unusably on the phone, the fallback is a fixed bar at the bottom of the viewport rather than a floating one.
 - **Define link set (sponsor).** PRD names Rekhta, Wiktionary and Google Translate. Confirm those three are the ones actually wanted before s07.
 
 ## Decisions
 
 *Dated, append-only. Promote project-wide decisions to `pm/DECISIONS.md`.*
+
+- *2026-09-17* — **Action bar docked above the tab bar, not floating (s05).** On the first deploy the floating bar overlapped Android Chrome's own selection toolbar on the sponsor's phone. Took the fallback the open question named: a full-width bar fixed above the tab bar. `placeActionBar` and its tests are deleted; `.urdu` keeps 72 px of bottom padding so the bar never hides the last line. PRD FR-C5 amended to match.
 
 - *2026-09-17* — **Duplicate shows the existing entry inline, not a link (s06).** FR-C6 asks for a link to the existing item, but its destination (f04 vocab detail) does not exist, so a link would be a dead end. The sheet fetches `GET /api/vocab/:id` and shows Urdu · Roman · English in place. f04 can turn it into a link.
 

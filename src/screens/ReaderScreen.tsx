@@ -1,9 +1,9 @@
 // f03 s02-s05: paste, render in Nastaliq, persist, split into tappable tokens, speak a token on
 // tap, and act on a selection through the floating action bar (Speak, and s06's Add to vocab).
 
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { AddVocabSheet } from "../reader/AddVocabSheet";
-import { type Placement, placeActionBar, selectedTerm } from "../reader/actionBar";
+import { selectedTerm } from "../reader/actionBar";
 import { sourceSentence } from "../reader/addVocab";
 import { speak } from "../reader/speech";
 import { readStoredText, storeText, toParagraphs } from "../reader/text";
@@ -36,14 +36,11 @@ export function ReaderScreen({ voiceState }: { voiceState: VoiceState }) {
 
   const paragraphs = toParagraphs(text);
   const readerRef = useRef<HTMLDivElement>(null);
-  const barRef = useRef<HTMLDivElement>(null);
   const [selection, setSelection] = useState<{
     term: string;
     paragraph: string;
-    rect: DOMRect;
   } | null>(null);
   const [adding, setAdding] = useState<{ term: string; sentence: string } | null>(null);
-  const [placement, setPlacement] = useState<Placement | null>(null);
 
   // FR-C5: follow the native selection rather than intercepting touches. Only selections inside
   // the reader count; anything else (the paste box, Settings) clears the bar.
@@ -65,39 +62,13 @@ export function ReaderScreen({ voiceState }: { voiceState: VoiceState }) {
       const start = range.startContainer;
       const element = start instanceof Element ? start : start.parentElement;
       const paragraph = element?.closest("p")?.textContent ?? "";
-      setSelection({ term, paragraph, rect: range.getBoundingClientRect() });
+      setSelection({ term, paragraph });
     }
     document.addEventListener("selectionchange", sync);
-    // The bar is position: fixed, so a scroll moves the selection out from under it.
-    globalThis.addEventListener("scroll", sync, { passive: true });
-    globalThis.addEventListener("resize", sync);
     return () => {
       document.removeEventListener("selectionchange", sync);
-      globalThis.removeEventListener("scroll", sync);
-      globalThis.removeEventListener("resize", sync);
     };
   }, []);
-
-  // Measure the rendered bar, then place it; layout effect so it never paints in the wrong spot.
-  useLayoutEffect(() => {
-    const bar = barRef.current;
-    if (!selection || !bar) {
-      setPlacement(null);
-      return;
-    }
-    const tabs = document.querySelector(".tabs");
-    setPlacement(
-      placeActionBar(
-        selection.rect,
-        { width: bar.offsetWidth, height: bar.offsetHeight },
-        {
-          width: innerWidth,
-          height: innerHeight,
-          bottomInset: tabs?.getBoundingClientRect().height ?? 0,
-        },
-      ),
-    );
-  }, [selection]);
 
   function onTokenTap(event: React.MouseEvent<HTMLDivElement>) {
     // A tap that ends a selection drag must not also speak: the selection is the user's intent,
@@ -155,13 +126,9 @@ export function ReaderScreen({ voiceState }: { voiceState: VoiceState }) {
         // Pressing a button must not take focus or collapse the selection before the click
         // lands, so the pointerdown default is suppressed; the selection stays the user's.
         <div
-          ref={barRef}
           className="action-bar"
           role="toolbar"
           aria-label="Selection actions"
-          style={
-            placement ? { top: placement.top, left: placement.left } : { visibility: "hidden" }
-          }
           onPointerDown={(event) => event.preventDefault()}
         >
           <button type="button" onClick={() => speak(selection.term, voiceState.voice)}>
