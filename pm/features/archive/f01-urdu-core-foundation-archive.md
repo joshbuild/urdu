@@ -28,7 +28,7 @@ the PWA is installed on the sponsor's Android phone.
 | Auth, vocab, review, export behaviour | `worker/` (routes thin, rules in `worker/domain/`), `test/` |
 | API request/response shapes | `shared/api.ts` |
 | Dev / test / migrate / deploy / smoke commands | `AGENTS.md` “Project state” |
-| Deploy + phone verification record | `smoke-tests/smoke-test-01.md` |
+| Deploy + phone verification record | `smoke-tests/archive/smoke-test-01_archive.md` |
 | Cross-cutting decisions from this front | `pm/DECISIONS.md` 260911a, 260917b |
 
 **Done-When, as verified:** (1) deployed Worker on migrated D1 — `pnpm run deploy`,

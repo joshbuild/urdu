@@ -109,11 +109,10 @@ Edge cases that must be proven: multiline `Meaning` cells, commas inside Urdu te
 
 ### Next Steps
 
-1. **Stage 4 — the sponsor's production run.** Deploy (`pnpm run deploy`, which now also turns preview URLs off), then:
-   `URDU_SECRET="<secret>" pnpm tsx scripts/airtable-import.ts https://urdu.umber-amber.workers.dev`
-   Exit 0 with a clean report closes Done-When #4 and #5; exit 1 means the report comes back here.
-2. Check production `GET /api/export` returns 36 rows, then verify the review queue on the phone (Done-When #5, #6).
-3. Close the front once Stage 4 passes.
+1. **Stage 4 — the sponsor's production run**, written up as `smoke-tests/smoke-test-02.md`: dry run (no secret), deploy, import, verify through both D1 and `GET /api/export`, then the phone. Exit 0 with a clean report closes Done-When #4 and #5; exit 1 means the report comes back here.
+2. Close the front once that checklist comes back green.
+
+Note for Stage 4: the phone check is deliberately thin — the review UI is f05 and not built, so the phone can only confirm the status counts (36 total, 8 due on 2026-09-17). Done-When #6 is the PLAN Phase 1 exit re-read, which the D1 and export checks establish.
 
 ### Open Questions
 

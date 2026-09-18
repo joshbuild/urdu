@@ -6,7 +6,7 @@
 is deployed at `urdu.umber-amber.workers.dev` (Worker version `b7585268`) on D1
 `urdu` at `0001_init`, and the PWA is installed and unlocking on the sponsor's
 Android phone. Done-When 1–6 all verified — see the tombstone in the archived
-doc and the run record in `smoke-tests/smoke-test-01.md`.
+doc and the run record in `smoke-tests/archive/smoke-test-01_archive.md`.
 
 ## 2026-09-17 — s08 deploy + phone; f01 closed (260917c)
 
@@ -45,7 +45,7 @@ against a real process death — the thing no test in `test/` can reach.
 **Process.** Sponsor stated a standing preference for bash over PowerShell; the
 smoke-test checklist and the s08 runbook in the doc were both converted, and the
 journal's earlier PowerShell was deliberately left as a historical record. The
-checklist itself (`smoke-tests/smoke-test-01.md`, 27 items across four parts) is
+checklist itself (`smoke-tests/archive/smoke-test-01_archive.md`, 27 items across four parts) is
 new and is the durable verification record.
 
 **Carried forward, not lost:** `preview_urls` defaulted on at first deploy, and
