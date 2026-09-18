@@ -52,7 +52,7 @@
 |---|---|---|---|
 | f01 | `features/archive/f01-urdu-core-foundation-archive.md` | 🟢 shipped 2026-09-17 | Repo, shared domain rules, D1 schema, unlock auth, vocab/review API, PWA shell. |
 | f02 | `features/archive/f02-airtable-import-archive.md` | 🟢 shipped 2026-09-17 | One-time idempotent import of the Airtable "Urdu Vocab" base into D1. |
-| f03 | `features/f03-reader.md` | planned | Paste-and-read in Nastaliq with tap-to-speak, selection action bar, add and define. |
+| f03 | `features/f03-reader.md` | 🟡 in progress (s01) | Paste-and-read in Nastaliq with tap-to-speak, selection action bar, add and define. |
 | f04 | `features/f04-vocab-ui.md` | planned | Browse, search, edit, and create vocabulary; settings. |
 | f05 | `features/f05-review.md` | planned | Due-item review session with five-grade self-scoring. |
 | f06 | `features/f06-coach-contract.md` | planned | Coach tool routes, bearer auth, clipboard handoff import, OpenAPI description. |
