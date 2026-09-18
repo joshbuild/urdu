@@ -99,15 +99,15 @@ s01–s03 are independent of the Worker entirely. s06 is the only slice that nee
 
 ### Recently Completed
 
+- *2026-09-17* — **s01 shell and navigation.** `src/App.tsx` keeps the unlock gate and grows a fixed bottom tab bar (Read · Vocab · Review · Settings) shown only once unlocked; screens split into `src/screens/`. Reader is a stub; Vocab and Review carry the vault counts the f01 home screen used to show; Settings carries "lock this device" forward and will hold the s04 voice picker. Selected tab persists in localStorage inside try/catch. `pnpm check` green, 232 tests.
 - *2026-09-17* — Front opened; doc written from the PRD FR-C block and PLAN Phase 2.
 
 ### Next Steps
 
-1. Start **s01** — reader screen and minimal navigation behind the unlock, on top of the existing `src/App.tsx` shell.
+1. Start **s02** — self-hosted subset Noto Nastaliq Urdu, the paste area, RTL paragraph rendering and localStorage persistence of the current text (FR-C1, C2, C8), filling in the `ReaderScreen` stub.
 
 ### Open Questions
 
-- **Navigation shape (agent call, resolve in s01).** The shell is a single screen today and Phase 2 adds three (reader, vocab, review). Pick the smallest thing that holds all three — likely a bottom tab bar, phone-first — rather than pulling in a router for its own sake.
 - **Font delivery (agent call, resolve in s02).** Noto Nastaliq Urdu is heavy. Subset to the Urdu block plus Latin digits and measure; if it is still punishing on the phone, fall back to a wider subset served with `font-display: swap` and accept a flash.
 - **Action bar vs. the OS selection toolbar (sponsor may need to weigh in at s05).** Android Chrome shows its own copy/share bar on selection. If the two collide unusably on the phone, the fallback is a fixed bar at the bottom of the viewport rather than a floating one.
 - **Define link set (sponsor).** PRD names Rekhta, Wiktionary and Google Translate. Confirm those three are the ones actually wanted before s07.
@@ -116,4 +116,6 @@ s01–s03 are independent of the Worker entirely. s06 is the only slice that nee
 
 *Dated, append-only. Promote project-wide decisions to `pm/DECISIONS.md`.*
 
+- *2026-09-17* — **Tab bar, not a router (s01).** Phase 2 adds three screens and none of them are deep-linked or shareable — this is a single-user installed PWA. A four-item tab bar with the selection in localStorage covers it; a router would add a dependency and a URL surface for nothing. Revisit if a screen ever needs to be linked to (e.g. the duplicate link from FR-C6 into f04's vocab detail), which is f04's call to make.
+- *2026-09-17* — **No component-test stack in f03.** The repo has no jsdom or testing-library and adding one is a real cost on this machine (AVG, bounded Vitest workers). Instead the reader's decidable logic — tokenizer, voice resolution, kind inference, action-bar positioning from a selection rect — is written as pure functions in `shared/` and tested in the existing node project; the rendered UI is verified on the phone at s08, as f01 and f02 were. If a slice produces UI logic that cannot be pulled into a pure function, reopen this.
 - *2026-09-17* — **Voice picker comes forward from f04 into f03.** FR-C4 requires a chosen voice and mp01 proved the browser default is unusable here (Assamese). Shipping the reader without a picker would ship a broken tap-to-speak. The rest of FR-I1 stays in f04.

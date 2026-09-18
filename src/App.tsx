@@ -1,12 +1,18 @@
 import { type FormEvent, useCallback, useEffect, useState } from "react";
 import type { StatusResponse } from "../shared/api";
 import "./app.css";
+import { ReaderScreen } from "./screens/ReaderScreen";
+import { ReviewScreen } from "./screens/ReviewScreen";
+import { SettingsScreen } from "./screens/SettingsScreen";
+import { readStoredTab, storeTab, TAB_LABELS, TABS, type Tab } from "./screens/tabs";
+import { VocabScreen } from "./screens/VocabScreen";
 
 type Screen = "loading" | "locked" | "ready" | "unavailable";
 
 export function App() {
   const [screen, setScreen] = useState<Screen>("loading");
   const [status, setStatus] = useState<StatusResponse | null>(null);
+  const [tab, setTab] = useState<Tab>(readStoredTab);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
 
@@ -37,6 +43,11 @@ export function App() {
     void loadStatus(controller.signal);
     return () => controller.abort();
   }, [loadStatus]);
+
+  function selectTab(next: Tab) {
+    setTab(next);
+    storeTab(next);
+  }
 
   async function unlock(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -97,87 +108,100 @@ export function App() {
     setBusy(false);
   }
 
+  const ready = screen === "ready" && status !== null;
+
   return (
-    <main className="shell">
-      <header className="brand">
-        <img src="/icons/icon-192.png" width="64" height="64" alt="" />
-        <div>
-          <p className="eyebrow">YOUR URDU COMPANION</p>
-          <h1>Urdu</h1>
-        </div>
-      </header>
+    <>
+      <main className={ready ? "shell shell--tabbed" : "shell"}>
+        <header className="brand">
+          <img src="/icons/icon-192.png" width="64" height="64" alt="" />
+          <div>
+            <p className="eyebrow">YOUR URDU COMPANION</p>
+            <h1>Urdu</h1>
+          </div>
+        </header>
 
-      <section className="panel" aria-busy={busy || screen === "loading"}>
-        {screen === "loading" && <p role="status">Opening your vault…</p>}
-
-        {screen === "locked" && (
+        {ready && status ? (
           <>
-            <h2>Welcome back</h2>
-            <p>Unlock your vocabulary vault on this device.</p>
-            <form onSubmit={unlock}>
-              <input type="hidden" name="username" autoComplete="username" value="owner" />
-              <label htmlFor="password">Personal secret</label>
-              <input
-                id="password"
-                name="password"
-                type="password"
-                autoComplete="current-password"
-                required
-                disabled={busy}
-                aria-describedby={error ? "request-error" : "unlock-hint"}
-                autoCapitalize="none"
-                spellCheck={false}
-              />
-              <p id="unlock-hint" className="hint">
-                Use your saved secret from your password manager. This device stays unlocked until
-                you lock it.
+            {tab === "read" && <ReaderScreen />}
+            {tab === "vocab" && <VocabScreen status={status} />}
+            {tab === "review" && <ReviewScreen status={status} />}
+            {tab === "settings" && <SettingsScreen onLock={lock} busy={busy} />}
+            {error && (
+              <p id="request-error" className="error" role="alert">
+                {error}
               </p>
-              <button type="submit" disabled={busy}>
-                {busy ? "Unlocking…" : "Unlock"}
-              </button>
-            </form>
+            )}
           </>
-        )}
+        ) : (
+          <section className="panel" aria-busy={busy || screen === "loading"}>
+            {screen === "loading" && <p role="status">Opening your vault…</p>}
 
-        {screen === "ready" && status && (
-          <>
-            <p className="eyebrow">YOUR VAULT</p>
-            <h2>A little Urdu, every day.</h2>
-            <dl className="counts">
-              <div>
-                <dt>Vocabulary items</dt>
-                <dd>{status.total.toLocaleString()}</dd>
-              </div>
-              <div>
-                <dt>Due for review</dt>
-                <dd>{status.due.toLocaleString()}</dd>
-              </div>
-            </dl>
-            <p className="hint">Review date: {status.today} · Vancouver time</p>
-            <button type="button" className="secondary" onClick={lock} disabled={busy}>
-              {busy ? "Locking…" : "Lock this device"}
-            </button>
-          </>
-        )}
+            {screen === "locked" && (
+              <>
+                <h2>Welcome back</h2>
+                <p>Unlock your vocabulary vault on this device.</p>
+                <form onSubmit={unlock}>
+                  <input type="hidden" name="username" autoComplete="username" value="owner" />
+                  <label htmlFor="password">Personal secret</label>
+                  <input
+                    id="password"
+                    name="password"
+                    type="password"
+                    autoComplete="current-password"
+                    required
+                    disabled={busy}
+                    aria-describedby={error ? "request-error" : "unlock-hint"}
+                    autoCapitalize="none"
+                    spellCheck={false}
+                  />
+                  <p id="unlock-hint" className="hint">
+                    Use your saved secret from your password manager. This device stays unlocked
+                    until you lock it.
+                  </p>
+                  <button type="submit" disabled={busy}>
+                    {busy ? "Unlocking…" : "Unlock"}
+                  </button>
+                </form>
+              </>
+            )}
 
-        {screen === "unavailable" && (
-          <>
-            <h2>Your vault is unavailable</h2>
-            <button type="button" onClick={retry} disabled={busy}>
-              {busy ? "Connecting…" : "Try again"}
-            </button>
-            <button type="button" className="secondary" onClick={lock} disabled={busy}>
-              Lock this device
-            </button>
-          </>
-        )}
+            {screen === "unavailable" && (
+              <>
+                <h2>Your vault is unavailable</h2>
+                <button type="button" onClick={retry} disabled={busy}>
+                  {busy ? "Connecting…" : "Try again"}
+                </button>
+                <button type="button" className="secondary" onClick={lock} disabled={busy}>
+                  Lock this device
+                </button>
+              </>
+            )}
 
-        {error && (
-          <p id="request-error" className="error" role="alert">
-            {error}
-          </p>
+            {error && (
+              <p id="request-error" className="error" role="alert">
+                {error}
+              </p>
+            )}
+          </section>
         )}
-      </section>
-    </main>
+      </main>
+
+      {ready && (
+        <nav className="tabs" aria-label="Sections">
+          {TABS.map((name) => (
+            <button
+              key={name}
+              type="button"
+              className="tab"
+              aria-current={tab === name ? "page" : undefined}
+              onClick={() => selectTab(name)}
+            >
+              {TAB_LABELS[name]}
+            </button>
+          ))}
+        </nav>
+      )}
+    </>
   );
 }
