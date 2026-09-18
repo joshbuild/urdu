@@ -84,7 +84,8 @@ The vault is only worth keeping if items come back at the right time. f01 built 
 
 ### Next Steps
 
-- Sponsor: deploy and run `smoke-tests/smoke-test-05.md` on the phone. Fix anything it finds, then `/pm-close`.
+- Sponsor: finish `smoke-tests/smoke-test-05.md` (D, E, and F after a redeploy). Fix anything it finds, then `/pm-close`.
+- Note: DECISIONS 260918c (accepted SRS redesign) will change the grading and the ladder under this screen. That is planned as its own front; f05 can close on the current rules.
 
 ### Open Questions
 

@@ -13,7 +13,7 @@
 ## Tasks
 *Bullets, each tagged.*
 
-- Direction-aware review, beyond deltas (DECISIONS 260918b): per-direction stats (last grade, last reviewed, recent failure), derivable from `review_events.direction`, used to pick the prompt direction and prefer English → Urdu when production is weak; never show both directions of an item on the same day. Revisit after a few weeks of real use. #sponsor-decide
+- Plan the SRS refactor from `research/urdu-vocabulary-srs-research-and-design.md` (DECISIONS 260918c): new work front (feature or mini-plan), with sequencing against f05 close and f08, the D1 migration (ladder versions, timestamp due, richer review events), `shared/` rewrite, Settings preset picker, and direction stats and selection. Its §10 acceptance criteria are the starting Done-When. Next session, first. #agent-implement
 - f06 Coach contract: an `oral` grade counts toward mastery only for an unprompted recall attempt; repeats after hearing the answer, heavily hinted answers and pronunciation imitation are logged but must not raise mastery (DECISIONS 260918b). Fold into f06's doc when it opens. #agent-research
 
 - Before a work session, turn AVG **Hardened Mode** and **CyberCapture** off; turn them back on after. Measured 2026-09-17: off = 8 s for the worker test project and 32.7 s for `pnpm check`; on = runner timeouts and minutes. Do **not** add AVG exceptions — a repo folder exception measured 492 s and reinstated the failures, apparently by triggering a console policy re-sync (DECISIONS 260917b). #agent-implement

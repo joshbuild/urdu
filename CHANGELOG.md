@@ -4,6 +4,10 @@
 
 ### Added
 
+- Review tab: due-item sessions in either direction, with speak, reveal, five grades, skip, end early and a tally.
+- Review ahead by a number of days.
+- Mastery shown as colour-coded pills ("0 • New") in the vocabulary list and detail; the vocabulary sort order is remembered on the device.
+- English → Urdu reviews cost less when missed (Wrong −1, Partially correct 0).
 - Mobile app shell with personal-secret unlock, vocabulary and due counts, and device locking.
 - App manifest and icons for standalone installation.
 - Vocabulary storage with duplicate detection, tagging, search and due-item selection.
