@@ -10,11 +10,11 @@
 
 - f05 `review` — 🟡 IN PROGRESS, built; smoke-test-05 part-way green with the sponsor → `features/f05-review.md`
 - f09 `srs-ladder` — 🟡 IN PROGRESS, built and `pnpm check` green; migration 0002 applied remotely; redeploy and smoke-test-09 remaining → `features/f09-srs-ladder.md`
-- f06 `coach-contract` — 🟡 IN PROGRESS, Stage 1 (ChatGPT paste path for new vocab); Stage 2 fill-in revisions next → `features/f06-coach-contract.md`
+- f06 `coach-contract` — 🟡 IN PROGRESS, Stages 1–2 (ChatGPT paste path + fill-ins) built, `pnpm check` green; smoke-test-06 remaining; Stage 3 with f07 → `features/f06-coach-contract.md`
 
 ## Next Session Pointers
 *The 1–3 concrete next actions for a cold start.*
 
 1. **f09 `srs-ladder` to production**: remote migration 0002 is applied. The sponsor redeploys (`pnpm run deploy`, picks up the Settings spacing layout) and continues `smoke-tests/smoke-test-09.md` from A3, then phone checks. Then `/pm-close` f09.
 2. **f05 `review`**: its remaining smoke-test-05 parts (D, E, F) now run on the f09 build, because main carries both; read "next review" checks as "due in". Then `/pm-close`.
-3. **f06 Stage 1**: handoff schema, prompt, import route, Paste screen. Inbox empty (fill-in item decided, f06 Stage 2). Toolchain: AVG Hardened Mode + CyberCapture off; never add exceptions.
+3. **f06 to the phone**: the sponsor deploys (`pnpm run deploy`, no migration) and runs `smoke-tests/smoke-test-06.md`, two real ChatGPT round trips. Inbox empty. Toolchain: AVG Hardened Mode + CyberCapture off; never add exceptions.

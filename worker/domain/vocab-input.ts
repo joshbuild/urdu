@@ -2,10 +2,10 @@
 // later, so a bad field is rejected the same way whichever client sent it.
 
 import {
-  type CreateVocabRequest,
   PWA_VOCAB_SOURCES,
   type UpdateVocabRequest,
   type VocabFields,
+  type VocabSource,
 } from "../../shared/api";
 import { VOCAB_KINDS, type VocabKind } from "../../shared/normalize";
 
@@ -31,12 +31,12 @@ export type Parsed<T> = { ok: true; value: T } | { ok: false; error: InputError 
 const fail = (field: string | undefined, message: string) =>
   ({ ok: false, error: { field, message } }) as const;
 
-function isRecord(value: unknown): value is Record<string, unknown> {
+export function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
 // Trimmed; "" and null both mean "no value".
-function optionalText(field: string, value: unknown): Parsed<string | null> {
+export function optionalText(field: string, value: unknown): Parsed<string | null> {
   if (value === null) return { ok: true, value: null };
   if (typeof value !== "string") return fail(field, "must be a string or null");
   const text = value.trim();
@@ -45,7 +45,7 @@ function optionalText(field: string, value: unknown): Parsed<string | null> {
   return { ok: true, value: text === "" ? null : text };
 }
 
-function urduText(value: unknown): Parsed<string> {
+export function urduText(value: unknown): Parsed<string> {
   if (typeof value !== "string") return fail("urdu", "is required and must be a string");
   const text = value.trim();
   if (text === "") return fail("urdu", "must not be empty");
@@ -77,7 +77,7 @@ function kindValue(value: unknown): Parsed<VocabKind> {
     : fail("kind", `must be one of ${VOCAB_KINDS.join(", ")}`);
 }
 
-function parseFields(body: Record<string, unknown>): Parsed<Partial<VocabFields>> {
+export function parseFields(body: Record<string, unknown>): Parsed<Partial<VocabFields>> {
   const out: Partial<VocabFields> = {};
   if ("urdu" in body) {
     const r = urduText(body.urdu);
@@ -117,7 +117,7 @@ function parseFields(body: Record<string, unknown>): Parsed<Partial<VocabFields>
 
 export type CreateInput = Partial<Omit<VocabFields, "urdu" | "ladder_step">> & {
   urdu: string;
-  source: NonNullable<CreateVocabRequest["source"]>;
+  source: VocabSource;
 };
 
 export function parseCreate(body: unknown): Parsed<CreateInput> {

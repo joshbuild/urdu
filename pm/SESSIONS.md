@@ -7,6 +7,7 @@
 
 ## Log
 *Newest at top.*
+- 260918e · f06 coach-contract · built Stages 1–2: `/api/handoffs` (strict validation, per-item created/duplicate, repeat id a no-op), `/api/handoffs/revisions` with preview (empty fields only, `urdu` key-matched, schedule untouched), `/api/vocab/incomplete`; prompts and the CHATGPT panel under the Vocab list; fill-in Inbox item consumed; 396 tests, `pnpm check` green; smoke-test-06 written for the sponsor → `features/f06-coach-contract-journal.md`
 - 260918d · f09 srs-ladder · interval sheet cross-check passed; remote migration 0002 applied after a deploy-first "vault unavailable"; Settings spacing shown as per-unit rows (c6d8429) → `features/f09-srs-ladder-journal.md`
 
 - 260918c · f09 srs-ladder · planned and built the SRS refactor from the research report (deltas kept per 260918d): versioned geometric ladders in `shared/ladders.ts`, timestamp scheduling, richer review events, settings + Review spacing picker, migration 0002 (legacy ladder, due dates kept; migration test + local D1 run, 36 rows intact); DECISIONS 260918e; smoke-test-09 written; `pnpm check` green at 358; remote migration + deploy with the sponsor → `features/f09-srs-ladder-journal.md`

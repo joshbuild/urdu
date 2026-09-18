@@ -191,3 +191,82 @@ export type ImportResponse = {
 };
 
 export const MAX_IMPORT_BATCH = 200;
+
+// --- Clipboard handoff (f06, FR-F4/F6/F7). The app writes handoff_id and session_at into the
+// --- prompt it copies; the chat echoes them back with its proposals or revisions.
+
+export const MAX_HANDOFF_PROPOSALS = 50;
+export const MAX_HANDOFF_REVISIONS = 20;
+export const MAX_HANDOFF_ID_LENGTH = 100;
+
+// handoffs.status values (Appendix A leaves them to f06).
+export const HANDOFF_STATUSES = ["applied", "revised"] as const;
+export type HandoffStatus = (typeof HANDOFF_STATUSES)[number];
+
+// FR-F2 candidate shape.
+export type HandoffProposal = {
+  urdu: string;
+  roman?: string | null;
+  english?: string | null;
+  notes?: string | null;
+  example_urdu?: string | null;
+  example_english?: string | null;
+  tags?: string[];
+};
+
+export type HandoffRequest = {
+  handoff_id: string;
+  session_at: string;
+  proposals: HandoffProposal[];
+};
+
+export type ProposalResult =
+  | { index: number; urdu: string; outcome: "created"; id: string }
+  | { index: number; urdu: string; outcome: "duplicate"; existing_id: string }
+  | { index: number; urdu: string; outcome: "rejected"; reason: string };
+
+export type HandoffResponse = {
+  handoff_id: string;
+  // True when this handoff_id was already imported: nothing was written, and results are the
+  // stored outcome of the first import.
+  repeat: boolean;
+  results: ProposalResult[];
+};
+
+// FR-F7: fields a revision may fill, only where the stored item has none.
+export const FILLABLE_FIELDS = [
+  "roman",
+  "english",
+  "notes",
+  "example_urdu",
+  "example_english",
+] as const;
+export type FillableField = (typeof FILLABLE_FIELDS)[number];
+
+export type Revision = { vocab_id: string; urdu: string } & Partial<
+  Record<FillableField, string | null>
+>;
+
+export type RevisionsRequest = { handoff_id: string; revisions: Revision[] };
+
+export type RevisionResult =
+  | {
+      vocab_id: string;
+      urdu: string;
+      outcome: "fill";
+      fills: Partial<Record<FillableField, string>>;
+      // Proposed values dropped because the field already has text.
+      kept: FillableField[];
+    }
+  | { vocab_id: string; urdu: string; outcome: "nothing"; kept: FillableField[] }
+  | { vocab_id: string; urdu: string; outcome: "rejected"; reason: string };
+
+export type RevisionsResponse = {
+  handoff_id: string;
+  // Preview writes nothing; a confirmed request writes the "fill" rows.
+  preview: boolean;
+  repeat: boolean;
+  results: RevisionResult[];
+};
+
+export type IncompleteResponse = { items: VocabItem[]; total: number };

@@ -1,6 +1,6 @@
 # Feature Plan — Coach Contract
 
-**Status**: 🟡 IN PROGRESS — *opened 2026-09-18 at Stage 1 (paste path for new vocab), ahead of f05/f09 closing, at the sponsor's request.*
+**Status**: 🟡 IN PROGRESS — *Stages 1–2 built 2026-09-18 (`pnpm check` green, 396 tests); awaiting smoke-test-06 on the phone. Stage 3 waits for f07.*
 **Handle**: `f06`
 **Created**: *2026-09-18* · **Updated**: *2026-09-18*
 
@@ -62,15 +62,19 @@ Vocab drafting should cost nothing beyond the ChatGPT subscription. The app hand
 ### Recently Completed
 
 - 2026-09-18: opened.
+- 2026-09-18: Stages 1–2 built. `POST /api/handoffs`, `POST /api/handoffs/revisions[?preview=1]` and `GET /api/vocab/incomplete` (`worker/domain/handoff*.ts`, `worker/routes/api-handoff.ts`); prompts and paste parsing in `src/handoff/prompts.ts`; `HandoffPanel` under the Vocab list. 28 Worker + 9 client tests. `smoke-tests/smoke-test-06.md` written.
 
 ### Next Steps
 
-- Stage 1: define the handoff JSON schema and its `handoffs.status` values, then write the prompt and the import route with Worker tests.
+- Sponsor: deploy and run `smoke-tests/smoke-test-06.md` (real ChatGPT round trips for both stages). Tighten the prompt from whatever the app rejects.
+- Stage 3 with f07.
 
 ### Open Questions
 
-- Where the buttons live: Stage 1's Copy prompt / Paste on the Vocab screen bottom beside Stage 2's, or a separate Handoff screen. Agent default: the Vocab screen bottom, all four together.
+- None open. (Button placement resolved to the agent default: all four at the bottom of the Vocab list.)
 
 ## Decisions
 
+- 2026-09-18: Handoff contract as built. The app writes a fresh ULID `handoff_id` (and `session_at`) into each copied prompt, and the chat echoes them back, so a re-paste is a no-op. `handoffs.status` is `applied` (proposals) or `revised` (fill-ins). An id reused by the other kind of paste is a 409. A payload with any invalid field is rejected whole with the field path (`proposals[2].roman`) and no handoff row, so a corrected reply can reuse the id. Per-item outcomes are only for vault facts: created, duplicate, or no Urdu letters. `results` is refused until Stage 3. A surrounding markdown code fence is stripped client-side as packaging; the JSON inside is never repaired.
+- 2026-09-18: Fill-ins also cover `example_english` (FR-F7 lists four fields; the fifth is the same kind of empty text). The echoed `urdu` is matched by `urdu_key`, so tashkeel differences don't reject a row. Fills use `COALESCE`, so text written between preview and save is never overwritten. The incomplete list puts items missing Roman or English first, max 20.
 - 2026-09-18: Stages 1–2 use the PWA session cookie, not the Coach bearer token. The sponsor is the one pasting, so FR-B3's bearer applies only to the Stage 3 `/coach/*` routes.

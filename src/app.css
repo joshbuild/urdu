@@ -645,3 +645,59 @@ button.grade--hesitant {
   background: #054e51;
   color: #fffef9;
 }
+
+/* f06: the ChatGPT round trip below the Vocab list. */
+.handoff {
+  margin-top: 28px;
+  padding-top: 16px;
+  border-top: 1px solid #d5dfdd;
+}
+
+.handoff-buttons {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.handoff-buttons button {
+  margin: 0;
+}
+
+.handoff-results {
+  list-style: none;
+  padding: 0;
+  margin: 12px 0;
+}
+
+.handoff-results li {
+  padding: 8px 0;
+  border-bottom: 1px solid #e3eae8;
+}
+
+.handoff-fills {
+  margin: 6px 0 0;
+}
+
+.handoff-fills div {
+  display: grid;
+  grid-template-columns: 7em 1fr;
+  gap: 8px;
+}
+
+.handoff-fills dt {
+  color: #5a7472;
+}
+
+.handoff-fills dd {
+  margin: 0;
+}
+
+button.link {
+  background: none;
+  border: none;
+  padding: 0 0 0 8px;
+  margin: 0;
+  width: auto;
+  color: #1d6a64;
+  text-decoration: underline;
+}

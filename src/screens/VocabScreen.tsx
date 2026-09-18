@@ -1,8 +1,10 @@
-// f04: the Vocab tab — list (FR-D1), item detail and edit (FR-D2), manual entry (FR-D3).
+// f04: the Vocab tab — list (FR-D1), item detail and edit (FR-D2), manual entry (FR-D3). f06 adds
+// the ChatGPT handoff panel below the list.
 // One view at a time inside the tab; the list's filters live here so Back returns to the same list.
 
 import { useCallback, useEffect, useState } from "react";
 import type { StatusResponse, VocabItem } from "../../shared/api";
+import { HandoffPanel } from "../handoff/HandoffPanel";
 import { AddVocabSheet } from "../reader/AddVocabSheet";
 import { DEFAULT_FILTERS, type ListFilters, readStoredSort, storeSort } from "../vocab/list";
 import { VocabDetail } from "../vocab/VocabDetail";
@@ -62,6 +64,13 @@ export function VocabScreen({
             filters={filters}
             onFilters={changeFilters}
             now={new Date().toISOString()}
+            onOpen={open}
+          />
+          <HandoffPanel
+            onChanged={() => {
+              onChanged();
+              setFilters((current) => ({ ...current }));
+            }}
             onOpen={open}
           />
         </>
