@@ -3,6 +3,14 @@
 
 **File Purpose**: Prepend-only log of significant decisions and major actions. Newest entry at top. Never edit prior entries. Work-local decisions live in their work-front doc's §Decisions; cross-cutting ones are promoted here.
 
+2026-09-18 (260918e): The SRS refactor (f09) is built on these implementation choices (agent, within 260918c/d):
+- Ladder versions live in code: `shared/ladders.ts` holds each version as a literal interval array in seconds, pinned by tests to the generator (round(10800 × 2^(q·i/4)), first value at or past the cap becomes the 3650-day cap). D1 stores only `ladder_id`; export includes the definitions. Ids: 1 legacy, 2 Dense, 3 Moderate (default), 4 Balanced, 5 Wide, 6 Very wide. Rejected: a D1 `ladders` table (a second copy read on every review, no single-user benefit).
+- The cap is a fixed 3650 days (report §11 left calendar-aware open).
+- The active ladder is a `settings` row, not per device, because the Worker schedules.
+- Migration 0002 rebuilds `vocab` and `review_events` (SQLite cannot drop the 0–6 CHECKs). Legacy dates become `<date>T08:00:00.000Z`, which is 00:00 PST or 01:00 PDT in Vancouver, so due items stay due on the same local day. Rejected: local midnight via DST arithmetic in SQL.
+- Mastery is a display band from the interval, with the old names and bounds on the legacy intervals, so migrated items read as before.
+- Deferred with homes: direction statistics and automatic direction choice (report §4.2/§5.4), due-time success analytics (§9), immediate remapping (§6.2) and same-session relearning (TODO backlog); voice evidence rules (§8) to f06/f07.
+Ripples: PRD FR-A2..A8, FR-D1/D2, FR-E1, FR-F1/F2, Appendix A; VISION §6; AGENTS invariants.
 2026-09-18 (260918d): Grade deltas stay as shipped in 260918b, overriding the recognition row of 260918c (sponsor). Recognition keeps −2/−1/0/+1/+2 and production keeps −1/0/0/+1/+2. The only direction asymmetry is damped miss penalties in the harder production direction; gains are equal. The SRS refactor adopts the report's ladder, timestamp and event-model changes, not its deltas. Rejected: the report's recognition −2/−1/0/0/+1, where a plain Correct would never advance the main daily path; production Confident +1, which would make the harder direction slower to climb. Ripples: the note at the top of the research report.
 2026-09-18 (260918c): The SRS design in `research/urdu-vocabulary-srs-research-and-design.md` is accepted as the new direction (sponsor, with ChatGPT research). It keeps one shared schedule per item and changes the following:
 - Recognition deltas become −2/−1/0/0/+1. This supersedes the recognition half of 260918b; production stays −1/0/0/+1/+2.

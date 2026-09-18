@@ -34,6 +34,7 @@
 - f04 `vocab-ui` (🟢 shipped 2026-09-18): FR-D1..D3 and Settings (FR-I1 minus voice spend).
 - f05 `review`: FR-E1..E4.
 - f08 `vocab-enrich` (planned, added 2026-09-17): an LLM drafts every field of a new vocab item from the Add form (reader and FR-D3), the sponsor reviews before save. Server-side through Urdu Core, capped spend, same OpenAI key as f07. Manual entry stays as the fallback. Handle is f08 because f06/f07 were already taken.
+- f09 `srs-ladder` (added 2026-09-18): the SRS redesign from `research/urdu-vocabulary-srs-research-and-design.md` (DECISIONS 260918c/d/e). Built right after f05; needs remote migration 0002 before its deploy.
 - **Exit:** Sponsor uses the app for reading and review on the phone for several consecutive days without needing Airtable.
 
 ### Phase 3 — Coach connection
@@ -59,3 +60,4 @@
 | f06 | `features/f06-coach-contract.md` | planned | Coach tool routes, bearer auth, clipboard handoff import, OpenAPI description. |
 | f07 | `features/f07-coach-client.md` | planned | In-app GPT-Live-1 voice Coach (FR-G Option 2, chosen by mp02). |
 | f08 | `features/f08-vocab-enrich.md` | planned | LLM drafts all fields of a new vocab item for review before save (Phase 2, after f05). |
+| f09 | `features/f09-srs-ladder.md` | 🟡 in progress (built) | Versioned geometric review ladders, timestamp scheduling, richer review events (DECISIONS 260918c/e). |

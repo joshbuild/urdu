@@ -23,7 +23,7 @@ owner wins — edit the owner first, then ripple to the surfaces named below.
 | `pm/VISION.md` | intent, why we're building this | wins on intent; defers to PRD on scope |
 | `pm/PRD.md` | v0 scope, requirements, data model, Coach contract | **wins on scope over every other doc** |
 | `AGENTS.md` (this file) | architecture shape, invariants, commands, agent process | defers to PRD/VISION on scope and intent |
-| `shared/` (`mastery.ts`, `dates.ts`, `normalize.ts`, `ulid.ts`) | as-built domain rules — mastery ladder, intervals, grading, normalization, IDs | code + its tests win over prose; ripple a rule change into PRD and this file |
+| `shared/` (`ladders.ts`, `mastery.ts`, `dates.ts`, `normalize.ts`, `ulid.ts`) | as-built domain rules — review ladders, intervals, grading, mastery bands, normalization, IDs | code + its tests win over prose; ripple a rule change into PRD and this file |
 | `pm/DECISIONS.md` | cross-cutting decisions and what was rejected | append/prepend-only; correct by a new dated entry |
 | `pm/pm-glossary.md` | process vocabulary, work types, identifier ladder | process terms defer here |
 | `pm/PLAN.md` | phases and the Features Index | roster mirrors each feature doc's badge |
@@ -39,14 +39,14 @@ unbuilt scope must be marked planned (`post-v0`, `v1`). As-built content (this
 file's Project state, feature-doc tombstones, code) owns *what is true now* and
 is never aspirational; mark planned-not-built as planned or unknown.
 
-**Keep-in-sync.** A mastery/grading change touches `shared/mastery.ts`, its
-test, PRD Appendix, and the Invariants below. A command change touches
+**Keep-in-sync.** A ladder/grading change touches `shared/ladders.ts` or
+`shared/mastery.ts`, their tests, PRD Appendix A, and the Invariants below. A command change touches
 `package.json` and Project state. Keep this file under 24 KiB so agents that
 truncate project docs still load all of it.
 
 ## Project state
 
-Single-user personal Urdu learning PWA. See `pm/STATUS.md` for current progress. f01 shipped 2026-09-17: scaffold, shared rules, D1 schema, auth, vocab, review and export API, PWA shell, and the first deployment to `urdu.umber-amber.workers.dev`, verified on the sponsor's phone (`smoke-tests/archive/smoke-test-01_archive.md`). f02 `airtable-import` shipped 2026-09-17: the import endpoint and `scripts/airtable-import.ts`, and the sponsor's production run, which put 36 vocab rows, 3 tags and 0 review events into production D1 with an empty cross-check report (`smoke-tests/archive/smoke-test-02_archive.md`). That closed PLAN Phase 1. In Phase 2, f03 `reader` shipped 2026-09-17 and f04 `vocab-ui` 2026-09-18 (browse/search/edit/delete/manual add, session-limit setting), both verified on the phone; f05 `review` is next. `spikes/` is Phase 0 reference code, excluded from tsc and Biome.
+Single-user personal Urdu learning PWA. See `pm/STATUS.md` for current progress. f01 shipped 2026-09-17: scaffold, shared rules, D1 schema, auth, vocab, review and export API, PWA shell, and the first deployment to `urdu.umber-amber.workers.dev`, verified on the sponsor's phone (`smoke-tests/archive/smoke-test-01_archive.md`). f02 `airtable-import` shipped 2026-09-17: the import endpoint and `scripts/airtable-import.ts`, and the sponsor's production run, which put 36 vocab rows, 3 tags and 0 review events into production D1 with an empty cross-check report (`smoke-tests/archive/smoke-test-02_archive.md`). That closed PLAN Phase 1. In Phase 2, f03 `reader` shipped 2026-09-17 and f04 `vocab-ui` 2026-09-18 (browse/search/edit/delete/manual add, session-limit setting), both verified on the phone. f05 `review` is built, awaiting the end of smoke-test-05. f09 `srs-ladder` (versioned geometric ladders, timestamp scheduling, migration 0002) is built, awaiting the sponsor's remote migration and smoke-test-09. `spikes/` is Phase 0 reference code, excluded from tsc and Biome.
 
 Commands (pnpm; Node 22):
 - `pnpm dev` — Vite dev server with the Worker and a local D1 (secrets from `.dev.vars`, see `.dev.vars.example`).
@@ -102,8 +102,8 @@ Test-run discipline (this workstation has been wedged by concurrent Vitest runs)
 ## Invariants to preserve
 
 - **Deterministic code owns state transitions; AI only proposes.** Mastery changes, intervals, next-review calculation, IDs, timestamps, validation, and persistence are application logic in Urdu Core. AI may grade free-form answers, define, transliterate, suggest duplicates, or propose metadata.
-- **Mastery ladder is a single source of truth** (do not duplicate in UI and backend): levels 0–6 = New/Learning/Basic/Firm/Strong/Stable/Permanent with intervals 0/1/5/25/125/625/3125 days. `Next Review = Last Reviewed + interval(mastery)`; never-reviewed items are due immediately.
-- **Review grading:** recognition (`ur_en`) Wrong −2, Partially correct −1, Hesitantly correct 0, Correct +1, Confidently correct +2; production (`en_ur`, `oral`) −1/0/0/+1/+2; clamp to 0–6. One shared mastery level and next-review date per item. A tracked review updates mastery, sets Last Reviewed, recalculates Next Review, and records a review event. Ad-hoc speaking/defining/viewing must **not** alter mastery.
+- **Review ladders are a single source of truth** (`shared/ladders.ts`; do not duplicate in UI and backend): immutable versioned interval lists — id 1 legacy 0/1/5/25/125/625/3125 d, ids 2–6 geometric presets 3 h → 10 y (×2^(q/4), q = 4–8), Moderate (id 3) the default; the active one is the `settings` row. Each item has one schedule (`ladder_id`, `ladder_step`, `interval_seconds`, `last_reviewed_at`, `due_at`); `due_at = last_reviewed_at + interval`; never-reviewed items (null) are due immediately. Never edit a version's intervals — add a new id. Mastery is a display band derived from the interval.
+- **Review grading:** recognition (`ur_en`) Wrong −2, Partially correct −1, Hesitantly correct 0, Correct +1, Confidently correct +2; production (`en_ur`, `oral`) −1/0/0/+1/+2, in rungs; clamp to the ladder's ends. An item on a non-active ladder first maps to the log-nearest active rung (ties shorter); changing the active ladder rewrites no due time. A tracked review updates the schedule and records a review event (direction, grade, applied delta, ladder/step/interval/due before and after, source, prompt support). Ad-hoc speaking/defining/viewing must **not** alter the schedule.
 - **Phrases are first-class vocabulary items**, not annotations on words. Check for duplicates/equivalents before creating an entry.
 - **Auth is a single personal secret** validated server-side in the Worker, establishing a long-lived per-device session. The secret must never appear in frontend JS, the repo, URLs, or readable browser storage. Coach/tool auth to Urdu Core is separate and narrowly scoped.
 - **Language target is everyday Pakistani Urdu**, with practical Roman Urdu transliteration and concise English explanations.

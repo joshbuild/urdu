@@ -212,39 +212,25 @@ Adding vocabulary from the reading view should be fast. The system should infer 
 
 ## 6. Mastery and Spaced Review
 
-The app should preserve the learning model already established in the existing Urdu Coach project.
+The app began with the Urdu Coach project's seven-level ladder (0/1/5/25/125/625/3125 days). In 2026-09 it moved to versioned geometric ladders (DECISIONS 260918c/e, f09; design in `research/urdu-vocabulary-srs-research-and-design.md`), because two-rung moves on a ×5 ladder made ×25 scheduling commitments.
 
-### 6.1 Mastery levels
+### 6.1 Review ladders
 
-The canonical progression is:
+A ladder is a list of review intervals. Five presets start at 3 hours and end at 10 years, each rung a fixed multiple of the last: Dense ×2, **Moderate ×2.38 (default)**, Balanced ×2.83, Wide ×3.36, Very wide ×4. The learner picks one in Settings. Every ladder version is immutable and has an id; a changed ladder is a new version. The old seven-level ladder survives as the legacy version that migrated items sit on.
 
-| Level | Name | Review interval |
-|---|---|---:|
-| 0 | New | 0 days |
-| 1 | Learning | 1 day |
-| 2 | Basic | 5 days |
-| 3 | Firm | 25 days |
-| 4 | Strong | 125 days |
-| 5 | Stable | 625 days |
-| 6 | Permanent | 3125 days |
+The ladders have a **single source of truth** in the application (`shared/ladders.ts`) rather than being duplicated across UI and business logic.
 
-The intervals should have a **single source of truth** in the application/data model rather than being duplicated across UI and business logic.
+"Mastery" is shown as a band derived from the item's current interval, keeping the old names: New, Learning, Basic, Firm, Strong, Stable, Permanent.
 
 ### 6.2 Scheduling principle
 
-A vocabulary item's current mastery level determines its review interval.
+Each item has one schedule: its ladder, its rung, the interval actually scheduled, and a due time.
 
-Conceptually:
-
-`Next Review = Last Reviewed + interval for current mastery level`
+`Due = Last Reviewed + interval of the item's rung`, to the second, not the day.
 
 An item that has never been reviewed is due immediately.
 
-Changing mastery therefore changes the effective review horizon:
-
-- higher mastery pushes the item farther into the future;
-- lower mastery pulls it closer;
-- unmastered/new material stays prominent.
+Changing the ladder setting moves no due time. Each item joins the new ladder at its next review, at the rung whose interval is multiplicatively closest to its current one, and the grade then applies from there.
 
 The implementation should make this relationship deterministic and easy to inspect.
 
@@ -252,23 +238,24 @@ The implementation should make this relationship deterministic and easy to inspe
 
 For tracked spaced-repetition reviews:
 
-| Recall | Mastery change |
+| Recall | Rung change |
 |---|---:|
-| Wrong | -2 levels |
-| Partially correct | -1 level |
+| Wrong | -2 rungs |
+| Partially correct | -1 rung |
 | Hesitantly correct | no change |
-| Correct | +1 level |
-| Confidently correct | +2 levels |
+| Correct | +1 rung |
+| Confidently correct | +2 rungs |
 
-These deltas apply to recognition (Urdu → English). Production reviews (English → Urdu, and spoken Coach answers) soften misses: Wrong −1, Partially correct and Hesitantly correct no change, Correct +1, Confidently correct +2. Failing to produce a word is weak evidence it has been forgotten (amended 2026-09-18, DECISIONS 260918b). Both directions share one mastery level and one next-review date.
+These deltas apply to recognition (Urdu → English). Production reviews (English → Urdu, and spoken Coach answers) soften misses: Wrong −1, Partially correct and Hesitantly correct no change, Correct +1, Confidently correct +2. Failing to produce a word is weak evidence it has been forgotten (amended 2026-09-18, DECISIONS 260918b). Both directions share one schedule (DECISIONS 260918d kept these deltas over the research report's table).
 
-Mastery is clamped to levels 0 through 6.
+The rung is clamped to the ladder's first and last rung.
 
 After a tracked review:
 
-1. update mastery;
-2. set `Last Reviewed` to the review date;
-3. derive or recalculate `Next Review` from the current mastery interval.
+1. move to the new rung (joining the active ladder first if needed);
+2. set `Last Reviewed` to the review instant;
+3. set the due time to the review instant plus the new rung's interval;
+4. record a review event with the direction, grade, delta, and the schedule before and after.
 
 Ad-hoc viewing, speaking, definitions, or quizzes should **not silently alter mastery**.
 

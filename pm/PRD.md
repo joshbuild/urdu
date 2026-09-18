@@ -56,13 +56,13 @@ The sponsor already learns Urdu with (a) a ChatGPT "Urdu Coach" project used mai
 
 ### FR-A Urdu Core: data and rules
 - **FR-A1** D1 schema per Appendix A: `vocab`, `review_events`, `handoffs`, `tags`, `sessions`, with D1 migrations under `migrations/`.
-- **FR-A2** Mastery ladder, intervals, and grade deltas live once in `shared/` and are the only implementation used by the Worker; the UI imports them for display only.
-- **FR-A3** `next_review_on = last_reviewed_on + interval(mastery)` in whole days, computed in the configured home timezone; never-reviewed items are due immediately. Stored on the row and indexed.
-- **FR-A4** Recording a tracked review: apply the delta for the review's direction (recognition `ur_en`: −2/−1/0/+1/+2; production `en_ur` and `oral`: −1/0/0/+1/+2; DECISIONS 260918b), clamp 0-6, set `last_reviewed_on` to today, recompute `next_review_on`, insert a `review_events` row with mastery before/after, grade, direction, source, optional handoff id. Atomic.
+- **FR-A2** Review ladders (immutable versions: id 1 legacy 0/1/5/25/125/625/3125 d; ids 2–6 geometric presets from 3 h to 3650 d, ×2^(q/4) for q = 4–8, Moderate id 3 the default), grade deltas and mastery bands live once in `shared/` and are the only implementation used by the Worker; the UI imports them for display only. The active ladder is a vault setting (`GET`/`PATCH /api/settings`, ids 2–6). Amended 2026-09-18 by f09 (DECISIONS 260918c/e).
+- **FR-A3** `due_at = last_reviewed_at + interval_seconds`, exact UTC instants; never-reviewed items (null) are due immediately. Stored on the row and indexed. Changing the active ladder rewrites no due time.
+- **FR-A4** Recording a tracked review: if the item is on another ladder, map it to the active ladder's log-nearest rung (ties shorter; a zero interval to rung 0); apply the delta for the review's direction (recognition `ur_en`: −2/−1/0/+1/+2; production `en_ur` and `oral`: −1/0/0/+1/+2; DECISIONS 260918b/d) in rungs, clamp to the ladder, set `last_reviewed_at` to now and `due_at` to now + the rung's interval, insert a `review_events` row with grade, direction, source, optional handoff id, prompt support, applied delta, and ladder/step/interval/due before and after. Atomic.
 - **FR-A5** Urdu normalization (Appendix B) produces `urdu_key`; an insert whose key matches an existing row is rejected with the existing id. Applies to PWA adds, Coach proposals, and import.
-- **FR-A6** Vocab CRUD: create, read, list (search by Urdu/Roman/English substring, filter by tag, due-only, sort), update any editable field including mastery, delete.
-- **FR-A7** Due selection: items with `next_review_on <= today` or never reviewed, ordered `next_review_on asc, added_at asc`, with limit and optional tag filter.
-- **FR-A8** Viewing, speaking, defining, or skipping never changes mastery or review dates.
+- **FR-A6** Vocab CRUD: create, read, list (search by Urdu/Roman/English substring, filter by tag, due-only, sort), update any editable field including the review rung, delete.
+- **FR-A7** Due selection: items with `due_at <= now` or never reviewed, ordered `due_at asc` (nulls first), `added_at asc`, with limit and optional tag filter.
+- **FR-A8** Viewing, speaking, defining, or skipping never changes an item's schedule.
 
 ### FR-B Auth and sessions
 - **FR-B1** `POST /api/unlock` with the personal secret; constant-time compare against a Worker secret; on success create a random session token, store its hash in `sessions`, return it as an `HttpOnly; Secure; SameSite=Strict` cookie with about 1 year expiry.
@@ -82,19 +82,19 @@ The sponsor already learns Urdu with (a) a ChatGPT "Urdu Coach" project used mai
 - **FR-C8** Current text persists in localStorage across reloads. No server persistence of texts in v0.
 
 ### FR-D Vocabulary UI
-- **FR-D1** List with search (Urdu/Roman/English), tag filter, due-only toggle, sort by added/next review/mastery (the chosen sort is remembered per device). Mastery shows as a colour-coded pill, "0 • New" to "6 • Permanent" (added 2026-09-18).
-- **FR-D2** Item view shows all fields, mastery level name, last/next review, and a speak button; edit any field including mastery (which recomputes next review); delete with confirmation.
+- **FR-D1** List with search (Urdu/Roman/English), tag filter, due-only toggle, sort by added/next review/mastery (interval) (the chosen sort is remembered per device). Mastery shows as a colour-coded pill naming the band and the scheduled interval, "New" or e.g. "Firm • 3 wk" (added 2026-09-18, reworded by f09).
+- **FR-D2** Item view shows all fields, mastery band, time until due and last review, and a speak button; edit any field including the rung on the active ladder (a correction: the due time follows from the last review and no event is written); delete with confirmation.
 - **FR-D3** Manual "new item" entry from the vocab screen using the same form as FR-C6.
 
 ### FR-E Review
-- **FR-E1** Session start: choose direction (Urdu to English default, English to Urdu) and see the due count; queue per FR-A7 capped at a per-session limit (default 20, adjustable in Settings). Optional **review ahead by N days** (0-365, default 0) also queues items with `next_review_on` up to today + N; grades still count from today (added 2026-09-18, sponsor request during smoke-test-05).
+- **FR-E1** Session start: choose direction (Urdu to English default, English to Urdu) and see the due count; queue per FR-A7 capped at a per-session limit (default 20, adjustable in Settings). Optional **review ahead by N days** (0-365, default 0) also queues items with `due_at` up to now + N days; grades still count from now (added 2026-09-18, sponsor request during smoke-test-05).
 - **FR-E2** Card front shows the prompt side with a speak button whenever Urdu is showing; Reveal shows Urdu, Roman, English, notes, example.
 - **FR-E3** Five grade buttons in ladder order (Wrong, Partially correct, Hesitantly correct, Correct, Confidently correct); tapping records via FR-A4 and advances. Skip advances without recording.
 - **FR-E4** End of session shows counts graded and skipped. No streaks or statistics.
 
 ### FR-F Coach tool contract and handoff
-- **FR-F1** `GET /coach/vocab` returns due items by default (or all, tag filter, limit) with id, urdu, roman, english, mastery, next_review_on.
-- **FR-F2** `POST /coach/propose` accepts candidates `{urdu, roman?, english?, notes?, example_urdu?, tags?}`; each is created immediately at mastery 0 with `source=coach`, or rejected as duplicate with the existing id. Returns per-candidate outcomes. No approval queue.
+- **FR-F1** `GET /coach/vocab` returns due items by default (or all, tag filter, limit) with id, urdu, roman, english, mastery band, due_at.
+- **FR-F2** `POST /coach/propose` accepts candidates `{urdu, roman?, english?, notes?, example_urdu?, tags?}`; each is created immediately on the first rung of the active ladder with `source=coach`, or rejected as duplicate with the existing id. Returns per-candidate outcomes. No approval queue.
 - **FR-F3** `POST /coach/reviews` accepts `{handoff_id, session_at, results:[{vocab_id?|urdu?, grade, direction}]}`; resolves each by id then by `urdu_key`; applies FR-A4 to matched items; returns unmatched or ambiguous results flagged, never guessed. A repeated `handoff_id` is a no-op returning the original outcome.
 - **FR-F4** The clipboard handoff is a single JSON document carrying `handoff_id`, `session_at`, optional `proposals` (FR-F2 shape) and optional `results` (FR-F3 shape). The PWA has a Paste-handoff screen that validates, submits through the same Worker logic, and shows per-item outcomes.
 - **FR-F5** An OpenAPI 3.1 description of FR-F1..F3 is maintained in-repo for use as the Custom GPT Action schema.
@@ -123,8 +123,9 @@ The sponsor already learns Urdu with (a) a ChatGPT "Urdu Coach" project used mai
 - **Mobile**: usable one-handed on a phone; hit targets at least 44 px; installed-PWA manifest with icons; no offline data caching.
 
 ## Appendix A — Data model (D1)
-- `vocab`: id (ULID) · urdu · urdu_key · kind (word|phrase) · roman · english · notes · example_urdu · example_english · tags (JSON array of names) · favourite (0/1) · mastery (0-6) · added_at · last_reviewed_on (date, nullable) · next_review_on (date, nullable = due now) · source (reading|coach|airtable|manual) · airtable_id (nullable, unique) · created_at · updated_at. Unique index on urdu_key; index on next_review_on.
-- `review_events`: id · vocab_id · reviewed_at · grade (wrong|partial|hesitant|correct|confident) · mastery_before · mastery_after · direction (ur_en|en_ur|oral) · source (pwa|coach) · handoff_id (nullable).
+- `vocab`: id (ULID) · urdu · urdu_key · kind (word|phrase) · roman · english · notes · example_urdu · example_english · tags (JSON array of names) · favourite (0/1) · ladder_id · ladder_step · interval_seconds · added_at · last_reviewed_at (UTC instant, nullable) · due_at (UTC instant, nullable = due now) · source (reading|coach|airtable|manual) · airtable_id (nullable, unique) · created_at · updated_at. Unique index on urdu_key; index on (due_at, added_at). Ladder definitions live in `shared/ladders.ts`, not D1 (f09, migration 0002).
+- `review_events`: id · vocab_id · reviewed_at · grade (wrong|partial|hesitant|correct|confident) · direction (ur_en|en_ur|oral) · source (pwa|coach) · handoff_id (nullable) · prompt_support (none|hint|answer_exposed|repetition) · applied_delta (nullable on pre-f09 events) · ladder_before_id · step_before · interval_before · due_before · ladder_id · step_after · interval_after · due_after.
+- `settings`: key · value. `active_ladder_id` (default 3).
 - `handoffs`: id (Coach-supplied) · imported_at · payload (JSON) · status · outcome (JSON).
 - `tags`: name (PK) · description.
 - `sessions`: id · token_hash · created_at · last_seen_at · label.
