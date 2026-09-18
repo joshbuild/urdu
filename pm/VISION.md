@@ -260,6 +260,8 @@ For tracked spaced-repetition reviews:
 | Correct | +1 level |
 | Confidently correct | +2 levels |
 
+These deltas apply to recognition (Urdu → English). Production reviews (English → Urdu, and spoken Coach answers) soften misses: Wrong −1, Partially correct and Hesitantly correct no change, Correct +1, Confidently correct +2. Failing to produce a word is weak evidence it has been forgotten (amended 2026-09-18, DECISIONS 260918b). Both directions share one mastery level and one next-review date.
+
 Mastery is clamped to levels 0 through 6.
 
 After a tracked review:

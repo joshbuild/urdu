@@ -81,6 +81,11 @@ pnpm run deploy
 - [ ] F3 — set **Sort** to Mastery, swipe the app away and reopen it: the Vocab
       list is still sorted by Mastery. Search and the other filters start empty.
 
+- [ ] F4 — **English → Urdu** grading is gentler on misses. Note a word's
+      level (say 3 • Firm), review it English → Urdu and grade it **Wrong**: it
+      drops **one** level (to 2), not two. **Partially correct** leaves the
+      level unchanged. Urdu → English grading is the same as before.
+
 ## Result
 
 - [ ] All green. Notes:

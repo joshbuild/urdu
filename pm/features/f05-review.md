@@ -76,6 +76,7 @@ The vault is only worth keeping if items come back at the right time. f01 built 
 
 ### Recently Completed
 
+- 2026-09-18 — Direction-specific grading: English → Urdu grades use −1/0/0/+1/+2 (DECISIONS 260918b), in `shared/mastery.ts`; recognition unchanged. Smoke-test-05 gained F4.
 - 2026-09-18 — Sponsor add-ons mid smoke-test: review ahead (Worker `ahead` param + test, start-panel days field), remembered vocab sort, mastery pills. Smoke-test-05 gained Part F.
 - 2026-09-18 — s05: `smoke-tests/smoke-test-05.md` written for the phone.
 - 2026-09-18 — s01–s04: `src/review/session.ts` reducer (14 tests); `src/screens/ReviewScreen.tsx` start panel, card, grade bar, skip, end early, tally; 404 on grade counts as skip, 401 hands off to the lock screen. `pnpm check` green at 307. Not yet seen in a browser or on the phone.
@@ -93,6 +94,7 @@ The vault is only worth keeping if items come back at the right time. f01 built 
 
 - 2026-09-18 — **Client only.** The due and review routes shipped in f01 and already meet FR-A4/A7; f05 adds no Worker surface. *Superseded in part the same day by the `ahead` parameter below.*
 - 2026-09-18 — **Review ahead folded into f05, not a new feature.** It's the same screen and route, with one query parameter. Early reviews count from today (`last_reviewed_on` = today), so the ladder is untouched. Ahead days are per session, not remembered.
+- 2026-09-18 — **Production grades soften misses** (−1/0/0/+1/+2); one shared level stays. Cross-cutting, so recorded in DECISIONS 260918b.
 - 2026-09-18 — **Vocab sort remembered, other filters not.** A stale search, tag or due-only filter would silently hide items; a stale sort only reorders them.
 - 2026-09-18 — **Grades need a reveal first; Skip does not.** Grading an unseen answer makes no sense, and Skip must stay a free exit.
 - 2026-09-18 — **Queue fetched once at start.** Items graded in the session drop out of the due set anyway; refetching per card would add latency for no gain.

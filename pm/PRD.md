@@ -58,7 +58,7 @@ The sponsor already learns Urdu with (a) a ChatGPT "Urdu Coach" project used mai
 - **FR-A1** D1 schema per Appendix A: `vocab`, `review_events`, `handoffs`, `tags`, `sessions`, with D1 migrations under `migrations/`.
 - **FR-A2** Mastery ladder, intervals, and grade deltas live once in `shared/` and are the only implementation used by the Worker; the UI imports them for display only.
 - **FR-A3** `next_review_on = last_reviewed_on + interval(mastery)` in whole days, computed in the configured home timezone; never-reviewed items are due immediately. Stored on the row and indexed.
-- **FR-A4** Recording a tracked review: apply delta, clamp 0-6, set `last_reviewed_on` to today, recompute `next_review_on`, insert a `review_events` row with mastery before/after, grade, direction, source, optional handoff id. Atomic.
+- **FR-A4** Recording a tracked review: apply the delta for the review's direction (recognition `ur_en`: −2/−1/0/+1/+2; production `en_ur` and `oral`: −1/0/0/+1/+2; DECISIONS 260918b), clamp 0-6, set `last_reviewed_on` to today, recompute `next_review_on`, insert a `review_events` row with mastery before/after, grade, direction, source, optional handoff id. Atomic.
 - **FR-A5** Urdu normalization (Appendix B) produces `urdu_key`; an insert whose key matches an existing row is rejected with the existing id. Applies to PWA adds, Coach proposals, and import.
 - **FR-A6** Vocab CRUD: create, read, list (search by Urdu/Roman/English substring, filter by tag, due-only, sort), update any editable field including mastery, delete.
 - **FR-A7** Due selection: items with `next_review_on <= today` or never reviewed, ordered `next_review_on asc, added_at asc`, with limit and optional tag filter.
