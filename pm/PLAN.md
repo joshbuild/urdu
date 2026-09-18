@@ -33,6 +33,7 @@
 - f03 `reader`: FR-C1..C8 including the selection action bar, Add to vocab form, Define ladder, voice picker.
 - f04 `vocab-ui`: FR-D1..D3 and Settings (FR-I1 minus voice spend).
 - f05 `review`: FR-E1..E4.
+- f08 `vocab-enrich` (planned, added 2026-09-17): an LLM drafts every field of a new vocab item from the Add form (reader and FR-D3), the sponsor reviews before save. Server-side through Urdu Core, capped spend, same OpenAI key as f07. Manual entry stays as the fallback. Handle is f08 because f06/f07 were already taken.
 - **Exit:** Sponsor uses the app for reading and review on the phone for several consecutive days without needing Airtable.
 
 ### Phase 3 — Coach connection
@@ -52,8 +53,9 @@
 |---|---|---|---|
 | f01 | `features/archive/f01-urdu-core-foundation-archive.md` | 🟢 shipped 2026-09-17 | Repo, shared domain rules, D1 schema, unlock auth, vocab/review API, PWA shell. |
 | f02 | `features/archive/f02-airtable-import-archive.md` | 🟢 shipped 2026-09-17 | One-time idempotent import of the Airtable "Urdu Vocab" base into D1. |
-| f03 | `features/f03-reader.md` | 🟡 in progress (s01) | Paste-and-read in Nastaliq with tap-to-speak, selection action bar, add and define. |
+| f03 | `features/f03-reader.md` | 🟡 in progress (s07) | Paste-and-read in Nastaliq with tap-to-speak, selection action bar, add and define. |
 | f04 | `features/f04-vocab-ui.md` | planned | Browse, search, edit, and create vocabulary; settings. |
 | f05 | `features/f05-review.md` | planned | Due-item review session with five-grade self-scoring. |
 | f06 | `features/f06-coach-contract.md` | planned | Coach tool routes, bearer auth, clipboard handoff import, OpenAPI description. |
 | f07 | `features/f07-coach-client.md` | planned | In-app GPT-Live-1 voice Coach (FR-G Option 2, chosen by mp02). |
+| f08 | `features/f08-vocab-enrich.md` | planned | LLM drafts all fields of a new vocab item for review before save (Phase 2, after f05). |

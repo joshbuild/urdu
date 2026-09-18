@@ -22,7 +22,7 @@ The sponsor already learns Urdu with (a) a ChatGPT "Urdu Coach" project used mai
 
 ### 2.2 Out of Scope (v0)
 - Windows/desktop Chrome parity (staged to v1; v0 layout stays responsive and avoids touch-only assumptions).
-- Any LLM call from the PWA or Worker for defining/enriching text (Define is vault lookup + external dictionary links; enrichment happens in ChatGPT).
+- Any LLM call for Define (Define is vault lookup + external dictionary links). *Amended 2026-09-17:* LLM enrichment of a new vocab item is **in** v0 as planned feature f08 `vocab-enrich` (Phase 2, after f05): Urdu Core drafts Roman, English, notes and example for a new term, the sponsor reviews and saves. Until f08 ships, Add to vocab is the manual FR-C6 form.
 - Hosted TTS (only if the speech spike fails; behind the same `speak()` interface).
 - Saved reading passages, reading history, tag management UI, favourites UI, statistics, undo of a review grade, mixed-direction review, fuzzy duplicate suggestions, approval queue for Coach proposals.
 - Everything in `VISION.md` §16 (multi-user, accounts, offline-first, dictionary, curriculum, custom voice tutor built from scratch, analytics, billing). The §16 line on a custom voice tutor is amended: in-app voice using OpenAI's GPT-Live-1 API is permitted because it is the same model family as ChatGPT Voice and allows vault tool calls mid-conversation.
@@ -117,7 +117,7 @@ The sponsor already learns Urdu with (a) a ChatGPT "Urdu Coach" project used mai
 - **Latency**: tap-to-speech start under 300 ms on the phone; API round trips under 500 ms p95 from Vancouver.
 - **Reliability**: review recording is atomic; a failed request never leaves mastery and events inconsistent.
 - **Security**: per `VISION.md` §12 and FR-B; all traffic HTTPS; Coach token scoped to FR-F only.
-- **Cost**: Cloudflare free or minimum paid tiers; no LLM spend except capped GPT-Live-1 if selected.
+- **Cost**: Cloudflare free or minimum paid tiers; no LLM spend except capped GPT-Live-1 and f08's capped vocab enrichment (planned).
 - **Portability**: `GET /api/export` returns the full vault as JSON; CSV export deferred.
 - **Maintainability**: domain rules in `shared/` with Vitest coverage for ladder, deltas, clamping, scheduling across DST, normalization, and duplicate detection; single `pnpm dev` and `pnpm deploy`.
 - **Mobile**: usable one-handed on a phone; hit targets at least 44 px; installed-PWA manifest with icons; no offline data caching.

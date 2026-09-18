@@ -111,7 +111,7 @@ Test-run discipline (this workstation has been wedged by concurrent Vitest runs)
 
 ## Explicit non-goals (v0)
 
-Multi-user, accounts/OAuth, offline-first, a dictionary or curriculum, a custom voice tutor built from scratch (the chosen GPT-Live-1 integration is allowed), social/billing/analytics features, or any infrastructure built "in case" a later version needs it. No LLM calls for Define/enrichment; the capped voice path is the exception for API spending.
+Multi-user, accounts/OAuth, offline-first, a dictionary or curriculum, a custom voice tutor built from scratch (the chosen GPT-Live-1 integration is allowed), social/billing/analytics features, or any infrastructure built "in case" a later version needs it. No LLM calls for Define. LLM enrichment of new vocab items is planned v0 scope (f08, DECISIONS 260917h); it and the capped voice path are the only API spending.
 
 ## PM workflow (all agents)
 
