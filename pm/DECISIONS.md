@@ -3,6 +3,7 @@
 
 **File Purpose**: Prepend-only log of significant decisions and major actions. Newest entry at top. Never edit prior entries. Work-local decisions live in their work-front doc's §Decisions; cross-cutting ones are promoted here.
 
+2026-09-18 (260918d): Grade deltas stay as shipped in 260918b, overriding the recognition row of 260918c (sponsor). Recognition keeps −2/−1/0/+1/+2 and production keeps −1/0/0/+1/+2. The only direction asymmetry is damped miss penalties in the harder production direction; gains are equal. The SRS refactor adopts the report's ladder, timestamp and event-model changes, not its deltas. Rejected: the report's recognition −2/−1/0/0/+1, where a plain Correct would never advance the main daily path; production Confident +1, which would make the harder direction slower to climb. Ripples: the note at the top of the research report.
 2026-09-18 (260918c): The SRS design in `research/urdu-vocabulary-srs-research-and-design.md` is accepted as the new direction (sponsor, with ChatGPT research). It keeps one shared schedule per item and changes the following:
 - Recognition deltas become −2/−1/0/0/+1. This supersedes the recognition half of 260918b; production stays −1/0/0/+1/+2.
 - The fixed 0/1/5/25/125/625/3125-day ladder is replaced by an immutable, versioned geometric ladder from 3 hours to about 10 years, with five quarter-step presets (2^1 to 2^2) and Moderate 2^1.25 as the default. Scheduling uses exact durations and due timestamps, not dates.

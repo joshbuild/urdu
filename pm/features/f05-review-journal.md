@@ -26,4 +26,4 @@
 - direction statistics and selection;
 - the Coach recall-only rule.
 
-This is a schema and domain refactor, not an f05 tweak. It was recorded as DECISIONS 260918c, and planning it is the next session's first job. Nothing was implemented from the report. The sponsor's `design/spaced-repetition-intervals.xlsx` was left uncommitted.
+The sponsor then kept the shipped deltas instead (DECISIONS 260918d), so the refactor takes only the ladder, timestamp and event-model changes. This is a schema and domain refactor, not an f05 tweak. It was recorded as DECISIONS 260918c, and planning it is the next session's first job. Nothing was implemented from the report. The sponsor's `design/spaced-repetition-intervals.xlsx` was left uncommitted.

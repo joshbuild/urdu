@@ -13,6 +13,6 @@
 ## Next Session Pointers
 *The 1–3 concrete next actions for a cold start.*
 
-1. **Plan the SRS refactor** from `research/urdu-vocabulary-srs-research-and-design.md` (accepted, DECISIONS 260918c): a versioned geometric ladder (3 h–10 y, Moderate 2^1.25 default), recognition deltas −2/−1/0/0/+1, timestamp due times, richer review events, non-retroactive ladder switches. Open it as its own front (next free handle) and sequence it against f05's close and f08. Planning only, no build, until the sponsor approves the plan.
+1. **Plan the SRS refactor** from `research/urdu-vocabulary-srs-research-and-design.md` (accepted, DECISIONS 260918c): a versioned geometric ladder (3 h–10 y, Moderate 2^1.25 default), deltas unchanged (DECISIONS 260918d), timestamp due times, richer review events, non-retroactive ladder switches. Open it as its own front (next free handle) and sequence it against f05's close and f08. Planning only, no build, until the sponsor approves the plan.
 2. **f05 `review`**: the sponsor finishes smoke-test-05 (D, E, and F after `git pull && pnpm run deploy`), then `/pm-close`. It closes on the current rules.
 3. **Inbox: 1 item** (fill in missing vault fields), so `/pm-triage` is owed; it may shape f08. Toolchain: AVG Hardened Mode + CyberCapture off; never add exceptions.

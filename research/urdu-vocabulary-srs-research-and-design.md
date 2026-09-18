@@ -1,6 +1,6 @@
 # Urdu Vocabulary SRS: Research Findings and Final Design Recommendation
 
-**Status:** Accepted design recommendation  
+**Status:** Accepted design recommendation, **except the grade deltas**: the app keeps recognition −2/−1/0/+1/+2 and production −1/0/0/+1/+2 (DECISIONS 260918d). The tables in §1 and §4.3 below are superseded.  
 **Audience:** implementation planning and technical design  
 **Application context:** personal, single-user Urdu vocabulary app; primarily mobile; hundreds of vocabulary items; self-graded reviews
 
