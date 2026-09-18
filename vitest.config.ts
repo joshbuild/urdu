@@ -26,6 +26,15 @@ export default defineConfig({
         },
       },
       {
+        // Client-side logic the reader keeps pure (paragraphs, tokens, voice choice) so it can be
+        // tested here rather than through a DOM. f03 deliberately adds no component-test stack.
+        test: {
+          name: "client",
+          environment: "node",
+          include: ["src/**/*.test.ts"],
+        },
+      },
+      {
         plugins: [
           cloudflareTest(async () => ({
             wrangler: { configPath: "./wrangler.jsonc" },

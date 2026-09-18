@@ -5,3 +5,7 @@ dist/
 .env
 
 data/
+
+# f03: the Google Fonts zip and extracted TTFs. The served subset is checked in
+# under public/fonts/; regenerate it with scripts/subset-font.sh.
+font/

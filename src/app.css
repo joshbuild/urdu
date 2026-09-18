@@ -191,3 +191,61 @@ button.secondary:hover:not(:disabled) {
   border-color: #b7cdc5;
   color: #054e51;
 }
+
+/* f03 s02: self-hosted Nastaliq (FR-C2). Subset to the Arabic block by scripts/subset-font.sh;
+   the unicode-range makes the Latin fallback to system-ui deliberate rather than accidental.
+   swap, because 114 KB over a phone connection must never hold up first paint. */
+@font-face {
+  font-family: "Noto Nastaliq Urdu";
+  src: url("/fonts/noto-nastaliq-urdu-subset.woff2") format("woff2");
+  font-weight: 400;
+  font-display: swap;
+  unicode-range: U+0600-06FF, U+200C-200D, U+2010-2014, U+2018-201D, U+2026;
+}
+
+.paste {
+  width: 100%;
+  min-height: 160px;
+  border: 1px solid #829b97;
+  border-radius: 10px;
+  padding: 12px 16px;
+  background: white;
+  color: #173e40;
+  font: inherit;
+  font-family: "Noto Nastaliq Urdu", system-ui, sans-serif;
+  font-size: 1.25rem;
+  line-height: 2.2;
+  resize: vertical;
+}
+
+.reader-bar {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+button.inline {
+  width: auto;
+  min-height: 44px;
+  margin-top: 0;
+  padding: 8px 14px;
+}
+
+/* Nastaliq hangs far below and above the baseline; 2.2 line height is FR-C2's floor,
+   not a preference. */
+.urdu {
+  margin-top: 8px;
+  font-family: "Noto Nastaliq Urdu", system-ui, sans-serif;
+  font-size: clamp(1.4rem, 6vw, 1.9rem);
+  line-height: 2.2;
+  text-align: right;
+}
+
+.urdu p {
+  margin: 0 0 28px;
+}
+
+.urdu p:last-child {
+  margin-bottom: 0;
+}
