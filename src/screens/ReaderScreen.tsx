@@ -1,10 +1,11 @@
-// f03 s02-s05: paste, render in Nastaliq, persist, split into tappable tokens, speak a token on
-// tap, and act on a selection through the floating action bar (Speak, and s06's Add to vocab).
+// f03 s02-s07: paste, render in Nastaliq, persist, split into tappable tokens, speak a token on
+// tap, and act on a selection through the docked action bar: Speak, Add to vocab, Define.
 
 import { useEffect, useRef, useState } from "react";
 import { AddVocabSheet } from "../reader/AddVocabSheet";
 import { selectedTerm } from "../reader/actionBar";
 import { sourceSentence } from "../reader/addVocab";
+import { DefineSheet } from "../reader/DefineSheet";
 import { speak } from "../reader/speech";
 import { readStoredText, storeText, toParagraphs } from "../reader/text";
 import { tokenize } from "../reader/tokens";
@@ -41,6 +42,7 @@ export function ReaderScreen({ voiceState }: { voiceState: VoiceState }) {
     paragraph: string;
   } | null>(null);
   const [adding, setAdding] = useState<{ term: string; sentence: string } | null>(null);
+  const [defining, setDefining] = useState<{ term: string; sentence: string } | null>(null);
 
   // FR-C5: follow the native selection rather than intercepting touches. Only selections inside
   // the reader count; anything else (the paste box, Settings) clears the bar.
@@ -69,6 +71,14 @@ export function ReaderScreen({ voiceState }: { voiceState: VoiceState }) {
       document.removeEventListener("selectionchange", sync);
     };
   }, []);
+
+  // Both sheets take the selection with them and clear it, so the native toolbar and our bar
+  // do not linger behind the sheet.
+  function openSheet(open: (value: { term: string; sentence: string }) => void) {
+    if (!selection) return;
+    open({ term: selection.term, sentence: sourceSentence(selection.paragraph, selection.term) });
+    globalThis.getSelection()?.removeAllRanges();
+  }
 
   function onTokenTap(event: React.MouseEvent<HTMLDivElement>) {
     // A tap that ends a selection drag must not also speak: the selection is the user's intent,
@@ -134,23 +144,23 @@ export function ReaderScreen({ voiceState }: { voiceState: VoiceState }) {
           <button type="button" onClick={() => speak(selection.term, voiceState.voice)}>
             Speak
           </button>
-          <button
-            type="button"
-            onClick={() => {
-              setAdding({
-                term: selection.term,
-                sentence: sourceSentence(selection.paragraph, selection.term),
-              });
-              globalThis.getSelection()?.removeAllRanges();
-            }}
-          >
+          <button type="button" onClick={() => openSheet(setAdding)}>
             Add
           </button>
-          {/* s07 wires Define. */}
-          <button type="button" disabled>
+          <button type="button" onClick={() => openSheet(setDefining)}>
             Define
           </button>
         </div>
+      )}
+      {defining && (
+        <DefineSheet
+          term={defining.term}
+          onClose={() => setDefining(null)}
+          onAdd={() => {
+            setAdding(defining);
+            setDefining(null);
+          }}
+        />
       )}
       {adding && (
         <AddVocabSheet

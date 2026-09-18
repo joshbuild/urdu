@@ -1,6 +1,6 @@
 # Feature Plan — Reader
 
-**Status**: 🟡 IN PROGRESS *(opened 2026-09-17 — s01-s06 built, s07 next)*
+**Status**: 🟡 IN PROGRESS *(opened 2026-09-17 — s01-s07 built, s08 next)*
 **Handle**: `f03`
 **Created**: *2026-09-17* · **Updated**: *2026-09-17*
 
@@ -99,6 +99,7 @@ s01–s03 are independent of the Worker entirely. s06 is the only slice that nee
 
 ### Recently Completed
 
+- *2026-09-17* — **s07 Define (FR-C7).** Define opens a sheet that searches the vault (`GET /api/vocab?q=`) and keeps only an exact `urdu_key` match, showing Roman, English, notes, example and mastery. Otherwise it shows Rekhta, Wiktionary and Google Translate links in new tabs (sponsor confirmed the set), plus an Add to vocab button that hands the term to the s06 sheet. If the lookup fails, the links still show. No new API. Pure logic in `src/reader/define.ts`; the shared bottom sheet moved to `src/reader/Sheet.tsx`. 274 tests.
 - *2026-09-17* — **s06 Add to vocab (FR-C6).** Add on the action bar opens a bottom sheet over the passage (scroll position survives). Prefilled with the selection; kind inferred from the final Urdu via `shared/normalize.ts` `inferKind`; the source sentence (first sentence of the selection's paragraph holding the term, split on ۔ ؟ . ? !) goes in notes per the PRD; comma or Urdu-comma tags. Saves through `POST /api/vocab` with `source: "reading"`. A 409 shows the existing entry inline, fetched by id. Pure logic in `src/reader/addVocab.ts`. 277 tests. Untested against a live origin or phone.
 - *2026-09-17* — **s05 selection action bar (FR-C5).** `src/reader/actionBar.ts` places the bar from the selection rect as a pure function: above when it fits, else below, never under the tab bar, clamped to the screen edges. The screen follows `selectionchange` (plus scroll/resize), only for selections inside the reader, and suppresses pointerdown on the bar so a press does not collapse the selection. Speak is wired; Add and Define render disabled for s06/s07. 266 tests. Collision with Android's own selection toolbar is still unverified on the phone.
 - *2026-09-17* — **s04 speech and the voice picker (FR-C4, FR-I1).** `src/reader/speech.ts` ports the spike's `speak()` — cancel-before-speak, pre-warm on silence — with the resolution ladder as a pure function over a narrow `VoiceLike` shape (saved choice, ur-PK, any ur-*, else null; never the browser default). `useVoice` holds the one voice for the app; Settings picks it, Urdu voices first, with a sample and an honest "no Urdu voice installed" state. Reader taps go through one delegated listener and do not fire when the tap merely ends a selection drag. `spikes/speech/` deleted, its TODO item dropped and `spike:check` narrowed to the remaining spike. 257 tests.
@@ -109,12 +110,11 @@ s01–s03 are independent of the Worker entirely. s06 is the only slice that nee
 
 ### Next Steps
 
-1. Start **s07**, Define (FR-C7), once the sponsor confirms the link set. A sponsor deploy is worth doing first to check the s05 bar and the s06 sheet on the phone.
+1. **s08**: sponsor deploys and runs `smoke-tests/smoke-test-03.md` on the installed PWA; that is the Done-When gate.
 2. Unverified on a device: everything from s02 onward has only been typechecked, tested and built locally. The font weight, Nastaliq rendering, tap latency and selection behaviour are all phone questions (s08).
 
 ### Open Questions
 
-- **Define link set (sponsor).** PRD names Rekhta, Wiktionary and Google Translate. Confirm those three are the ones actually wanted before s07.
 
 ## Decisions
 

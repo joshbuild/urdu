@@ -371,3 +371,28 @@ textarea {
 .urdu {
   padding-bottom: 72px;
 }
+
+/* f03 s07: Define's vault entry and dictionary links. */
+.entry dt {
+  margin-top: 12px;
+  color: #526967;
+  font-size: 0.875rem;
+}
+
+.entry dd {
+  margin: 4px 0 0;
+}
+
+.links {
+  margin: 16px 0;
+  padding: 0;
+  list-style: none;
+}
+
+.links a {
+  display: flex;
+  align-items: center;
+  min-height: 48px;
+  color: #054e51;
+  font-weight: 600;
+}

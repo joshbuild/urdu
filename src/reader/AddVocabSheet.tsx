@@ -5,6 +5,7 @@ import { type FormEvent, useState } from "react";
 import type { DuplicateResponse, InvalidRequestResponse, VocabItem } from "../../shared/api";
 import { inferKind } from "../../shared/normalize";
 import { type AddDraft, buildCreateRequest, initialDraft } from "./addVocab";
+import { Sheet } from "./Sheet";
 
 type Outcome =
   | { kind: "idle" }
@@ -79,7 +80,7 @@ export function AddVocabSheet({
 
   if (outcome.kind === "saved") {
     return (
-      <Sheet onClose={onClose}>
+      <Sheet label="Add to vocab" onClose={onClose}>
         <p className="eyebrow">ADDED</p>
         <p className="urdu-inline" dir="rtl" lang="ur">
           {outcome.item.urdu}
@@ -93,7 +94,7 @@ export function AddVocabSheet({
   }
 
   return (
-    <Sheet onClose={onClose}>
+    <Sheet label="Add to vocab" onClose={onClose}>
       <p className="eyebrow">ADD TO VOCAB · {inferKind(draft.urdu.trim() || term).toUpperCase()}</p>
       <form onSubmit={save}>
         {FIELDS.map(({ name, label, urdu, multiline }) => {
@@ -145,17 +146,5 @@ export function AddVocabSheet({
         </button>
       </form>
     </Sheet>
-  );
-}
-
-function Sheet({ onClose, children }: { onClose: () => void; children: React.ReactNode }) {
-  return (
-    <div className="sheet-backdrop">
-      {/* The backdrop closes the sheet; the button is the accessible way to do the same. */}
-      <button type="button" className="sheet-scrim" aria-label="Close" onClick={onClose} />
-      <div className="sheet panel" role="dialog" aria-modal="true" aria-label="Add to vocab">
-        {children}
-      </div>
-    </div>
   );
 }

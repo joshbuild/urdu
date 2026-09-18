@@ -23,7 +23,7 @@
 - Import script: `scripts/airtable-csv.ts` (pure mapping, unit-tested) + `scripts/airtable-import.ts` (IO, batching, report); command documented in `AGENTS.md`.
 - Field mapping and the FR-H requirements: `pm/PRD.md` FR-H and Appendix C.
 - The build secret-scan rule the fold-in produced: `pm/DECISIONS.md` 260917c.
-- The sponsor's production run, step by step with its results: `smoke-tests/smoke-test-02.md`.
+- The sponsor's production run, step by step with its results: `smoke-tests/archive/smoke-test-02_archive.md`.
 - Narration: `f02-airtable-import-journal-archive.md`.
 
 **Carried forward.** Nothing. Both f01 carry-forwards were folded in and closed here.
@@ -131,7 +131,7 @@ Edge cases that must be proven: multiline `Meaning` cells, commas inside Urdu te
 
 *Closed 2026-09-17 — Stage 4 ran clean; see the tombstone at the top. Retained as the record of what was outstanding at the time.*
 
-1. **Stage 4 — the sponsor's production run**, written up as `smoke-tests/smoke-test-02.md`: dry run (no secret), deploy, import, verify through both D1 and `GET /api/export`, then the phone. Exit 0 with a clean report closes Done-When #4 and #5; exit 1 means the report comes back here.
+1. **Stage 4 — the sponsor's production run**, written up as `smoke-tests/archive/smoke-test-02_archive.md`: dry run (no secret), deploy, import, verify through both D1 and `GET /api/export`, then the phone. Exit 0 with a clean report closes Done-When #4 and #5; exit 1 means the report comes back here.
 2. Close the front once that checklist comes back green.
 
 Note for Stage 4: the phone check is deliberately thin — the review UI is f05 and not built, so the phone can only confirm the status counts (36 total, 8 due on 2026-09-17). Done-When #6 is the PLAN Phase 1 exit re-read, which the D1 and export checks establish.
