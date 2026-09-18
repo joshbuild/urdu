@@ -146,7 +146,9 @@ export function App() {
                 onChanged={refreshStatus}
               />
             )}
-            {tab === "review" && <ReviewScreen status={status} />}
+            {tab === "review" && (
+              <ReviewScreen status={status} voice={voiceState.voice} onChanged={refreshStatus} />
+            )}
             {tab === "settings" && (
               <SettingsScreen onLock={lock} busy={busy} voiceState={voiceState} />
             )}

@@ -487,3 +487,71 @@ button.danger {
 button.danger:hover:not(:disabled) {
   background: #6e1f18;
 }
+
+/* f05: review session. Grades sit in a fixed order at the bottom of the card so the thumb
+   learns them; the ladder runs worst to best, top to bottom. */
+.direction {
+  margin: 20px 0;
+  border: 0;
+  padding: 0;
+}
+
+.direction legend {
+  font-weight: 600;
+}
+
+.direction label {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 44px;
+  margin: 0;
+  font-weight: 400;
+}
+
+.direction input {
+  width: 22px;
+  min-height: 22px;
+  margin: 0;
+}
+
+.review-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.review-top .back {
+  width: auto;
+}
+
+.review-prompt {
+  margin: 16px 0;
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+
+.grade-bar {
+  display: grid;
+  gap: 8px;
+  margin-top: 24px;
+}
+
+.grade-bar button.secondary {
+  margin-top: 4px;
+}
+
+button.grade--wrong {
+  background: #8a2920;
+  border-color: #8a2920;
+}
+
+button.grade--partial {
+  background: #a4552a;
+  border-color: #a4552a;
+}
+
+button.grade--hesitant {
+  background: #6b6a3a;
+  border-color: #6b6a3a;
+}
