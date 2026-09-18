@@ -1,8 +1,14 @@
 # f09 srs-ladder — Journal
 
-**Current state (2026-09-18):** built, `pnpm check` green (358 tests). Not deployed; production D1 still on schema 0001. Next: the sponsor runs `smoke-tests/smoke-test-09.md` (backup → remote migration 0002 → deploy → phone), then `/pm-close`.
+**Current state (2026-09-18):** built, `pnpm check` green (359 tests). Remote migration 0002 applied by the sponsor (after a first deploy showed "vault unavailable"; the deploy had run before the migration). Next: redeploy for the spacing layout, finish smoke-test-09 from A3, then `/pm-close`.
 
 ## Sessions
+
+### 260918d — production migration, spacing layout
+
+- Sponsor cross-checked the ladder intervals against their spreadsheet: every rung matches; only the last rung differs by design (10 y cap vs uncapped geometry). Accepted as a pass.
+- Sponsor deployed before migrating, got "your vault is unavailable"; applying remote 0002 fixed it. Runbook order was right; step skipped.
+- Settings spacing picker now shows `Name ×m` with rungs grouped one row per unit (hours <1 d, days <28 d, weeks <182 d, months <730 d, years), smaller muted font. `spacingSummary` replaced by `spacingMultiplier`/`spacingRows` (c6d8429). Not yet deployed or seen on the phone.
 
 ### 260918c — planned and built
 

@@ -4,7 +4,7 @@
 
 ### Added
 
-- Review spacing setting with five presets (Dense to Very wide, Moderate by default); reviews start at 3 hours and reach up to 10 years, and changing the setting moves no due dates.
+- Review spacing setting with five presets (Dense to Very wide, Moderate by default); reviews start at 3 hours and reach up to 10 years, and changing the setting moves no due dates. Each preset lists its intervals grouped by hours, days, weeks, months and years.
 - Reviews are scheduled to the hour: lists show "Due in 7 h", and mastery pills show the level and interval ("Firm • 3 wk").
 
 - Review tab: due-item sessions in either direction, with speak, reveal, five grades, skip, end early and a tally.

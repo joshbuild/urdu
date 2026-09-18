@@ -7,6 +7,7 @@
 
 ## Log
 *Newest at top.*
+- 260918d · f09 srs-ladder · interval sheet cross-check passed; remote migration 0002 applied after a deploy-first "vault unavailable"; Settings spacing shown as per-unit rows (c6d8429) → `features/f09-srs-ladder-journal.md`
 
 - 260918c · f09 srs-ladder · planned and built the SRS refactor from the research report (deltas kept per 260918d): versioned geometric ladders in `shared/ladders.ts`, timestamp scheduling, richer review events, settings + Review spacing picker, migration 0002 (legacy ladder, due dates kept; migration test + local D1 run, 36 rows intact); DECISIONS 260918e; smoke-test-09 written; `pnpm check` green at 358; remote migration + deploy with the sponsor → `features/f09-srs-ladder-journal.md`
 - 260918b · f05 review · opened and built f05: s01–s04 reducer and Review screen, smoke-test-05 (A–C green on the phone); sponsor add-ons review ahead (`ahead` param), remembered sort, mastery pills, short sort labels; production grade deltas −1/0/0/+1/+2 (DECISIONS 260918b); sponsor accepted `research/urdu-vocabulary-srs-research-and-design.md` (new recognition deltas, versioned geometric 3 h–10 y ladder, timestamp scheduling), recorded as DECISIONS 260918c, and the refactor is to be planned next session; `pnpm check` green → `features/f05-review-journal.md`
@@ -29,5 +30,3 @@
 - 260914f · mp02 gpt-live-spike · sponsor deleted spike Worker (curl 000); closed and archived mp02; Phase 0 done, Phase 1 current → `mini-plans/archive/mp02-gpt-live-spike-journal-archive.md`
 - 260914e · mp02 gpt-live-spike · s06 verdict: Option 2 written into PRD FR-G/FR-B5/FR-I1/App D and PLAN; s05 skipped as moot; no key in repo; Worker delete blocked by classifier, sponsor to run → `mini-plans/mp02-gpt-live-spike-journal.md`
 - 260914d · mp02 gpt-live-spike · phone runs: tab smoke, installed (crit 1), real Coach prompt swapped in, five-minute installed run "pretty comparable", $0.40 dashboard for the day; all four criteria pass, sponsor accepted five minutes; s06 verdict next → `mini-plans/mp02-gpt-live-spike-journal.md`
-- 260914c · mp02 gpt-live-spike · s01 API research; criterion 4 amended to $0.60; s02 Worker + s03 page built; desktop runs: Urdu speech, tool round trip, close usage all work; deployed, sponsor to set secrets + redeploy, then phone run → `mini-plans/mp02-gpt-live-spike-journal.md`
-- 260914b · mp01 → mp02 · closed mp01 (archived); opened mp02 gpt-live-spike at Stage 0 with slices + 3 sponsor questions → `mini-plans/mp02-gpt-live-spike-journal.md`
