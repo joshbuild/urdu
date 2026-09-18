@@ -14,8 +14,8 @@ export interface ListFilters {
 export const DEFAULT_FILTERS: ListFilters = { q: "", tag: "", due: false, sort: "added" };
 
 export const SORT_LABELS: Record<VocabSort, string> = {
-  added: "Recently added",
-  next_review: "Next review",
+  added: "Added",
+  next_review: "Review",
   mastery: "Mastery",
 };
 
