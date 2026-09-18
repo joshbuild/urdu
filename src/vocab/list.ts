@@ -1,6 +1,7 @@
 // f04 s02: the vocab list's decidable logic (FR-D1), kept pure for the node test project.
 
 import type { VocabItem, VocabSort } from "../../shared/api";
+import { formatInterval } from "../../shared/ladders";
 
 export const PAGE_SIZE = 50;
 
@@ -34,13 +35,14 @@ export function listQuery(filters: ListFilters, offset = 0, limit = PAGE_SIZE): 
 }
 
 // Never-reviewed and overdue items are both simply "due" to the reader of the list (FR-A3).
-export function isDue(item: Pick<VocabItem, "next_review_on">, today: string): boolean {
-  return item.next_review_on === null || item.next_review_on <= today;
+// `now` is an ISO instant; due times are exact (f09), so an item can fall due mid-afternoon.
+export function isDue(item: Pick<VocabItem, "due_at">, now: string): boolean {
+  return item.due_at === null || item.due_at <= now;
 }
 
-export function reviewLabel(item: Pick<VocabItem, "next_review_on">, today: string): string {
-  if (isDue(item, today)) return "Due now";
-  return `Next ${item.next_review_on}`;
+export function reviewLabel(item: Pick<VocabItem, "due_at">, now: string): string {
+  if (item.due_at === null || isDue(item, now)) return "Due now";
+  return `Due in ${formatInterval((Date.parse(item.due_at) - Date.parse(now)) / 1000)}`;
 }
 
 // The chosen sort survives reloads on this device (sponsor request 2026-09-18). Search, tag and

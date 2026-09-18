@@ -25,6 +25,9 @@ function vocabRow(overrides: Row = {}): Row {
     urdu,
     urdu_key: urduKey(urdu),
     kind: "phrase",
+    ladder_id: 3,
+    ladder_step: 0,
+    interval_seconds: 10800,
     added_at: NOW,
     source: "manual",
     created_at: NOW,
@@ -39,10 +42,14 @@ function eventRow(vocabId: string, overrides: Row = {}): Row {
     vocab_id: vocabId,
     reviewed_at: NOW,
     grade: "correct",
-    mastery_before: 0,
-    mastery_after: 1,
     direction: "ur_en",
     source: "pwa",
+    ladder_before_id: 3,
+    step_before: 0,
+    interval_before: 10800,
+    ladder_id: 3,
+    step_after: 1,
+    interval_after: 25687,
     ...overrides,
   };
 }
@@ -69,6 +76,7 @@ describe("migrations", () => {
       "handoffs",
       "review_events",
       "sessions",
+      "settings",
       "tags",
       "vocab",
     ]);
@@ -76,9 +84,9 @@ describe("migrations", () => {
 
   it("use the due index for due selection", async () => {
     const { results } = await env.DB.prepare(
-      "EXPLAIN QUERY PLAN SELECT id FROM vocab WHERE next_review_on IS NULL OR next_review_on <= ? ORDER BY next_review_on, added_at LIMIT 20",
+      "EXPLAIN QUERY PLAN SELECT id FROM vocab WHERE due_at IS NULL OR due_at <= ? ORDER BY due_at, added_at LIMIT 20",
     )
-      .bind("2026-09-14")
+      .bind(NOW)
       .all<{ detail: string }>();
     expect(results.map((r) => r.detail).join("\n")).toContain("vocab_due");
   });
@@ -92,10 +100,9 @@ describe("vocab", () => {
     expect(saved).toMatchObject({
       tags: "[]",
       favourite: 0,
-      mastery: 0,
       roman: null,
-      last_reviewed_on: null,
-      next_review_on: null,
+      last_reviewed_at: null,
+      due_at: null,
       airtable_id: null,
     });
   });
@@ -119,14 +126,22 @@ describe("vocab", () => {
   });
 
   // STRICT rejects 2.5 as a datatype error (it would coerce "3" losslessly, so no string case).
-  it.each([-1, 7, 2.5])("rejects mastery %s", async (mastery) => {
-    await expect(insert("vocab", vocabRow({ mastery }))).rejects.toThrow(/constraint/i);
+  it.each([
+    ["ladder_id", 0],
+    ["ladder_step", -1],
+    ["ladder_step", 2.5],
+    ["interval_seconds", -1],
+  ])("rejects %s = %s", async (column, value) => {
+    await expect(insert("vocab", vocabRow({ [column]: value }))).rejects.toThrow(/constraint/i);
   });
 
-  it.each([0, 6])("accepts mastery %i", async (mastery) => {
-    await insert("vocab", vocabRow({ mastery }));
-    expect(await count("vocab")).toBe(1);
-  });
+  it.each([0, 15])(
+    "accepts ladder_step %i (the bound is the ladder's, checked in code)",
+    async (ladder_step) => {
+      await insert("vocab", vocabRow({ ladder_step }));
+      expect(await count("vocab")).toBe(1);
+    },
+  );
 
   it.each([
     ["kind", "sentence"],
@@ -136,23 +151,21 @@ describe("vocab", () => {
     ["tags", '{"a":1}'],
     ["urdu_key", ""],
     ["id", "not-a-ulid"],
-    ["last_reviewed_on", "2026-09-14T00:00:00Z"],
   ])("rejects %s = %j", async (column, value) => {
     const row = vocabRow({ [column]: value });
-    if (column === "last_reviewed_on") row.next_review_on = "2026-09-15";
     await expect(insert("vocab", row)).rejects.toThrow(/constraint failed/);
   });
 
-  it("requires review dates to be both null or both set", async () => {
-    await expect(insert("vocab", vocabRow({ last_reviewed_on: "2026-09-14" }))).rejects.toThrow(
+  it("requires review instants to be both null or both set", async () => {
+    await expect(insert("vocab", vocabRow({ last_reviewed_at: NOW }))).rejects.toThrow(
       /CHECK constraint failed/,
     );
-    await expect(insert("vocab", vocabRow({ next_review_on: "2026-09-15" }))).rejects.toThrow(
+    await expect(insert("vocab", vocabRow({ due_at: NOW }))).rejects.toThrow(
       /CHECK constraint failed/,
     );
     await insert(
       "vocab",
-      vocabRow({ mastery: 1, last_reviewed_on: "2026-09-14", next_review_on: "2026-09-15" }),
+      vocabRow({ ladder_step: 1, last_reviewed_at: NOW, due_at: "2026-09-15T00:08:07.000Z" }),
     );
     expect(await count("vocab")).toBe(1);
   });
@@ -167,8 +180,10 @@ describe("review_events", () => {
     ["grade", "right"],
     ["direction", "ur_ur"],
     ["source", "airtable"],
-    ["mastery_before", -1],
-    ["mastery_after", 7],
+    ["step_before", -1],
+    ["interval_after", -1],
+    ["ladder_id", 0],
+    ["prompt_support", "coached"],
   ])("rejects %s = %j", async (column, value) => {
     const vocab = vocabRow();
     await insert("vocab", vocab);

@@ -1,7 +1,8 @@
 import { env, exports } from "cloudflare:workers";
 import { beforeEach, describe, expect, it } from "vitest";
 import type { VocabItem } from "../shared/api";
-import { addDays, todayIn } from "../shared/dates";
+import { todayIn } from "../shared/dates";
+import { addSeconds, ladder } from "../shared/ladders";
 import { type Api, clearTables, unlockedApi } from "./client";
 
 // Escapes keep the exact code points visible in review.
@@ -31,9 +32,12 @@ async function json<T>(res: Response, status = 200): Promise<T> {
   return res.json();
 }
 
-async function setReviewDates(id: string, last: string | null, next: string | null) {
-  await env.DB.prepare("UPDATE vocab SET last_reviewed_on = ?, next_review_on = ? WHERE id = ?")
-    .bind(last, next, id)
+// An instant `days` from now (fractions allowed), as the Worker stores it.
+const inDays = (days: number) => new Date(Date.now() + days * 86_400_000).toISOString();
+
+async function setReviewDates(id: string, last: string | null, due: string | null) {
+  await env.DB.prepare("UPDATE vocab SET last_reviewed_at = ?, due_at = ? WHERE id = ?")
+    .bind(last, due, id)
     .run();
 }
 
@@ -49,7 +53,7 @@ async function eventCount(): Promise<number> {
 }
 
 describe("POST /api/vocab", () => {
-  it("creates an item with computed key, inferred kind, mastery 0 and no review dates", async () => {
+  it("creates an item on the active ladder's first rung, never reviewed", async () => {
     const before = Date.now();
     const item = await create({
       urdu: `  ${KITAB} `,
@@ -69,9 +73,11 @@ describe("POST /api/vocab", () => {
       notes: null,
       tags: ["nouns", "reading"],
       favourite: false,
-      mastery: 0,
-      last_reviewed_on: null,
-      next_review_on: null,
+      ladder_id: 3,
+      ladder_step: 0,
+      interval_seconds: 10800,
+      last_reviewed_at: null,
+      due_at: null,
       source: "reading",
       airtable_id: null,
     });
@@ -120,9 +126,10 @@ describe("POST /api/vocab", () => {
     ["bad kind", { urdu: KITAB, kind: "sentence" }, "kind"],
     ["tags not an array", { urdu: KITAB, tags: "nouns" }, "tags"],
     ["blank tag", { urdu: KITAB, tags: ["ok", ""] }, "tags"],
-    ["mastery on create", { urdu: KITAB, mastery: 3 }, "mastery"],
+    ["ladder_step on create", { urdu: KITAB, ladder_step: 3 }, "ladder_step"],
+    ["legacy mastery", { urdu: KITAB, mastery: 3 }, "mastery"],
     ["coach source", { urdu: KITAB, source: "coach" }, "source"],
-    ["unknown field", { urdu: KITAB, next_review_on: "2026-01-01" }, "next_review_on"],
+    ["unknown field", { urdu: KITAB, due_at: "2026-01-01" }, "due_at"],
     ["non-boolean favourite", { urdu: KITAB, favourite: 1 }, "favourite"],
     ["over-long urdu", { urdu: "\u{0628}".repeat(501) }, "urdu"],
   ])("rejects %s with 400", async (_label, body, field) => {
@@ -175,7 +182,7 @@ describe("GET /api/vocab", () => {
     const a = await create({ urdu: KITAB, tags: ["nouns"] });
     const b = await create({ urdu: PANI, tags: ["nouns", "drinks"] });
     await create({ urdu: GHAR, tags: ["places"] });
-    await setReviewDates(b.id, addDays(today, -5), addDays(today, 20));
+    await setReviewDates(b.id, inDays(-5), inDays(20));
 
     const nouns = await json<{ items: VocabItem[]; total: number }>(
       await api("GET", "/api/vocab?tag=nouns"),
@@ -200,10 +207,13 @@ describe("GET /api/vocab", () => {
     await setAddedAt(a.id, "2026-01-01T00:00:00.000Z");
     await setAddedAt(b.id, "2026-02-01T00:00:00.000Z");
     await setAddedAt(c.id, "2026-03-01T00:00:00.000Z");
-    await setReviewDates(a.id, "2026-01-01", "2026-06-01");
-    await setReviewDates(c.id, "2026-01-01", "2026-02-01");
-    await env.DB.prepare("UPDATE vocab SET mastery = ? WHERE id = ?").bind(4, a.id).run();
-    await env.DB.prepare("UPDATE vocab SET mastery = ? WHERE id = ?").bind(2, c.id).run();
+    await setReviewDates(a.id, "2026-01-01T08:00:00.000Z", "2026-06-01T08:00:00.000Z");
+    await setReviewDates(c.id, "2026-01-01T08:00:00.000Z", "2026-02-01T08:00:00.000Z");
+    // sort=mastery orders by the scheduled interval.
+    const setInterval = (id: string, s: number) =>
+      env.DB.prepare("UPDATE vocab SET interval_seconds = ? WHERE id = ?").bind(s, id).run();
+    await setInterval(a.id, 125 * 86_400);
+    await setInterval(c.id, 5 * 86_400);
 
     const order = async (qs: string) =>
       (await json<{ items: VocabItem[] }>(await api("GET", `/api/vocab?${qs}`))).items.map(
@@ -285,33 +295,43 @@ describe("PATCH /api/vocab/:id", () => {
     expect(self).toMatchObject({ urdu_key: KITAB, kind: "phrase" });
   });
 
-  it("recomputes next_review_on on a mastery change without touching last_reviewed_on or events", async () => {
+  it("a ladder_step edit moves onto the active ladder and recomputes due, with no event", async () => {
     const reviewed = await create({ urdu: KITAB });
-    await setReviewDates(reviewed.id, "2026-09-01", "2026-09-02");
+    const last = "2026-09-01T08:00:00.000Z";
+    await env.DB.prepare(
+      "UPDATE vocab SET ladder_id = 1, ladder_step = 1, interval_seconds = 86400, last_reviewed_at = ?, due_at = ? WHERE id = ?",
+    )
+      .bind(last, "2026-09-02T08:00:00.000Z", reviewed.id)
+      .run();
     const updated = await json<VocabItem>(
-      await api("PATCH", `/api/vocab/${reviewed.id}`, { mastery: 3 }),
+      await api("PATCH", `/api/vocab/${reviewed.id}`, { ladder_step: 6 }),
     );
+    const rung = ladder(3).intervals_seconds[6] as number;
     expect(updated).toMatchObject({
-      mastery: 3,
-      last_reviewed_on: "2026-09-01",
-      next_review_on: "2026-09-26",
+      ladder_id: 3,
+      ladder_step: 6,
+      interval_seconds: rung,
+      last_reviewed_at: last,
+      due_at: addSeconds(last, rung),
     });
 
     const fresh = await create({ urdu: PANI });
     const stillDue = await json<VocabItem>(
-      await api("PATCH", `/api/vocab/${fresh.id}`, { mastery: 5 }),
+      await api("PATCH", `/api/vocab/${fresh.id}`, { ladder_step: 12 }),
     );
-    expect(stillDue).toMatchObject({ mastery: 5, last_reviewed_on: null, next_review_on: null });
+    expect(stillDue).toMatchObject({ ladder_step: 12, last_reviewed_at: null, due_at: null });
 
     expect(await eventCount()).toBe(0);
   });
 
   it.each([
     ["empty body", {}],
-    ["mastery out of range", { mastery: 7 }],
-    ["fractional mastery", { mastery: 2.5 }],
+    ["rung past the active ladder", { ladder_step: 13 }],
+    ["negative rung", { ladder_step: -1 }],
+    ["fractional rung", { ladder_step: 2.5 }],
+    ["legacy mastery field", { mastery: 3 }],
     ["non-editable field", { source: "coach" }],
-    ["review date", { last_reviewed_on: "2026-09-01" }],
+    ["review instant", { last_reviewed_at: "2026-09-01T00:00:00.000Z" }],
     ["punctuation-only urdu", { urdu: "\u{061F}" }],
   ])("rejects %s with 400", async (_label, body) => {
     const item = await create({ urdu: KITAB });
@@ -332,8 +352,9 @@ describe("DELETE /api/vocab/:id", () => {
     const other = await create({ urdu: PANI });
     const insertEvent = (id: string, vocabId: string) =>
       env.DB.prepare(
-        `INSERT INTO review_events (id, vocab_id, reviewed_at, grade, mastery_before, mastery_after, direction, source)
-         VALUES (?, ?, '2026-09-01T00:00:00.000Z', 'correct', 0, 1, 'ur_en', 'pwa')`,
+        `INSERT INTO review_events (id, vocab_id, reviewed_at, grade, direction, source,
+           ladder_before_id, step_before, interval_before, ladder_id, step_after, interval_after)
+         VALUES (?, ?, '2026-09-01T00:00:00.000Z', 'correct', 'ur_en', 'pwa', 3, 0, 10800, 3, 1, 25687)`,
       ).bind(id, vocabId);
     await env.DB.batch([
       insertEvent("01J00000000000000000000001", item.id),
@@ -356,9 +377,10 @@ describe("GET /api/vocab/due", () => {
     const future = await create({ urdu: "\u{062F}\u{0648}\u{0633}\u{062A}" }); // دوست
     await setAddedAt(neverOld.id, "2026-01-01T00:00:00.000Z");
     await setAddedAt(neverNew.id, "2026-02-01T00:00:00.000Z");
-    await setReviewDates(dueToday.id, addDays(today, -1), today);
-    await setReviewDates(overdue.id, addDays(today, -10), addDays(today, -5));
-    await setReviewDates(future.id, today, addDays(today, 1));
+    await setReviewDates(dueToday.id, inDays(-1), inDays(-0.01));
+    await setReviewDates(overdue.id, inDays(-10), inDays(-5));
+    // Due later today is not due yet: scheduling is by instant, not by date.
+    await setReviewDates(future.id, inDays(-0.1), inDays(0.05));
 
     const body = await json<{ items: VocabItem[]; today: string }>(
       await api("GET", "/api/vocab/due"),
@@ -392,9 +414,9 @@ describe("GET /api/vocab/due", () => {
     const now = await create({ urdu: KITAB });
     const inTwo = await create({ urdu: PANI });
     const inFive = await create({ urdu: GHAR });
-    await setReviewDates(now.id, addDays(today, -1), today);
-    await setReviewDates(inTwo.id, today, addDays(today, 2));
-    await setReviewDates(inFive.id, today, addDays(today, 5));
+    await setReviewDates(now.id, inDays(-1), inDays(-0.01));
+    await setReviewDates(inTwo.id, inDays(-0.1), inDays(1.9));
+    await setReviewDates(inFive.id, inDays(-0.1), inDays(4.9));
 
     const ids = async (query: string) =>
       (await json<{ items: VocabItem[] }>(await api("GET", `/api/vocab/due${query}`))).items.map(
@@ -414,14 +436,24 @@ describe("GET /api/status", () => {
     await create({ urdu: KITAB });
     const b = await create({ urdu: PANI });
     const c = await create({ urdu: GHAR });
-    await setReviewDates(b.id, addDays(today, -3), addDays(today, 2));
-    await setReviewDates(c.id, addDays(today, -3), addDays(today, -1));
+    await setReviewDates(b.id, inDays(-3), inDays(0.1));
+    await setReviewDates(c.id, inDays(-3), inDays(-1));
 
-    expect(await json(await api("GET", "/api/status"))).toEqual({ total: 3, due: 2, today });
+    expect(await json(await api("GET", "/api/status"))).toEqual({
+      total: 3,
+      due: 2,
+      today,
+      active_ladder_id: 3,
+    });
   });
 
   it("reports zeros for an empty vault", async () => {
-    expect(await json(await api("GET", "/api/status"))).toEqual({ total: 0, due: 0, today });
+    expect(await json(await api("GET", "/api/status"))).toEqual({
+      total: 0,
+      due: 0,
+      today,
+      active_ladder_id: 3,
+    });
   });
 });
 
@@ -445,11 +477,11 @@ describe("GET /api/tags", () => {
 });
 
 describe("FR-A8: reads never write", () => {
-  it("leaves updated_at, mastery and review dates unchanged", async () => {
+  it("leaves updated_at, schedule and review instants unchanged", async () => {
     const item = await create({ urdu: KITAB, tags: ["t"] });
-    await setReviewDates(item.id, addDays(today, -30), addDays(today, -5));
+    await setReviewDates(item.id, inDays(-30), inDays(-5));
     await env.DB.prepare(
-      "UPDATE vocab SET mastery = 2, updated_at = '2026-01-01T00:00:00.000Z' WHERE id = ?",
+      "UPDATE vocab SET ladder_step = 2, updated_at = '2026-01-01T00:00:00.000Z' WHERE id = ?",
     )
       .bind(item.id)
       .run();

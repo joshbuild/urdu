@@ -23,14 +23,14 @@ const TEXT_FIELDS: { name: keyof VocabItem; label: string; urdu?: boolean }[] = 
 
 export function VocabDetail({
   id,
-  today,
+  now,
   voice,
   onBack,
   onEdit,
   onDeleted,
 }: {
   id: string;
-  today: string;
+  now: string;
   voice: SpeechSynthesisVoice | null;
   onBack: () => void;
   onEdit: (item: VocabItem) => void;
@@ -111,12 +111,14 @@ export function VocabDetail({
       <dl className="entry">
         <dt>Mastery</dt>
         <dd>
-          <MasteryPill mastery={item.mastery} />
+          <MasteryPill item={item} />
         </dd>
         <dt>Review</dt>
         <dd>
-          {reviewLabel(item, today)}
-          {item.last_reviewed_on ? ` · last ${item.last_reviewed_on}` : " · never reviewed"}
+          {reviewLabel(item, now)}
+          {item.last_reviewed_at
+            ? ` · last ${new Date(item.last_reviewed_at).toLocaleDateString()}`
+            : " · never reviewed"}
         </dd>
         {TEXT_FIELDS.map(({ name, label, urdu }) =>
           item[name] ? (

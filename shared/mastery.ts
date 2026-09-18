@@ -1,39 +1,8 @@
-// Mastery ladder and review grades (PRD FR-A2). The only implementation: the Worker
-// computes with these, the UI imports them for display.
+// Review grades and mastery display (PRD FR-A2, f09). Grade deltas are the only implementation:
+// shared/ladders.ts applies them, the UI imports the labels. Mastery is no longer stored; it is a
+// display band derived from an item's current interval.
 
 import type { ReviewDirection } from "./api";
-
-export const MASTERY_LEVELS = [
-  { level: 0, name: "New", intervalDays: 0 },
-  { level: 1, name: "Learning", intervalDays: 1 },
-  { level: 2, name: "Basic", intervalDays: 5 },
-  { level: 3, name: "Firm", intervalDays: 25 },
-  { level: 4, name: "Strong", intervalDays: 125 },
-  { level: 5, name: "Stable", intervalDays: 625 },
-  { level: 6, name: "Permanent", intervalDays: 3125 },
-] as const;
-
-export type Mastery = (typeof MASTERY_LEVELS)[number]["level"];
-
-export const MIN_MASTERY: Mastery = 0;
-export const MAX_MASTERY: Mastery = 6;
-
-export function isMastery(value: unknown): value is Mastery {
-  return (
-    typeof value === "number" &&
-    Number.isInteger(value) &&
-    value >= MIN_MASTERY &&
-    value <= MAX_MASTERY
-  );
-}
-
-export function masteryName(mastery: Mastery): string {
-  return MASTERY_LEVELS[mastery].name;
-}
-
-export function intervalDays(mastery: Mastery): number {
-  return MASTERY_LEVELS[mastery].intervalDays;
-}
 
 // Ladder order, worst to best (FR-E3 button order).
 export const GRADES = ["wrong", "partial", "hesitant", "correct", "confident"] as const;
@@ -50,7 +19,8 @@ export const GRADE_DELTAS: Readonly<Record<Grade, number>> = {
 };
 
 // Production (English → Urdu, and oral Coach answers): failing to produce a word is weak evidence
-// it has been forgotten, so misses cost less; successes gain the same (DECISIONS 260918b).
+// it has been forgotten, so misses cost less; successes gain the same (DECISIONS 260918b, kept by
+// 260918d over the research report's table).
 export const PRODUCTION_GRADE_DELTAS: Readonly<Record<Grade, number>> = {
   wrong: -1,
   partial: 0,
@@ -75,7 +45,42 @@ export function isGrade(value: unknown): value is Grade {
   return typeof value === "string" && (GRADES as readonly string[]).includes(value);
 }
 
-export function applyGrade(mastery: Mastery, grade: Grade, direction: ReviewDirection): Mastery {
-  const next = mastery + gradeDeltas(direction)[grade];
-  return Math.min(MAX_MASTERY, Math.max(MIN_MASTERY, next)) as Mastery;
+// Airtable's 0-6 "Mastery Score" (FR-H). Only the import reads it; it becomes a rung on the
+// legacy ladder, whose rung n is the old level n.
+export type LegacyLevel = 0 | 1 | 2 | 3 | 4 | 5 | 6;
+
+export function isLegacyLevel(value: unknown): value is LegacyLevel {
+  return typeof value === "number" && Number.isInteger(value) && value >= 0 && value <= 6;
+}
+
+const DAY = 86_400;
+
+// Bands keep the old level names, and their upper bounds sit on the legacy intervals, so a
+// migrated item reads exactly as it did before f09. Band 0 is also a legacy level-0 item.
+export const MASTERY_BANDS = [
+  { band: 0, name: "New", maxSeconds: 3 * 3600 - 1 },
+  { band: 1, name: "Learning", maxSeconds: 1 * DAY },
+  { band: 2, name: "Basic", maxSeconds: 7 * DAY },
+  { band: 3, name: "Firm", maxSeconds: 30 * DAY },
+  { band: 4, name: "Strong", maxSeconds: 180 * DAY },
+  { band: 5, name: "Stable", maxSeconds: 730 * DAY },
+  { band: 6, name: "Permanent", maxSeconds: Number.POSITIVE_INFINITY },
+] as const;
+
+export type MasteryBand = (typeof MASTERY_BANDS)[number]["band"];
+
+export function bandForInterval(seconds: number): MasteryBand {
+  const found = MASTERY_BANDS.find((b) => seconds <= b.maxSeconds);
+  return found ? found.band : 6;
+}
+
+export function masteryBand(item: {
+  interval_seconds: number;
+  last_reviewed_at: string | null;
+}): MasteryBand {
+  return item.last_reviewed_at === null ? 0 : bandForInterval(item.interval_seconds);
+}
+
+export function bandName(band: MasteryBand): string {
+  return MASTERY_BANDS[band].name;
 }

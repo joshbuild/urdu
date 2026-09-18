@@ -29,21 +29,23 @@ describe("listQuery", () => {
 });
 
 describe("isDue / reviewLabel", () => {
-  const today = "2026-09-18";
+  const now = "2026-09-18T20:00:00.000Z";
 
   it("treats never-reviewed items as due", () => {
-    expect(isDue({ next_review_on: null }, today)).toBe(true);
-    expect(reviewLabel({ next_review_on: null }, today)).toBe("Due now");
+    expect(isDue({ due_at: null }, now)).toBe(true);
+    expect(reviewLabel({ due_at: null }, now)).toBe("Due now");
   });
 
-  it("treats today and past dates as due", () => {
-    expect(isDue({ next_review_on: today }, today)).toBe(true);
-    expect(isDue({ next_review_on: "2026-09-01" }, today)).toBe(true);
+  it("treats now and past instants as due", () => {
+    expect(isDue({ due_at: now }, now)).toBe(true);
+    expect(isDue({ due_at: "2026-09-01T08:00:00.000Z" }, now)).toBe(true);
+    expect(reviewLabel({ due_at: "2026-09-01T08:00:00.000Z" }, now)).toBe("Due now");
   });
 
-  it("shows the date for future reviews", () => {
-    expect(isDue({ next_review_on: "2026-09-19" }, today)).toBe(false);
-    expect(reviewLabel({ next_review_on: "2026-09-19" }, today)).toBe("Next 2026-09-19");
+  it("shows how long until a future review", () => {
+    expect(isDue({ due_at: "2026-09-19T03:00:00.000Z" }, now)).toBe(false);
+    expect(reviewLabel({ due_at: "2026-09-19T03:00:00.000Z" }, now)).toBe("Due in 7 h");
+    expect(reviewLabel({ due_at: "2026-10-12T20:00:00.000Z" }, now)).toBe("Due in 3 wk");
   });
 });
 

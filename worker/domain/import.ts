@@ -3,7 +3,8 @@
 // mechanism, not a sync: nothing here deletes rows the batch does not mention, and the import
 // writes no review_events — Airtable carries no per-review history to import.
 //
-// next_review_on is always recomputed from last_reviewed_on + interval(mastery) (FR-H2). The
+// Rows land on the legacy ladder (f09): rung = Airtable's 0-6 level, dates as 08:00 UTC instants.
+// The due date is always recomputed from last_reviewed_on + legacy interval (FR-H2). The
 // caller's airtable_next_review_on is compared, never stored, and any disagreement is reported.
 
 import type {
@@ -13,7 +14,8 @@ import type {
   ImportTagRecord,
   ImportVocabRecord,
 } from "../../shared/api";
-import { nextReviewOn } from "../../shared/dates";
+import { legacyInstant, legacyNextReviewOn } from "../../shared/dates";
+import { LEGACY_LADDER_ID, ladder } from "../../shared/ladders";
 import { inferKind, urduKey } from "../../shared/normalize";
 import { ulid } from "../../shared/ulid";
 import { parseImportVocab } from "./import-input";
@@ -110,7 +112,8 @@ async function importOne(
 
   const at = now.toISOString();
   const tags = record.tags ?? [];
-  const recomputed = nextReviewOn(record.last_reviewed_on, record.mastery);
+  const recomputed = legacyNextReviewOn(record.last_reviewed_on, record.mastery);
+  const asInstant = (date: string | null) => (date === null ? null : legacyInstant(date));
   const outcome: ImportOutcome = existingId ? "updated" : "created";
   const id = existingId ?? ulid(now.getTime());
 
@@ -125,18 +128,21 @@ async function importOne(
     record.example_english ?? null,
     JSON.stringify(tags),
     record.favourite ? 1 : 0,
+    LEGACY_LADDER_ID,
     record.mastery,
+    ladder(LEGACY_LADDER_ID).intervals_seconds[record.mastery] as number,
     record.added_at,
-    record.last_reviewed_on,
-    recomputed,
+    asInstant(record.last_reviewed_on),
+    asInstant(recomputed),
   ];
 
   const write = existingId
     ? db
         .prepare(
           `UPDATE vocab SET urdu = ?, urdu_key = ?, kind = ?, roman = ?, english = ?, notes = ?,
-             example_urdu = ?, example_english = ?, tags = ?, favourite = ?, mastery = ?,
-             added_at = ?, last_reviewed_on = ?, next_review_on = ?, source = 'airtable',
+             example_urdu = ?, example_english = ?, tags = ?, favourite = ?, ladder_id = ?,
+             ladder_step = ?, interval_seconds = ?, added_at = ?, last_reviewed_at = ?,
+             due_at = ?, source = 'airtable',
              updated_at = ?
            WHERE id = ?`,
         )
@@ -144,9 +150,9 @@ async function importOne(
     : db
         .prepare(
           `INSERT INTO vocab (id, urdu, urdu_key, kind, roman, english, notes, example_urdu,
-             example_english, tags, favourite, mastery, added_at, last_reviewed_on,
-             next_review_on, source, airtable_id, created_at, updated_at)
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'airtable', ?, ?, ?)`,
+             example_english, tags, favourite, ladder_id, ladder_step, interval_seconds,
+             added_at, last_reviewed_at, due_at, source, airtable_id, created_at, updated_at)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'airtable', ?, ?, ?)`,
         )
         .bind(id, ...columns, record.airtable_id, at, at);
 

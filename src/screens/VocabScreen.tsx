@@ -61,7 +61,7 @@ export function VocabScreen({
           <VocabList
             filters={filters}
             onFilters={changeFilters}
-            today={status.today}
+            now={new Date().toISOString()}
             onOpen={open}
           />
         </>
@@ -70,7 +70,7 @@ export function VocabScreen({
       {view.kind === "detail" && (
         <VocabDetail
           id={view.id}
-          today={status.today}
+          now={new Date().toISOString()}
           voice={voice}
           onBack={toList}
           onEdit={(item) => setView({ kind: "edit", item })}
@@ -84,6 +84,7 @@ export function VocabScreen({
       {view.kind === "edit" && (
         <VocabEdit
           item={view.item}
+          activeLadderId={status.active_ladder_id}
           onCancel={() => open(view.item.id)}
           onSaved={(item) => {
             onChanged();

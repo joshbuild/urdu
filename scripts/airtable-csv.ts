@@ -8,7 +8,7 @@
 // `Tag Name`. All three files carry a UTF-8 BOM.
 
 import type { ImportTagRecord, ImportVocabRecord } from "../shared/api";
-import { isMastery, type Mastery } from "../shared/mastery";
+import { isLegacyLevel, type LegacyLevel } from "../shared/mastery";
 import { inferKind } from "../shared/normalize";
 
 export const VOCAB_HEADERS = {
@@ -116,7 +116,7 @@ function cell(row: CsvRow, name: string): string {
 }
 
 /** Airtable writes `Mastery Score` as `"1-Learning"`. The leading digit is the level. */
-export function parseMastery(value: string): MapResult<Mastery> {
+export function parseMastery(value: string): MapResult<LegacyLevel> {
   const text = value.trim();
   if (text === "") return { ok: false, field: "mastery", error: "Mastery Score is empty" };
   const match = /^(\d+)\b/.exec(text);
@@ -124,7 +124,7 @@ export function parseMastery(value: string): MapResult<Mastery> {
     return { ok: false, field: "mastery", error: `Mastery Score "${text}" has no leading level` };
   }
   const level = Number(match[1]);
-  if (!isMastery(level)) {
+  if (!isLegacyLevel(level)) {
     return { ok: false, field: "mastery", error: `mastery ${level} is outside 0-6` };
   }
   return { ok: true, value: level };

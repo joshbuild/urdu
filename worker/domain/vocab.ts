@@ -2,42 +2,42 @@
 // write (FR-A8): only create, update and delete touch rows.
 
 import type { Tag, UpdateVocabRequest, VocabItem, VocabSort } from "../../shared/api";
-import { nextReviewOn } from "../../shared/dates";
-import type { Mastery } from "../../shared/mastery";
+import { correctStep, ladder } from "../../shared/ladders";
 import { inferKind, urduKey } from "../../shared/normalize";
 import { ulid } from "../../shared/ulid";
 import type { CreateInput } from "./vocab-input";
 
-export type VocabRow = Omit<VocabItem, "tags" | "favourite" | "mastery"> & {
+export type VocabRow = Omit<VocabItem, "tags" | "favourite"> & {
   tags: string;
   favourite: number;
-  mastery: number;
 };
 
 export type WriteResult =
   | { ok: true; item: VocabItem }
   | { ok: false; error: "duplicate"; existingId: string }
   | { ok: false; error: "empty_key" }
-  | { ok: false; error: "not_found" };
+  | { ok: false; error: "not_found" }
+  // A ladder_step edit past the active ladder's last rung.
+  | { ok: false; error: "bad_step"; maxStep: number };
 
 export function toItem(row: VocabRow): VocabItem {
   return {
     ...row,
     tags: JSON.parse(row.tags) as string[],
     favourite: row.favourite === 1,
-    mastery: row.mastery as Mastery,
   };
 }
 
-// Items never reviewed (null) are due now.
-const DUE = "(next_review_on IS NULL OR next_review_on <= ?)";
+// Items never reviewed (null) are due now. Instants are all toISOString() output, so text order
+// is time order.
+const DUE = "(due_at IS NULL OR due_at <= ?)";
 const HAS_TAG = "EXISTS (SELECT 1 FROM json_each(vocab.tags) WHERE json_each.value = ?)";
-const DUE_ORDER = "next_review_on ASC NULLS FIRST, added_at ASC, id ASC";
+const DUE_ORDER = "due_at ASC NULLS FIRST, added_at ASC, id ASC";
 
 const SORT_ORDER: Readonly<Record<VocabSort, string>> = {
   added: "added_at DESC, id DESC",
   next_review: DUE_ORDER,
-  mastery: "mastery ASC, added_at ASC, id ASC",
+  mastery: "interval_seconds ASC, added_at ASC, id ASC",
 };
 
 async function findIdByKey(db: D1Database, key: string): Promise<string | null> {
@@ -71,10 +71,12 @@ export async function getVocab(db: D1Database, id: string): Promise<VocabItem | 
   return row ? toItem(row) : null;
 }
 
+// New items start on the first rung of the active ladder, never reviewed, so due now.
 export async function createVocab(
   db: D1Database,
   input: CreateInput,
   now: Date,
+  activeLadderId: number,
 ): Promise<WriteResult> {
   const key = urduKey(input.urdu);
   if (key === "") return { ok: false, error: "empty_key" };
@@ -96,10 +98,12 @@ export async function createVocab(
     example_english: input.example_english ?? null,
     tags,
     favourite: input.favourite ?? false,
-    mastery: 0,
+    ladder_id: activeLadderId,
+    ladder_step: 0,
+    interval_seconds: ladder(activeLadderId).intervals_seconds[0] as number,
     added_at: at,
-    last_reviewed_on: null,
-    next_review_on: null,
+    last_reviewed_at: null,
+    due_at: null,
     source: input.source,
     airtable_id: null,
     created_at: at,
@@ -112,9 +116,9 @@ export async function createVocab(
       db
         .prepare(
           `INSERT INTO vocab (id, urdu, urdu_key, kind, roman, english, notes, example_urdu,
-             example_english, tags, favourite, mastery, added_at, last_reviewed_on,
-             next_review_on, source, airtable_id, created_at, updated_at)
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+             example_english, tags, favourite, ladder_id, ladder_step, interval_seconds,
+             added_at, last_reviewed_at, due_at, source, airtable_id, created_at, updated_at)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         )
         .bind(
           item.id,
@@ -128,10 +132,12 @@ export async function createVocab(
           item.example_english,
           JSON.stringify(item.tags),
           item.favourite ? 1 : 0,
-          item.mastery,
+          item.ladder_id,
+          item.ladder_step,
+          item.interval_seconds,
           item.added_at,
-          item.last_reviewed_on,
-          item.next_review_on,
+          item.last_reviewed_at,
+          item.due_at,
           item.source,
           item.airtable_id,
           item.created_at,
@@ -144,13 +150,15 @@ export async function createVocab(
   return { ok: true, item };
 }
 
-// Manual edits are corrections, not reviews: a mastery change recomputes next_review_on
-// from the existing last_reviewed_on, leaves last_reviewed_on alone, and writes no event.
+// Manual edits are corrections, not reviews: a ladder_step change puts the item on the active
+// ladder at that rung, recomputes due_at from the existing last_reviewed_at, leaves
+// last_reviewed_at alone, and writes no event.
 export async function updateVocab(
   db: D1Database,
   id: string,
   changes: UpdateVocabRequest,
   now: Date,
+  activeLadderId: number,
 ): Promise<WriteResult> {
   const current = await getVocab(db, id);
   if (!current) return { ok: false, error: "not_found" };
@@ -166,8 +174,10 @@ export async function updateVocab(
       if (existingId && existingId !== id) return { ok: false, error: "duplicate", existingId };
     }
   }
-  if (changes.mastery !== undefined) {
-    next.next_review_on = nextReviewOn(current.last_reviewed_on, next.mastery);
+  if (changes.ladder_step !== undefined) {
+    const last = ladder(activeLadderId).intervals_seconds.length - 1;
+    if (changes.ladder_step > last) return { ok: false, error: "bad_step", maxStep: last };
+    Object.assign(next, correctStep(changes.ladder_step, activeLadderId, current.last_reviewed_at));
   }
 
   try {
@@ -176,8 +186,8 @@ export async function updateVocab(
       db
         .prepare(
           `UPDATE vocab SET urdu = ?, urdu_key = ?, kind = ?, roman = ?, english = ?, notes = ?,
-             example_urdu = ?, example_english = ?, tags = ?, favourite = ?, mastery = ?,
-             next_review_on = ?, updated_at = ?
+             example_urdu = ?, example_english = ?, tags = ?, favourite = ?, ladder_id = ?,
+             ladder_step = ?, interval_seconds = ?, due_at = ?, updated_at = ?
            WHERE id = ?`,
         )
         .bind(
@@ -191,8 +201,10 @@ export async function updateVocab(
           next.example_english,
           JSON.stringify(next.tags),
           next.favourite ? 1 : 0,
-          next.mastery,
-          next.next_review_on,
+          next.ladder_id,
+          next.ladder_step,
+          next.interval_seconds,
+          next.due_at,
           next.updated_at,
           id,
         ),
@@ -225,7 +237,7 @@ function escapeLike(text: string): string {
 export async function listVocab(
   db: D1Database,
   query: ListQuery,
-  today: string,
+  now: string,
 ): Promise<{ items: VocabItem[]; total: number }> {
   const where: string[] = [];
   const params: unknown[] = [];
@@ -250,7 +262,7 @@ export async function listVocab(
   }
   if (query.due) {
     where.push(DUE);
-    params.push(today);
+    params.push(now);
   }
 
   const whereSql = where.length > 0 ? `WHERE ${where.join(" AND ")}` : "";
@@ -267,7 +279,7 @@ export async function listVocab(
   return { items: items.map(toItem), total };
 }
 
-// `cutoff` is today, or a later day when reviewing ahead.
+// `cutoff` is now, or a later instant when reviewing ahead.
 export async function dueVocab(
   db: D1Database,
   cutoff: string,
@@ -289,11 +301,11 @@ export async function dueVocab(
 
 export async function vocabCounts(
   db: D1Database,
-  today: string,
+  now: string,
 ): Promise<{ total: number; due: number }> {
   const row = await db
     .prepare(`SELECT count(*) AS total, count(*) FILTER (WHERE ${DUE}) AS due FROM vocab`)
-    .bind(today)
+    .bind(now)
     .first<{ total: number; due: number }>();
   return { total: row?.total ?? 0, due: row?.due ?? 0 };
 }

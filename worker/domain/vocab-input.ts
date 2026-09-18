@@ -7,7 +7,6 @@ import {
   type UpdateVocabRequest,
   type VocabFields,
 } from "../../shared/api";
-import { isMastery } from "../../shared/mastery";
 import { VOCAB_KINDS, type VocabKind } from "../../shared/normalize";
 
 export const MAX_URDU_LENGTH = 500;
@@ -23,7 +22,7 @@ const EDITABLE = new Set<string>([
   ...OPTIONAL_TEXT,
   "tags",
   "favourite",
-  "mastery",
+  "ladder_step",
 ]);
 
 export type InputError = { field?: string; message: string };
@@ -105,14 +104,18 @@ function parseFields(body: Record<string, unknown>): Parsed<Partial<VocabFields>
     if (typeof body.favourite !== "boolean") return fail("favourite", "must be a boolean");
     out.favourite = body.favourite;
   }
-  if ("mastery" in body) {
-    if (!isMastery(body.mastery)) return fail("mastery", "must be an integer from 0 to 6");
-    out.mastery = body.mastery;
+  if ("ladder_step" in body) {
+    // The upper bound depends on the active ladder, so the service checks it.
+    const step = body.ladder_step;
+    if (typeof step !== "number" || !Number.isInteger(step) || step < 0) {
+      return fail("ladder_step", "must be a non-negative integer");
+    }
+    out.ladder_step = step;
   }
   return { ok: true, value: out };
 }
 
-export type CreateInput = Partial<Omit<VocabFields, "urdu" | "mastery">> & {
+export type CreateInput = Partial<Omit<VocabFields, "urdu" | "ladder_step">> & {
   urdu: string;
   source: NonNullable<CreateVocabRequest["source"]>;
 };
@@ -120,7 +123,7 @@ export type CreateInput = Partial<Omit<VocabFields, "urdu" | "mastery">> & {
 export function parseCreate(body: unknown): Parsed<CreateInput> {
   if (!isRecord(body)) return fail(undefined, "body must be a JSON object");
   for (const key of Object.keys(body)) {
-    if (key === "mastery") return fail("mastery", "new items start at mastery 0");
+    if (key === "ladder_step") return fail("ladder_step", "new items start on the first rung");
     if (key !== "source" && !EDITABLE.has(key)) return fail(key, "is not a recognised field");
   }
   if (!("urdu" in body)) return fail("urdu", "is required and must be a string");

@@ -82,13 +82,13 @@ describe("POST /api/admin/import", () => {
     expect(item.urdu).toBe(KITAB);
     expect(item.roman).toBe("kitaab");
     expect(item.english).toBe("book");
-    expect(item.mastery).toBe(3);
+    // Legacy ladder, rung = Airtable level; 3 = Firm, 25 days.
+    expect(item).toMatchObject({ ladder_id: 1, ladder_step: 3, interval_seconds: 25 * 86_400 });
     expect(item.source).toBe("airtable");
     expect(item.airtable_id).toBe("rec0000000000001");
     expect(item.kind).toBe("word");
-    expect(item.last_reviewed_on).toBe("2026-09-08");
-    // mastery 3 = Firm, interval 25 days.
-    expect(item.next_review_on).toBe("2026-10-03");
+    expect(item.last_reviewed_at).toBe("2026-09-08T08:00:00.000Z");
+    expect(item.due_at).toBe("2026-10-03T08:00:00.000Z");
     expect(item.added_at).toBe("2026-09-08T00:00:00.000Z");
     expect(at(body.results, 0)).toMatchObject({ outcome: "created", next_review_on: "2026-10-03" });
   });
@@ -102,8 +102,9 @@ describe("POST /api/admin/import", () => {
   it("leaves a never-reviewed row due now", async () => {
     await one({ last_reviewed_on: null, mastery: 0 });
     const item = await onlyRow();
-    expect(item.last_reviewed_on).toBeNull();
-    expect(item.next_review_on).toBeNull();
+    expect(item.last_reviewed_at).toBeNull();
+    expect(item.due_at).toBeNull();
+    expect(item).toMatchObject({ ladder_id: 1, ladder_step: 0, interval_seconds: 0 });
   });
 
   it("is idempotent: re-running updates in place and adds no rows or events", async () => {

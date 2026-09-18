@@ -1,25 +1,29 @@
-// f04 s04: edit any field of a vault item, mastery included (FR-D2). Sends only changed fields;
-// the Worker recomputes next review for a mastery change and records no review event (FR-A8).
+// f04 s04: edit any field of a vault item, its review rung included (FR-D2). Sends only changed
+// fields; the Worker recomputes the due time for a rung change and records no review event (FR-A8).
 
 import { type FormEvent, useState } from "react";
 import type { DuplicateResponse, InvalidRequestResponse, VocabItem } from "../../shared/api";
-import { MASTERY_LEVELS, type Mastery } from "../../shared/mastery";
+import { formatInterval, ladder } from "../../shared/ladders";
+import { bandForInterval, bandName } from "../../shared/mastery";
 import { VOCAB_KINDS, type VocabKind } from "../../shared/normalize";
 import { DraftFields } from "../reader/DraftFields";
 import { buildUpdate, draftFromItem } from "./edit";
 
 export function VocabEdit({
   item,
+  activeLadderId,
   onCancel,
   onSaved,
   onOpenExisting,
 }: {
   item: VocabItem;
+  activeLadderId: number;
   onCancel: () => void;
   onSaved: (item: VocabItem) => void;
   onOpenExisting: (id: string) => void;
 }) {
-  const [draft, setDraft] = useState(() => draftFromItem(item));
+  const [draft, setDraft] = useState(() => draftFromItem(item, activeLadderId));
+  const rungs = ladder(activeLadderId).intervals_seconds;
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [duplicateId, setDuplicateId] = useState<string | null>(null);
@@ -27,7 +31,7 @@ export function VocabEdit({
   async function save(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (busy) return;
-    const update = buildUpdate(item, draft);
+    const update = buildUpdate(item, draft, activeLadderId);
     if (!update) return onCancel();
     setBusy(true);
     setError("");
@@ -75,21 +79,21 @@ export function VocabEdit({
         ))}
       </select>
 
-      <label htmlFor="edit-mastery">Mastery</label>
+      <label htmlFor="edit-mastery">Mastery (review interval)</label>
       <select
         id="edit-mastery"
-        value={draft.mastery}
-        onChange={(event) => setDraft({ ...draft, mastery: Number(event.target.value) as Mastery })}
+        value={draft.ladder_step}
+        onChange={(event) => setDraft({ ...draft, ladder_step: Number(event.target.value) })}
       >
-        {MASTERY_LEVELS.map(({ level, name, intervalDays }) => (
-          <option key={level} value={level}>
-            {level} · {name} ({intervalDays} {intervalDays === 1 ? "day" : "days"})
+        {rungs.map((seconds, step) => (
+          <option key={seconds} value={step}>
+            {formatInterval(seconds)} · {bandName(bandForInterval(seconds))}
           </option>
         ))}
       </select>
       <p className="hint">
-        Changing mastery is a correction, not a review. Next review moves to match, and no review is
-        recorded.
+        Changing this is a correction, not a review. The next review moves to match, and no review
+        is recorded.
       </p>
 
       {duplicateId && (

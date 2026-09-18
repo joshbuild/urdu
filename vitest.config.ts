@@ -39,6 +39,8 @@ export default defineConfig({
           cloudflareTest(async () => ({
             wrangler: { configPath: "./wrangler.jsonc" },
             miniflare: {
+              // Scratch database for test/migration.test.ts (0001 → 0002 with legacy rows).
+              d1Databases: ["MIGRATION_DB"],
               bindings: {
                 TEST_MIGRATIONS: await readD1Migrations("./migrations"),
                 // Overrides .dev.vars; test/auth.test.ts asserts the override took effect.

@@ -1,47 +1,19 @@
 import { describe, expect, it } from "vitest";
 import {
-  applyGrade,
+  bandName,
   GRADE_DELTAS,
   GRADES,
-  type Grade,
   gradeDeltas,
-  intervalDays,
   isGrade,
-  isMastery,
-  MASTERY_LEVELS,
-  type Mastery,
-  masteryName,
+  isLegacyLevel,
+  masteryBand,
   PRODUCTION_GRADE_DELTAS,
 } from "./mastery";
 
-describe("mastery ladder", () => {
-  it.each([
-    [0, "New", 0],
-    [1, "Learning", 1],
-    [2, "Basic", 5],
-    [3, "Firm", 25],
-    [4, "Strong", 125],
-    [5, "Stable", 625],
-    [6, "Permanent", 3125],
-  ] as const)("level %i is %s with a %i-day interval", (level, name, days) => {
-    expect(masteryName(level)).toBe(name);
-    expect(intervalDays(level)).toBe(days);
-  });
-
-  it("has exactly seven levels indexed by level", () => {
-    expect(MASTERY_LEVELS.map((l) => l.level)).toEqual([0, 1, 2, 3, 4, 5, 6]);
-  });
-
-  it("guards mastery values", () => {
-    for (const ok of [0, 3, 6]) expect(isMastery(ok)).toBe(true);
-    for (const bad of [-1, 7, 2.5, Number.NaN, "3", null, undefined]) {
-      expect(isMastery(bad)).toBe(false);
-    }
-  });
-});
+const DAY = 86_400;
 
 describe("grades", () => {
-  it("are in ladder order with deltas -2..+2", () => {
+  it("are in ladder order with recognition deltas -2..+2", () => {
     expect(GRADES).toEqual(["wrong", "partial", "hesitant", "correct", "confident"]);
     expect(GRADES.map((g) => GRADE_DELTAS[g])).toEqual([-2, -1, 0, 1, 2]);
   });
@@ -57,34 +29,40 @@ describe("production deltas", () => {
     expect(GRADES.map((g) => PRODUCTION_GRADE_DELTAS[g])).toEqual([-1, 0, 0, 1, 2]);
   });
 
-  it("apply to English → Urdu and oral; recognition keeps the original ladder", () => {
+  it("apply to English → Urdu and oral; recognition keeps the original deltas", () => {
     expect(gradeDeltas("ur_en")).toBe(GRADE_DELTAS);
     expect(gradeDeltas("en_ur")).toBe(PRODUCTION_GRADE_DELTAS);
     expect(gradeDeltas("oral")).toBe(PRODUCTION_GRADE_DELTAS);
   });
+});
 
-  it("clamp at the ladder ends", () => {
-    expect(applyGrade(0, "wrong", "en_ur")).toBe(0);
-    expect(applyGrade(3, "wrong", "en_ur")).toBe(2);
-    expect(applyGrade(3, "partial", "en_ur")).toBe(3);
-    expect(applyGrade(6, "confident", "oral")).toBe(6);
+describe("legacy levels", () => {
+  it("accept the Airtable range 0-6 only", () => {
+    for (const ok of [0, 3, 6]) expect(isLegacyLevel(ok)).toBe(true);
+    for (const bad of [-1, 7, 2.5, Number.NaN, "3", null, undefined]) {
+      expect(isLegacyLevel(bad)).toBe(false);
+    }
   });
 });
 
-describe("applyGrade (recognition)", () => {
-  // Result for mastery 0..6, clamped to the ladder.
-  const expected: Record<Grade, Mastery[]> = {
-    wrong: [0, 0, 0, 1, 2, 3, 4],
-    partial: [0, 0, 1, 2, 3, 4, 5],
-    hesitant: [0, 1, 2, 3, 4, 5, 6],
-    correct: [1, 2, 3, 4, 5, 6, 6],
-    confident: [2, 3, 4, 5, 6, 6, 6],
-  };
+describe("mastery bands", () => {
+  const reviewed = "2026-09-18T08:00:00.000Z";
 
-  for (const grade of GRADES) {
-    it(`applies ${grade} at every level`, () => {
-      const levels = MASTERY_LEVELS.map((l) => l.level);
-      expect(levels.map((m) => applyGrade(m, grade, "ur_en"))).toEqual(expected[grade]);
-    });
-  }
+  it("call a never-reviewed item New whatever its interval", () => {
+    expect(masteryBand({ interval_seconds: 10800, last_reviewed_at: null })).toBe(0);
+  });
+
+  it("give every legacy level its old name", () => {
+    const names = [0, 1, 5, 25, 125, 625, 3125].map((days) =>
+      bandName(masteryBand({ interval_seconds: days * DAY, last_reviewed_at: reviewed })),
+    );
+    expect(names).toEqual(["New", "Learning", "Basic", "Firm", "Strong", "Stable", "Permanent"]);
+  });
+
+  it("band the Moderate ladder's rungs", () => {
+    const rungs = [10800, 25687, 61094, 145307, 345600, 821980, 1955009, 4649821, 11059200];
+    expect(
+      rungs.map((s) => masteryBand({ interval_seconds: s, last_reviewed_at: reviewed })),
+    ).toEqual([1, 1, 1, 2, 2, 3, 3, 4, 4]);
+  });
 });

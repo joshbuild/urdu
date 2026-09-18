@@ -11,7 +11,9 @@ import {
   type VocabListResponse,
   type VocabSort,
 } from "../../shared/api";
-import { addDays, todayIn } from "../../shared/dates";
+import { todayIn } from "../../shared/dates";
+import { addSeconds } from "../../shared/ladders";
+import { activeLadderId } from "../domain/settings";
 import {
   createVocab,
   deleteVocab,
@@ -33,6 +35,7 @@ export const MAX_AHEAD_DAYS = 365;
 
 type Ctx = Context<AppEnv>;
 
+// "today" labels the day in the home timezone; due checks compare exact instants.
 export const today = (c: Ctx) => todayIn(c.env.HOME_TZ, new Date());
 
 export function invalid(c: Ctx, error: InputError) {
@@ -53,6 +56,11 @@ function writeFailure(c: Ctx, result: Exclude<WriteResult, { ok: true }>) {
       });
     case "not_found":
       return c.json({ error: "not_found" }, 404);
+    case "bad_step":
+      return invalid(c, {
+        field: "ladder_step",
+        message: `must be an integer from 0 to ${result.maxStep} on the active ladder`,
+      });
   }
 }
 
@@ -93,9 +101,12 @@ const isError = (v: unknown): v is InputError => typeof v === "object" && v !== 
 export const vocabRoutes = new Hono<AppEnv>();
 
 vocabRoutes.get("/api/status", async (c) => {
-  const day = today(c);
-  const counts = await vocabCounts(c.env.DB, day);
-  const body: StatusResponse = { ...counts, today: day };
+  const counts = await vocabCounts(c.env.DB, new Date().toISOString());
+  const body: StatusResponse = {
+    ...counts,
+    today: today(c),
+    active_ladder_id: await activeLadderId(c.env.DB),
+  };
   return c.json(body);
 });
 
@@ -109,7 +120,12 @@ vocabRoutes.post("/api/vocab", async (c) => {
   if (body === undefined) return invalid(c, { message: "body must be valid JSON" });
   const parsed = parseCreate(body);
   if (!parsed.ok) return invalid(c, parsed.error);
-  const result = await createVocab(c.env.DB, parsed.value, new Date());
+  const result = await createVocab(
+    c.env.DB,
+    parsed.value,
+    new Date(),
+    await activeLadderId(c.env.DB),
+  );
   return result.ok ? c.json(result.item, 201) : writeFailure(c, result);
 });
 
@@ -128,7 +144,7 @@ vocabRoutes.get("/api/vocab", async (c) => {
   const result = await listVocab(
     c.env.DB,
     { q: c.req.query("q"), tag: tagParam(c), due, sort: sort as VocabSort, limit, offset },
-    today(c),
+    new Date().toISOString(),
   );
   const body: VocabListResponse = result;
   return c.json(body);
@@ -141,10 +157,10 @@ vocabRoutes.get("/api/vocab/due", async (c) => {
   // f05 review ahead: also take items falling due within the next `ahead` days.
   const ahead = intParam(c, "ahead", 0, 0, MAX_AHEAD_DAYS);
   if (isError(ahead)) return invalid(c, ahead);
-  const day = today(c);
+  const cutoff = addSeconds(new Date().toISOString(), ahead * 86_400);
   const body: DueResponse = {
-    items: await dueVocab(c.env.DB, addDays(day, ahead), limit, tagParam(c)),
-    today: day,
+    items: await dueVocab(c.env.DB, cutoff, limit, tagParam(c)),
+    today: today(c),
   };
   return c.json(body);
 });
@@ -159,7 +175,13 @@ vocabRoutes.patch("/api/vocab/:id", async (c) => {
   if (body === undefined) return invalid(c, { message: "body must be valid JSON" });
   const parsed = parseUpdate(body);
   if (!parsed.ok) return invalid(c, parsed.error);
-  const result = await updateVocab(c.env.DB, c.req.param("id"), parsed.value, new Date());
+  const result = await updateVocab(
+    c.env.DB,
+    c.req.param("id"),
+    parsed.value,
+    new Date(),
+    await activeLadderId(c.env.DB),
+  );
   return result.ok ? c.json(result.item) : writeFailure(c, result);
 });
 

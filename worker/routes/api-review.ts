@@ -6,6 +6,7 @@ import type { ConflictResponse, ReviewResponse } from "../../shared/api";
 import { exportVault } from "../domain/export";
 import { recordReview } from "../domain/review";
 import { parseReview } from "../domain/review-input";
+import { activeLadderId } from "../domain/settings";
 import type { AppEnv } from "../env";
 import { invalid, readJson, today } from "./api-vocab";
 
@@ -22,7 +23,7 @@ reviewRoutes.post("/api/vocab/:id/reviews", async (c) => {
     c.req.param("id"),
     { ...parsed.value, source: "pwa" },
     new Date(),
-    today(c),
+    await activeLadderId(c.env.DB),
   );
   if (result.ok) {
     const response: ReviewResponse = { item: result.item, event: result.event };

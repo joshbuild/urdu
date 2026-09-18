@@ -8,7 +8,7 @@
 // it stays out of shell history and process listings.
 
 import type { ReviewResponse, StatusResponse, VocabItem } from "../shared/api";
-import { nextReviewOn } from "../shared/dates";
+import { addSeconds, ladder } from "../shared/ladders";
 
 const SESSION_COOKIE = "__Host-urdu_session";
 
@@ -102,10 +102,11 @@ async function main(): Promise<void> {
   check("status responds 200 when unlocked", before.status === 200, describe(before));
   const counts = before.body as StatusResponse;
   check(
-    "status carries total, due and today",
+    "status carries total, due, today and the active ladder",
     typeof counts.total === "number" &&
       typeof counts.due === "number" &&
-      /^\d{4}-\d{2}-\d{2}$/.test(counts.today),
+      /^\d{4}-\d{2}-\d{2}$/.test(counts.today) &&
+      typeof counts.active_ladder_id === "number",
     describe(before),
   );
 
@@ -120,8 +121,12 @@ async function main(): Promise<void> {
   });
   check("create vocab responds 201", created.status === 201, describe(created));
   const item = created.body as VocabItem;
-  check("new item starts at mastery 0", item.mastery === 0, describe(created));
-  check("new item is due immediately", item.next_review_on === null, describe(created));
+  check(
+    "new item starts on the first rung of the active ladder",
+    item.ladder_id === counts.active_ladder_id && item.ladder_step === 0,
+    describe(created),
+  );
+  check("new item is due immediately", item.due_at === null, describe(created));
 
   let cleanedUp = false;
   try {
@@ -147,17 +152,21 @@ async function main(): Promise<void> {
     });
     check("review responds 201", reviewed.status === 201, describe(reviewed));
     const review = reviewed.body as ReviewResponse;
-    check("correct raises mastery to 1", review.item.mastery === 1, describe(reviewed));
+    check("correct moves up one rung", review.item.ladder_step === 1, describe(reviewed));
+    const rung1 = ladder(review.item.ladder_id).intervals_seconds[1] as number;
     check(
-      "next review is scheduled by the ladder",
-      review.item.last_reviewed_on !== null &&
-        review.item.next_review_on === nextReviewOn(review.item.last_reviewed_on, 1),
+      "the due time is the review time plus the rung's interval",
+      review.item.last_reviewed_at !== null &&
+        review.item.interval_seconds === rung1 &&
+        review.item.due_at === addSeconds(review.item.last_reviewed_at, rung1),
       describe(reviewed),
     );
     check(
       "the review event records the transition",
-      review.event.mastery_before === 0 &&
-        review.event.mastery_after === 1 &&
+      review.event.step_before === 0 &&
+        review.event.step_after === 1 &&
+        review.event.applied_delta === 1 &&
+        review.event.due_after === review.item.due_at &&
         review.event.source === "pwa",
       describe(reviewed),
     );

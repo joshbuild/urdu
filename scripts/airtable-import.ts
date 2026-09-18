@@ -19,7 +19,7 @@ import { readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import type { ImportRequest, ImportResponse, ImportResult, ImportVocabRecord } from "../shared/api";
 import { MAX_IMPORT_BATCH } from "../shared/api";
-import { nextReviewOn } from "../shared/dates";
+import { legacyNextReviewOn } from "../shared/dates";
 import { urduKey } from "../shared/normalize";
 import { type MapError, mapExport } from "./airtable-csv";
 
@@ -96,7 +96,7 @@ function crossCheck(vocab: ImportVocabRecord[]): {
   const byKey = new Map<string, string[]>();
 
   for (const record of vocab) {
-    const recomputed = nextReviewOn(record.last_reviewed_on, record.mastery);
+    const recomputed = legacyNextReviewOn(record.last_reviewed_on, record.mastery);
     const airtable = record.airtable_next_review_on ?? null;
     // An absent Airtable value cannot disagree — only a supplied one can.
     if (airtable !== null && airtable !== recomputed) {

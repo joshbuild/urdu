@@ -9,6 +9,7 @@ import type {
   StatusResponse,
   VocabItem,
 } from "../../shared/api";
+import { ladder } from "../../shared/ladders";
 import { GRADE_LABELS, GRADES, type Grade } from "../../shared/mastery";
 import { speak } from "../reader/speech";
 import {
@@ -132,8 +133,8 @@ export function ReviewScreen({
         />
         <p id="review-ahead-hint" className="hint">
           {ahead === 0
-            ? "0 reviews only what is due today."
-            : `Also includes items due in the next ${ahead} ${ahead === 1 ? "day" : "days"}. Grades count from today.`}
+            ? "0 reviews only what is due now."
+            : `Also includes items due in the next ${ahead} ${ahead === 1 ? "day" : "days"}. Grades count from now.`}
         </p>
         <button
           type="button"
@@ -143,8 +144,8 @@ export function ReviewScreen({
           {loading ? "Loading…" : "Start review"}
         </button>
         <p className="hint">
-          Up to {readSessionLimit()} items per session (change it in Settings). Review date:{" "}
-          {status.today} · Vancouver time.
+          Up to {readSessionLimit()} items per session (change it in Settings). Spacing:{" "}
+          {ladder(status.active_ladder_id).name}.
         </p>
         {startError && (
           <p className="error" role="alert">

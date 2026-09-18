@@ -2,6 +2,8 @@
 // are left out. Read-only, so it never changes updated_at or review dates (FR-A8).
 
 import type { ExportResponse, Handoff, ReviewEvent, Tag } from "../../shared/api";
+import { LADDERS } from "../../shared/ladders";
+import { activeLadderId } from "./settings";
 import { toItem, type VocabRow } from "./vocab";
 
 type HandoffRow = Omit<Handoff, "payload" | "outcome"> & {
@@ -18,6 +20,8 @@ export async function exportVault(db: D1Database, now: Date): Promise<ExportResp
   ]);
   return {
     exported_at: now.toISOString(),
+    ladders: LADDERS,
+    active_ladder_id: await activeLadderId(db),
     vocab: ((vocab?.results ?? []) as VocabRow[]).map(toItem),
     review_events: (events?.results ?? []) as ReviewEvent[],
     tags: (tags?.results ?? []) as Tag[],

@@ -10,12 +10,12 @@ const SEARCH_DELAY_MS = 250;
 export function VocabList({
   filters,
   onFilters,
-  today,
+  now,
   onOpen,
 }: {
   filters: ListFilters;
   onFilters: (next: ListFilters) => void;
-  today: string;
+  now: string;
   onOpen: (id: string) => void;
 }) {
   const [search, setSearch] = useState(filters.q);
@@ -149,7 +149,7 @@ export function VocabList({
                 {[item.roman, item.english].filter(Boolean).join(" · ") || "—"}
               </span>
               <span className="vocab-row-meta">
-                <MasteryPill mastery={item.mastery} /> {reviewLabel(item, today)}
+                <MasteryPill item={item} /> {reviewLabel(item, now)}
               </span>
             </button>
           </li>

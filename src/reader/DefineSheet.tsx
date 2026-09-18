@@ -3,6 +3,7 @@
 
 import { useEffect, useState } from "react";
 import type { VocabItem, VocabListResponse } from "../../shared/api";
+import { MasteryPill } from "../vocab/MasteryPill";
 import { dictionaryLinks, exactMatch } from "./define";
 import { Sheet } from "./Sheet";
 
@@ -85,7 +86,9 @@ export function DefineSheet({
             </>
           )}
           <dt>Mastery</dt>
-          <dd>{lookup.item.mastery} of 6</dd>
+          <dd>
+            <MasteryPill item={lookup.item} />
+          </dd>
         </dl>
       )}
 

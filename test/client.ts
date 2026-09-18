@@ -9,8 +9,12 @@ let ipCounter = 0;
 
 export const TABLES = ["review_events", "vocab", "handoffs", "tags", "sessions"] as const;
 
+// Also puts the active ladder back to the default (Moderate, id 3).
 export async function clearTables(): Promise<void> {
-  await env.DB.batch(TABLES.map((t) => env.DB.prepare(`DELETE FROM ${t}`)));
+  await env.DB.batch([
+    ...TABLES.map((t) => env.DB.prepare(`DELETE FROM ${t}`)),
+    env.DB.prepare("INSERT OR REPLACE INTO settings (key, value) VALUES ('active_ladder_id', '3')"),
+  ]);
 }
 
 export type Api = (method: string, path: string, body?: unknown) => Promise<Response>;

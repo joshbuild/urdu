@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { addDays, isIsoDate, nextReviewOn, todayIn } from "./dates";
+import { addDays, isIsoDate, legacyInstant, legacyNextReviewOn, todayIn } from "./dates";
 
 const HOME_TZ = "America/Vancouver";
 
@@ -61,9 +61,9 @@ describe("isIsoDate", () => {
   });
 });
 
-describe("nextReviewOn", () => {
+describe("legacyNextReviewOn", () => {
   it("is null (due now) when never reviewed", () => {
-    for (const m of [0, 3, 6] as const) expect(nextReviewOn(null, m)).toBeNull();
+    for (const m of [0, 3, 6] as const) expect(legacyNextReviewOn(null, m)).toBeNull();
   });
 
   it.each([
@@ -74,7 +74,16 @@ describe("nextReviewOn", () => {
     [4, "2027-01-17"],
     [5, "2028-05-31"],
     [6, "2035-04-05"],
-  ] as const)("mastery %i reviewed 2026-09-14 is next due %s", (mastery, date) => {
-    expect(nextReviewOn("2026-09-14", mastery)).toBe(date);
+  ] as const)("legacy level %i reviewed 2026-09-14 is next due %s", (mastery, date) => {
+    expect(legacyNextReviewOn("2026-09-14", mastery)).toBe(date);
+  });
+});
+
+describe("legacyInstant", () => {
+  it("puts a legacy date at 08:00 UTC, the start of the Vancouver day", () => {
+    expect(legacyInstant("2026-09-14")).toBe("2026-09-14T08:00:00.000Z");
+    expect(todayIn(HOME_TZ, new Date(legacyInstant("2026-01-14")))).toBe("2026-01-14");
+    expect(todayIn(HOME_TZ, new Date(legacyInstant("2026-07-14")))).toBe("2026-07-14");
+    expect(() => legacyInstant("2026-02-30")).toThrow(RangeError);
   });
 });

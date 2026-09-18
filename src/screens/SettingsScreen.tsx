@@ -1,7 +1,8 @@
-// f03 s01/s04, f04 s06. Lock this device (from the f01 shell), the voice picker, and the review
-// session limit (FR-I1). Voice spend belongs to f07.
+// f03 s01/s04, f04 s06, f09. Lock this device (from the f01 shell), the voice picker, the review
+// session limit (FR-I1) and review spacing (the active ladder). Voice spend belongs to f07.
 
 import { useState } from "react";
+import { LADDERS } from "../../shared/ladders";
 import { isUrdu, speak } from "../reader/speech";
 import type { VoiceState } from "../reader/useVoice";
 import {
@@ -11,6 +12,7 @@ import {
   readSessionLimit,
   storeSessionLimit,
 } from "../settings/sessionLimit";
+import { spacingSummary } from "../settings/spacing";
 
 const SAMPLE = "السلام علیکم، آپ کیسے ہیں؟";
 
@@ -18,13 +20,40 @@ export function SettingsScreen({
   onLock,
   busy,
   voiceState,
+  activeLadderId,
+  onChanged,
 }: {
   onLock: () => void;
   busy: boolean;
   voiceState: VoiceState;
+  activeLadderId: number;
+  // Settings on the server changed; App refreshes status, which carries the active ladder.
+  onChanged: () => void;
 }) {
   const { voices, voice, select, supported } = voiceState;
   const [limitText, setLimitText] = useState(() => String(readSessionLimit()));
+  const [spacingBusy, setSpacingBusy] = useState(false);
+  const [spacingError, setSpacingError] = useState("");
+
+  async function chooseLadder(id: number) {
+    if (spacingBusy || id === activeLadderId) return;
+    setSpacingBusy(true);
+    setSpacingError("");
+    try {
+      const response = await fetch("/api/settings", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ active_ladder_id: id }),
+      });
+      if (response.ok) onChanged();
+      else if (response.status === 401)
+        setSpacingError("This device is locked. Unlock it and try again.");
+      else setSpacingError("Could not save. Please try again.");
+    } catch {
+      setSpacingError("Could not connect. Check your connection and try again.");
+    }
+    setSpacingBusy(false);
+  }
 
   // Urdu voices first: a phone can carry dozens, and the two that matter should not be buried.
   // The rest stay listed, because an explicit choice is the sponsor's to make.
@@ -100,6 +129,33 @@ export function SettingsScreen({
         A whole number from {MIN_SESSION_LIMIT} to {MAX_SESSION_LIMIT}. Due items beyond it wait for
         the next session.
       </p>
+
+      <fieldset className="direction" disabled={spacingBusy}>
+        <legend>Review spacing</legend>
+        {LADDERS.filter((l) => l.selectable).map((l) => (
+          <label key={l.id}>
+            <input
+              type="radio"
+              name="spacing"
+              value={l.id}
+              checked={l.id === activeLadderId}
+              onChange={() => void chooseLadder(l.id)}
+            />
+            <span>
+              <strong>{l.name}</strong> {spacingSummary(l)}
+            </span>
+          </label>
+        ))}
+      </fieldset>
+      <p className="hint">
+        How far apart reviews are. Wider spacing means fewer reviews and more forgetting. Changing
+        it moves no due dates: each item switches at its next review.
+      </p>
+      {spacingError && (
+        <p className="error" role="alert">
+          {spacingError}
+        </p>
+      )}
 
       <h2>This device</h2>
       <p className="hint">

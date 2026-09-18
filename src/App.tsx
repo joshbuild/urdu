@@ -150,7 +150,13 @@ export function App() {
               <ReviewScreen status={status} voice={voiceState.voice} onChanged={refreshStatus} />
             )}
             {tab === "settings" && (
-              <SettingsScreen onLock={lock} busy={busy} voiceState={voiceState} />
+              <SettingsScreen
+                onLock={lock}
+                busy={busy}
+                voiceState={voiceState}
+                activeLadderId={status.active_ladder_id}
+                onChanged={refreshStatus}
+              />
             )}
             {error && (
               <p id="request-error" className="error" role="alert">

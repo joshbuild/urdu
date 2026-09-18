@@ -1,10 +1,10 @@
 // Validation for admin import records (FR-H). Stricter than vocab-input: the import is a
 // migration, so a malformed row is rejected and reported rather than coerced. Unlike a PWA
-// create, mastery and dates ARE caller-supplied here — that is the whole point of the import.
+// create, the legacy level and dates ARE caller-supplied here — that is the whole point of the import.
 
 import type { ImportTagRecord, ImportVocabRecord } from "../../shared/api";
 import { isIsoDate } from "../../shared/dates";
-import { isMastery } from "../../shared/mastery";
+import { isLegacyLevel } from "../../shared/mastery";
 import { VOCAB_KINDS, type VocabKind } from "../../shared/normalize";
 import {
   MAX_TAG_LENGTH,
@@ -104,7 +104,7 @@ export function parseImportVocab(body: unknown): Parsed<ImportVocabRecord> {
   if (urdu.length > MAX_URDU_LENGTH)
     return fail("urdu", `must be at most ${MAX_URDU_LENGTH} characters`);
 
-  if (!isMastery(body.mastery)) return fail("mastery", "must be an integer from 0 to 6");
+  if (!isLegacyLevel(body.mastery)) return fail("mastery", "must be an integer from 0 to 6");
 
   let kind: VocabKind | undefined;
   if (body.kind !== undefined) {
