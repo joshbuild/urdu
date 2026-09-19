@@ -1,14 +1,15 @@
-// f03 s01: the app's four screens. A tab bar rather than a router — Phase 2 adds three screens to
+// f03 s01: the app's screens (f07 added Voice). A tab bar rather than a router — Phase 2 adds three screens to
 // the shell and none of them are deep-linked, so there is nothing for routes to buy yet (f03 doc,
 // s01 open question). The selected tab is kept in localStorage so a phone reload lands where it left.
 
-export const TABS = ["read", "vocab", "review", "settings"] as const;
+export const TABS = ["read", "vocab", "review", "voice", "settings"] as const;
 export type Tab = (typeof TABS)[number];
 
 export const TAB_LABELS: Record<Tab, string> = {
   read: "Read",
   vocab: "Vocab",
   review: "Review",
+  voice: "Voice",
   settings: "Settings",
 };
 

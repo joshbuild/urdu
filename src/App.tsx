@@ -7,6 +7,7 @@ import { ReviewScreen } from "./screens/ReviewScreen";
 import { SettingsScreen } from "./screens/SettingsScreen";
 import { readStoredTab, storeTab, TAB_LABELS, TABS, type Tab } from "./screens/tabs";
 import { VocabScreen } from "./screens/VocabScreen";
+import { VoiceScreen } from "./screens/VoiceScreen";
 
 type Screen = "loading" | "locked" | "ready" | "unavailable";
 
@@ -149,6 +150,7 @@ export function App() {
             {tab === "review" && (
               <ReviewScreen status={status} voice={voiceState.voice} onChanged={refreshStatus} />
             )}
+            {tab === "voice" && <VoiceScreen onLocked={refreshStatus} />}
             {tab === "settings" && (
               <SettingsScreen
                 onLock={lock}

@@ -701,3 +701,71 @@ button.link {
   color: #1d6a64;
   text-decoration: underline;
 }
+
+/* f07 s03: the Voice tab. Coach turns sit left, the learner's right; tool lines are quiet. */
+.voice-status {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  font-variant-numeric: tabular-nums;
+}
+
+.voice-phase {
+  padding: 1px 10px;
+  border-radius: 999px;
+  background: #e8f0ec;
+  font-weight: 600;
+}
+
+.voice-phase--live {
+  background: #054e51;
+  color: #fffef9;
+}
+
+.voice-controls {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin: 16px 0;
+}
+
+.voice-controls button:only-child {
+  grid-column: 1 / -1;
+}
+
+.voice-log {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.voice-turn {
+  max-width: 85%;
+  margin: 0;
+  padding: 8px 12px;
+  border-radius: 12px;
+  line-height: 1.8;
+  white-space: pre-wrap;
+}
+
+.voice-turn--coach {
+  align-self: flex-start;
+  background: #e8f0ec;
+}
+
+.voice-turn--user {
+  align-self: flex-end;
+  background: #f1e6d3;
+}
+
+.voice-tools {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 0.85em;
+  color: #526967;
+}
+
+.voice-tool--failed {
+  color: #8a2920;
+}

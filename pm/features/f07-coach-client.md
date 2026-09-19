@@ -1,6 +1,6 @@
 # Feature Plan — Coach Client
 
-**Status**: 🟡 IN PROGRESS — *s01 broker and s02 tools built, `pnpm check` green (2026-09-18); s03 Voice screen next.*
+**Status**: 🟡 IN PROGRESS — *s01 broker, s02 tools and s03 Voice screen built, `pnpm check` green (2026-09-18); s03 awaits a desktop run with a real key; s04 spend next.*
 **Handle**: `f07`
 **Created**: *2026-09-18* · **Updated**: *2026-09-18*
 
@@ -106,13 +106,15 @@ Agent-resolved from the code; none changes scope.
 
 ### Recently Completed
 
+- 2026-09-18: s03 Voice screen built (Voice tab, WebRTC connect, event reducer, tool relay, hide/leave ends the session); 13 client tests, `pnpm check` green at 430. Not yet run against OpenAI.
 - 2026-09-18: s01 broker and s02 tool routes built; 21 Worker tests, `pnpm check` green at 417.
 - 2026-09-18: stress-tested (five resolutions above) and opened.
 - 2026-09-18: drafted from PRD FR-G/FR-B5, the mp02 journal and the TODO carry-forwards.
 
 ### Next Steps
 
-- s03 Voice screen: WebRTC connect, event reducer, tool relay. The desktop run needs `OPENAI_API_KEY` in `.dev.vars` (sponsor).
+- s03 desktop run: `pnpm dev`, Voice tab, a short session with an add and a duplicate add. Needs `OPENAI_API_KEY` in `.dev.vars` (sponsor).
+- s04 spend: migration 0003 `voice_sessions`, usage report, Settings display and caps.
 
 ### Open Questions
 

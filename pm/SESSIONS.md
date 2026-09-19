@@ -7,6 +7,7 @@
 
 ## Log
 *Newest at top.*
+- 260918h · f07 coach-client · built s03 Voice tab: data-channel parser + reducer, WebRTC connect and tool relay (failures returned to the Coach), hide/leave closes the session; 13 client tests, `pnpm check` green at 430; desktop run awaits a key in `.dev.vars` → `features/f07-coach-client-journal.md`
 - 260918g · f07 coach-client · stress-tested (supported recall now leaves the schedule untouched; call-id idempotency via `handoffs`) and opened; built s01 `POST /api/voice/session` with in-repo prompt/tools and s02 `/api/voice/tools/*` (get_vocab, add_to_vault, record_review); 21 tests, `pnpm check` green at 417 → `features/f07-coach-client-journal.md`
 - 260918f · f07 coach-client · drafted the f07 plan (broker, cookie tool routes, Voice screen, spend caps, mp02 prompt tuning folded from TODO); sponsor accepted all four recommendations: tools via cookie routes, bearer `/coach/*` + OpenAPI to v1, caps $0.50 soft / $1.00 hard, voice `marin` (DECISIONS 260918h); f06 Stage 3 re-homed; docs only → `features/f07-coach-client-journal.md`
 - 260918e · f06 coach-contract · built Stages 1–2: `/api/handoffs` (strict validation, per-item created/duplicate, repeat id a no-op), `/api/handoffs/revisions` with preview (empty fields only, `urdu` key-matched, schedule untouched), `/api/vocab/incomplete`; prompts and the CHATGPT panel under the Vocab list; fill-in Inbox item consumed; 396 tests, `pnpm check` green; smoke-test-06 written for the sponsor → `features/f06-coach-contract-journal.md`
