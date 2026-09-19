@@ -7,6 +7,7 @@
 
 ## Log
 *Newest at top.*
+- 260918f · f07 coach-client · drafted the f07 plan (broker, cookie tool routes, Voice screen, spend caps, mp02 prompt tuning folded from TODO); sponsor accepted all four recommendations: tools via cookie routes, bearer `/coach/*` + OpenAPI to v1, caps $0.50 soft / $1.00 hard, voice `marin` (DECISIONS 260918h); f06 Stage 3 re-homed; docs only → `features/f07-coach-client-journal.md`
 - 260918e · f06 coach-contract · built Stages 1–2: `/api/handoffs` (strict validation, per-item created/duplicate, repeat id a no-op), `/api/handoffs/revisions` with preview (empty fields only, `urdu` key-matched, schedule untouched), `/api/vocab/incomplete`; prompts and the CHATGPT panel under the Vocab list; fill-in Inbox item consumed; 396 tests, `pnpm check` green; smoke-test-06 written for the sponsor → `features/f06-coach-contract-journal.md`
 - 260918d · f09 srs-ladder · interval sheet cross-check passed; remote migration 0002 applied after a deploy-first "vault unavailable"; Settings spacing shown as per-unit rows (c6d8429) → `features/f09-srs-ladder-journal.md`
 
@@ -29,4 +30,3 @@
 - 260914g · f01 urdu-core-foundation · opened f01 (doc + 8 slices); sponsor answered Q1–Q5 (Hono chosen); s01 scaffold built, `pnpm check` green; sponsor dropped npm lockfile and created D1 `urdu` → `features/f01-urdu-core-foundation-journal.md`
 
 - 260914f · mp02 gpt-live-spike · sponsor deleted spike Worker (curl 000); closed and archived mp02; Phase 0 done, Phase 1 current → `mini-plans/archive/mp02-gpt-live-spike-journal-archive.md`
-- 260914e · mp02 gpt-live-spike · s06 verdict: Option 2 written into PRD FR-G/FR-B5/FR-I1/App D and PLAN; s05 skipped as moot; no key in repo; Worker delete blocked by classifier, sponsor to run → `mini-plans/mp02-gpt-live-spike-journal.md`

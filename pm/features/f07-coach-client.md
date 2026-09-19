@@ -1,13 +1,13 @@
 # Feature Plan — Coach Client
 
-**Status**: ⚪ DRAFT — *planned 2026-09-18 while f05/f06/f09 smoke tests run; four sponsor questions open (see Open Questions) before `/pm-open`.*
+**Status**: ⚪ DRAFT — *planned 2026-09-18; sponsor questions settled (DECISIONS 260918h); ready for `/pm-stress-test` and `/pm-open`.*
 **Handle**: `f07`
 **Created**: *2026-09-18* · **Updated**: *2026-09-18*
 
 **Owner docs it serves**:
 - `pm/PRD.md` — FR-G Option 2, FR-B3, FR-B5, FR-F1..F3, FR-I1, Appendix D result
 - `pm/DECISIONS.md` — 260911a (contract, ~$0.50/day), 260914b/c (Live Sessions API, Option 2 chosen), 260918b (oral counts only for unprompted recall)
-- `pm/features/f06-coach-contract.md` — Stage 3 (Coach routes, `results`) is built with this feature
+- `pm/features/f06-coach-contract.md` — its FR-F1/F3 logic is built here; its bearer routes and OpenAPI moved to v1 (260918h)
 - Reference code: `spikes/gpt-live/` (SDP route, data-channel tool loop); prompt source `pm/mini-plans/mp02-coach-instructions.md`; evidence `pm/mini-plans/archive/mp02-gpt-live-spike-journal-archive.md`
 
 > **One-line:** A Voice tab where the sponsor talks Urdu with a GPT-Live-1 Coach through a Worker-brokered WebRTC session. The Coach can read due vocab, add words and record tracked oral reviews mid-conversation through Urdu Core, and spend is shown and capped.
@@ -20,6 +20,7 @@ This replaces the ChatGPT Voice + Airtable loop. The sponsor opens the installed
 
 ### Scope
 
+- **Voice:** a fixed `marin` constant for v0, no picker.
 - **Voice screen (new tab).** Start / End / Mute, a live transcript (user and Coach bubbles merged per turn), elapsed time, the running cost of this session, and a line for each tool call ("Adding لباس… added" / "failed: duplicate"). The screen releases the mic and closes the session when it's left or the app is hidden.
 - **Session broker (FR-B5).** `POST /api/voice/session` (session cookie, JSON CSRF rule): `{sdp}` in, `{sessionId, sdp}` out. The Coach config lives on the server: `gpt-live-1`, voice, the in-repo Coach prompt, Responses delegation on `gpt-5.6-luna` with the tool schemas. `OPENAI_API_KEY` is a Worker secret only. The route refuses to start a session when today's spend is at or over the hard cap.
 - **Coach prompt in-repo** (`worker/coach/prompt.ts` or similar): mp02's adapted prompt, with the Airtable sections rewritten for the tools below, plus the tuning notes carried from mp02 (see Planning → Prompt tuning).
@@ -27,13 +28,13 @@ This replaces the ChatGPT Voice + Airtable loop. The sponsor opens the installed
   - `get_vocab` (FR-F1): due items by default, or all / by tag / limit. Returns id, urdu, roman, english, mastery band, due_at.
   - `add_to_vault` (FR-F2): candidates in, a result for each (created with id / duplicate with existing id / rejected). `source=coach`.
   - `record_review` (FR-F3): `{vocab_id?|urdu?, grade, direction: "oral", prompt_support}`. The item is resolved by id, then by `urdu_key`. Unmatched or ambiguous items are reported back, never guessed. An event whose `prompt_support ≠ none` is logged but applies delta 0 (TODO carry-forward, 260918b).
-- **Tool execution path:** the browser gets `response.output_item.done` on the data channel (proven in mp02), POSTs the call to a cookie-authenticated Worker route, and returns the result with `response.item.create` + `response.create`. See Open Question 1.
-- **Spend (FR-G, FR-I1).** When the session ends, the browser reports `session.closed` usage (seconds plus backend tokens), and the Worker records it in a new `voice_sessions` table (migration 0003). Settings shows today's spend and this session's spend. There's a soft daily cap (default $0.50): the Voice screen warns once it's crossed. There's also a hard cap: the client ends the session when the running estimate reaches it, and the broker refuses new sessions. See Open Question 3.
+- **Tool execution path:** the browser gets `response.output_item.done` on the data channel (proven in mp02), POSTs the call to cookie-authenticated `/api/voice/tools/*` routes that call the same domain functions as FR-F, and returns the result with `response.item.create` + `response.create` (260918h).
+- **Spend (FR-G, FR-I1).** When the session ends, the browser reports `session.closed` usage (seconds plus backend tokens), and the Worker records it in a new `voice_sessions` table (migration 0003). Settings shows today's spend and this session's spend. A soft daily cap (default $0.50) makes the Voice screen warn. A hard daily cap (default $1.00) makes the client end the live session on its running estimate, and the broker refuses new sessions once it's reached. Both caps are editable in Settings (a `settings` row each).
 - **Idempotency for reviews:** each voice session's `session_id` acts as the FR-F3 `handoff_id` scope. A retried `record_review` call carries a per-call id (`call_id`), so a network retry can't double-apply.
 
 ### Exclusions
 
-- The Custom GPT (Option 1) and its OpenAPI Action schema are v1 (FR-G). See Open Question 2 on whether FR-F5 / bearer auth move with it.
+- The Custom GPT (Option 1), FR-B3's bearer-token `/coach/*` routes and the FR-F5 OpenAPI description are v1 (260918h). Nothing in v0 calls them.
 - A sideband Durable Object. mp02 proved tool events reach the browser data channel, so it isn't needed unless that stops being true.
 - Mid-session vocab edits, favourites, retagging and ladder changes by voice. The Coach says it can't do them and points to the Vocab tab.
 - Saved transcripts or session history beyond the spend row. It's a non-goal and a privacy cost, with no v0 user story.
@@ -78,15 +79,14 @@ This replaces the ChatGPT Voice + Airtable loop. The sponsor opens the installed
 
 - smoke-test-07 is green on the installed phone app: the session works, tool calls change the vault correctly, a hinted answer leaves the schedule unchanged, and a failed add is not reported as done.
 - The spend display matches the OpenAI dashboard within a few cents, and the hard cap refuses a new session in a forced-low-cap test.
-- f06 Stage 3's scope is done or re-homed per Open Question 2.
 - `spikes/gpt-live/` is deleted, `pnpm check` is green, and the PRD, AGENTS Project state and PLAN are rippled.
 
 ### Roadmap
 
 1. **s01 broker:** `OPENAI_API_KEY` secret wiring, `POST /api/voice/session`, in-repo prompt and tool schemas, Worker tests with stubbed `fetch`. Sponsor: `wrangler secret put OPENAI_API_KEY` (a key with Realtime request + Responses write, per mp02).
-2. **s02 tools:** cookie-authenticated tool route(s) over the f06 domain functions, `record_review` with `prompt_support`, `call_id` idempotency. This is f06 Stage 3's domain work.
+2. **s02 tools:** `/api/voice/tools/*` cookie routes over the f06 domain functions, FR-F3 review resolution, `record_review` with `prompt_support`, `call_id` idempotency.
 3. **s03 Voice screen:** WebRTC connect, event reducer, transcript, tool loop, lifecycle (hide / leave → close).
-4. **s04 spend:** migration 0003 `voice_sessions`, usage report route, Settings display, soft/hard caps.
+4. **s04 spend:** migration 0003 `voice_sessions`, usage report route, Settings display and cap editing, soft/hard caps.
 5. **s05 prompt tuning** against the six notes, and the desktop run.
 6. **s06 phone:** sponsor deploys (with migration 0003 remote), smoke-test-07. Then delete `spikes/gpt-live/` and close.
 
@@ -100,15 +100,12 @@ s01–s02 can be built and fully tested without the sponsor. s03 onwards needs a
 
 ### Next Steps
 
-- Sponsor answers the Open Questions, then `/pm-stress-test` and `/pm-open` f07 (after f05/f09 close, to keep the fronts few).
+- `/pm-stress-test` f07, then `/pm-open` it. s01–s02 need no sponsor and can run alongside the open smoke tests.
 
 ### Open Questions
 
-1. **Tool auth path (sponsor, architecture).** mp02 showed tool calls arrive in the *browser*. FR-B3 says Coach operations take only a bearer token and never the PWA cookie, but the browser can't hold that token (secrets invariant). **Recommended:** the browser relays tool calls to cookie-authenticated `/api/voice/tools/*` routes that call the same domain functions as FR-F. That's an FR-B3 amendment: the bearer applies to *external* Coach clients only. Alternative: a Durable Object holds the sideband WebSocket and runs tools server-side under the Coach identity. That keeps FR-B3 literal but adds a stateful component mp02 found unnecessary.
-2. **Does f06 Stage 3's bearer / `/coach/*` / OpenAPI move to v1? (sponsor, scope).** If Q1 goes the recommended way, nothing in v0 calls bearer routes. Their only consumer is the v1 Custom GPT. **Recommended:** move FR-B3's bearer routes and FR-F5 OpenAPI to v1 with Option 1, and keep FR-F3's review-import logic in v0 (used by voice, and by `results` in pasted handoffs). f06 then closes after smoke-test-06.
-3. **Hard-cap semantics (sponsor).** The Worker can refuse new sessions, but only the browser (or a sideband) can end a live one. **Recommended:** the client ends the session at the hard cap using its running estimate, and the broker refuses new sessions over the cap. A misbehaving client could overshoot by one session. Also, what are the numbers? The PRD says a soft cap of $0.50/day by default. **Recommended:** hard cap $1.00/day, both editable in Settings.
-4. **Voice (sponsor, taste).** mp02 used `marin` throughout. Keep it, or add a picker in Settings? **Recommended:** a fixed `marin` constant for v0, since voice is immutable per session and the picker is cheap to add later.
+- None open. The four draft questions were settled by the sponsor on 2026-09-18 (see Decisions).
 
 ## Decisions
 
-*(none yet — Open Questions above)*
+- 2026-09-18: Sponsor accepted all four draft recommendations. (1) The browser relays tool calls to cookie-authenticated `/api/voice/tools/*` routes over the FR-F domain logic; FR-B3's bearer applies to external Coach clients only (cross-cutting: DECISIONS 260918h). (2) Bearer `/coach/*` routes and FR-F5 OpenAPI move to v1 with the Custom GPT; FR-F1/F3 logic stays v0 (260918h). (3) Caps: soft $0.50/day warns, hard $1.00/day; the client ends a live session at the hard cap and the broker refuses new sessions; both editable in Settings. Accepted risk: a misbehaving client can overshoot by one session. (4) Voice fixed to `marin`; no picker in v0.

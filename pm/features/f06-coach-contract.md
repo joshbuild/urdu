@@ -1,6 +1,6 @@
 # Feature Plan — Coach Contract
 
-**Status**: 🟡 IN PROGRESS — *Stages 1–2 built 2026-09-18 (`pnpm check` green, 396 tests); awaiting smoke-test-06 on the phone. Stage 3 waits for f07.*
+**Status**: 🟡 IN PROGRESS — *Stages 1–2 built 2026-09-18 (`pnpm check` green, 396 tests); awaiting smoke-test-06 on the phone. Stage 3 re-homed (DECISIONS 260918h): FR-F1/F3 logic to f07, bearer routes and OpenAPI to v1. f06 closes after smoke-test-06.*
 **Handle**: `f06`
 **Created**: *2026-09-18* · **Updated**: *2026-09-18*
 
@@ -20,7 +20,7 @@ Vocab drafting should cost nothing beyond the ChatGPT subscription. The app hand
 
 - **Stage 1: new vocab (FR-F2, F4, F6).** A Copy prompt button, an in-repo prompt, a Paste-handoff screen and a session-cookie route that imports `{handoff_id, session_at, proposals}` through the FR-F2 logic. Duplicates are rejected with the existing id, and each item gets its own outcome. A repeated `handoff_id` is a no-op that returns the stored outcome, using the existing `handoffs` table.
 - **Stage 2: fill-in (FR-F7).** Copy fill-in prompt (up to 20 incomplete items with their present fields) and Paste revisions, previewed per item. It fills empty fields only, the echoed `urdu` must match the stored item, and scheduling is untouched.
-- **Stage 3: Coach routes (FR-F1, F3, F5, FR-B3).** Bearer-token `/coach/*` routes, review `results` in handoffs, OpenAPI description. Built with or just before f07.
+- ~~**Stage 3: Coach routes (FR-F1, F3, F5, FR-B3).**~~ Re-homed 2026-09-18 (260918h): FR-F1/F3 logic is built in f07 behind cookie routes; bearer `/coach/*` routes and the FR-F5 OpenAPI description are v1.
 
 ### Exclusions
 
@@ -49,13 +49,13 @@ Vocab drafting should cost nothing beyond the ChatGPT subscription. The app hand
 
 ### Done When
 
-- Stages 1–2 are verified on the phone with a real ChatGPT round trip. Stage 3 is verified with the f07 Voice client, and `pnpm check` is green.
+- Stages 1–2 are verified on the phone with a real ChatGPT round trip. `pnpm check` is green.
 
 ### Roadmap
 
 1. Stage 1: prompt + handoff import route + Paste-handoff screen.
 2. Stage 2: fill-in prompt + revisions route with preview.
-3. Stage 3: bearer auth, `/coach/*` routes, results, OpenAPI (with f07).
+3. ~~Stage 3~~ re-homed (260918h).
 
 ## Status
 
@@ -67,7 +67,7 @@ Vocab drafting should cost nothing beyond the ChatGPT subscription. The app hand
 ### Next Steps
 
 - Sponsor: deploy and run `smoke-tests/smoke-test-06.md` (real ChatGPT round trips for both stages). Tighten the prompt from whatever the app rejects.
-- Stage 3 with f07.
+- `/pm-close` after smoke-test-06.
 
 ### Open Questions
 
@@ -78,3 +78,4 @@ Vocab drafting should cost nothing beyond the ChatGPT subscription. The app hand
 - 2026-09-18: Handoff contract as built. The app writes a fresh ULID `handoff_id` (and `session_at`) into each copied prompt, and the chat echoes them back, so a re-paste is a no-op. `handoffs.status` is `applied` (proposals) or `revised` (fill-ins). An id reused by the other kind of paste is a 409. A payload with any invalid field is rejected whole with the field path (`proposals[2].roman`) and no handoff row, so a corrected reply can reuse the id. Per-item outcomes are only for vault facts: created, duplicate, or no Urdu letters. `results` is refused until Stage 3. A surrounding markdown code fence is stripped client-side as packaging; the JSON inside is never repaired.
 - 2026-09-18: Fill-ins also cover `example_english` (FR-F7 lists four fields; the fifth is the same kind of empty text). The echoed `urdu` is matched by `urdu_key`, so tashkeel differences don't reject a row. Fills use `COALESCE`, so text written between preview and save is never overwritten. The incomplete list puts items missing Roman or English first, max 20.
 - 2026-09-18: Stages 1–2 use the PWA session cookie, not the Coach bearer token. The sponsor is the one pasting, so FR-B3's bearer applies only to the Stage 3 `/coach/*` routes.
+- 2026-09-18: Stage 3 leaves f06 (sponsor, DECISIONS 260918h). Voice tools run through cookie routes in f07, so nothing in v0 calls bearer routes; they and the OpenAPI description go to v1 with the Custom GPT. Handoff `results` stay refused.

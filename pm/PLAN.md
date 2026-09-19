@@ -40,7 +40,7 @@
 ### Phase 3 — Coach connection
 **Goal:** Words from conversation reach the vault with near-zero friction; v0 done.
 - f06 `coach-contract`: FR-F1..F6; its paste path (FR-F2, F4, F6, F7: Copy prompt → ChatGPT chat → paste JSON, for new items and for filling in incomplete ones) is built first, straight after f05/f09, ahead of the rest of Phase 3 (DECISIONS 260918f). Full scope: (Coach routes, bearer auth, handoff idempotency, OpenAPI description, PWA paste-handoff screen).
-- f07 `coach-client`: FR-G Option 2 (chosen by mp02). Voice screen, Worker-brokered GPT-Live-1 WebRTC session (FR-B5), Coach prompt in-repo (start from `mini-plans/mp02-coach-instructions.md` and the TODO tuning notes), tools bound to f06, spend display and caps.
+- f07 `coach-client`: FR-G Option 2 (chosen by mp02). Voice screen, Worker-brokered GPT-Live-1 WebRTC session (FR-B5), Coach prompt in-repo (start from `mini-plans/mp02-coach-instructions.md` and the TODO tuning notes), tools through cookie routes over the f06 domain logic (260918h), spend display and caps. f06 Stage 3's bearer routes and OpenAPI move to v1.
 - **Exit:** After a Voice session, new vocabulary and quiz results are in D1 via the Coach client, with the clipboard handoff verified as a working fallback. v0 is complete; amend `VISION.md` §16 line on custom voice tutors to match the shipped option.
 
 ### Phase 4 — v1 (coarse)
@@ -58,6 +58,6 @@
 | f04 | `features/archive/f04-vocab-ui-archive.md` | 🟢 shipped 2026-09-18 | Browse, search, edit, and create vocabulary; settings. |
 | f05 | `features/f05-review.md` | 🟡 in progress (s01) | Due-item review session with five-grade self-scoring. |
 | f06 | `features/f06-coach-contract.md` | 🟡 in progress (Stages 1–2 built, smoke-test-06 open) | Coach tool routes, bearer auth, clipboard handoff import with Copy prompt, OpenAPI description. |
-| f07 | `features/f07-coach-client.md` | ⚪ draft (4 sponsor questions) | In-app GPT-Live-1 voice Coach (FR-G Option 2, chosen by mp02). |
+| f07 | `features/f07-coach-client.md` | ⚪ draft (ready to open) | In-app GPT-Live-1 voice Coach (FR-G Option 2, chosen by mp02). |
 | f08 | `features/f08-vocab-enrich.md` | on hold | LLM drafts all fields of a new vocab item for review before save (Phase 2, after f05). |
 | f09 | `features/f09-srs-ladder.md` | 🟡 in progress (built) | Versioned geometric review ladders, timestamp scheduling, richer review events (DECISIONS 260918c/e). |
