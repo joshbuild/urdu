@@ -31,8 +31,9 @@
       "simple": { "limit": 5, "period": 60 }
     }
   ],
-  // Secret (not in this file): UNLOCK_SECRET, 24+ chars. Local: .dev.vars; production:
-  // `pnpm wrangler secret put UNLOCK_SECRET`.
+  // Secrets (not in this file): UNLOCK_SECRET, 24+ chars, and OPENAI_API_KEY (f07 voice Coach;
+  // unset means the broker answers 503). Local: .dev.vars; production:
+  // `pnpm wrangler secret put <NAME>`.
   "vars": {
     "HOME_TZ": "America/Vancouver"
   },

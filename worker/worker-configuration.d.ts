@@ -6,6 +6,7 @@ interface __BaseEnv_Env {
 	UNLOCK_LIMITER: RateLimit;
 	HOME_TZ: "America/Vancouver";
 	UNLOCK_SECRET: string;
+	OPENAI_API_KEY: string;
 }
 declare namespace Cloudflare {
 	interface GlobalProps {

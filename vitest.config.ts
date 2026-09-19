@@ -1,6 +1,6 @@
 import { cloudflareTest, readD1Migrations } from "@cloudflare/vitest-pool-workers";
 import { defineConfig } from "vitest/config";
-import { TEST_UNLOCK_SECRET } from "./test/constants";
+import { TEST_OPENAI_KEY, TEST_UNLOCK_SECRET } from "./test/constants";
 
 export default defineConfig({
   test: {
@@ -45,6 +45,7 @@ export default defineConfig({
                 TEST_MIGRATIONS: await readD1Migrations("./migrations"),
                 // Overrides .dev.vars; test/auth.test.ts asserts the override took effect.
                 UNLOCK_SECRET: TEST_UNLOCK_SECRET,
+                OPENAI_API_KEY: TEST_OPENAI_KEY,
               },
             },
           })),

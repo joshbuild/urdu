@@ -199,8 +199,9 @@ export const MAX_HANDOFF_PROPOSALS = 50;
 export const MAX_HANDOFF_REVISIONS = 20;
 export const MAX_HANDOFF_ID_LENGTH = 100;
 
-// handoffs.status values (Appendix A leaves them to f06).
-export const HANDOFF_STATUSES = ["applied", "revised"] as const;
+// handoffs.status values (Appendix A leaves them to f06). The voice ones (f07) key one tool call
+// each, `voice:<session id>:<call id>`, so a retried call returns its first result.
+export const HANDOFF_STATUSES = ["applied", "revised", "voice_add", "voice_review"] as const;
 export type HandoffStatus = (typeof HANDOFF_STATUSES)[number];
 
 // FR-F2 candidate shape.
@@ -270,3 +271,45 @@ export type RevisionsResponse = {
 };
 
 export type IncompleteResponse = { items: VocabItem[]; total: number };
+
+// f07 voice Coach (FR-B5, FR-F1..F3 through cookie routes, DECISIONS 260918h).
+export type VoiceSessionResponse = { sessionId: string; sdp: string };
+
+// Every tool route takes this envelope. `arguments` is the tool call's parsed JSON; the session
+// and call ids make a retried call return its first result.
+export type VoiceToolRequest = { session_id: string; call_id: string; arguments: unknown };
+export const MAX_VOICE_ID_LENGTH = 100;
+
+export type VoiceVocabEntry = {
+  id: string;
+  urdu: string;
+  roman: string | null;
+  english: string | null;
+  mastery: string;
+  due_at: string | null;
+};
+export type GetVocabResult = { items: VoiceVocabEntry[]; total: number };
+
+export type AddToVaultResult = {
+  results: Array<
+    | { urdu: string; outcome: "created"; id: string }
+    | { urdu: string; outcome: "duplicate"; existing_id: string; existing_english: string | null }
+    | { urdu: string; outcome: "rejected"; reason: string }
+  >;
+};
+
+export type RecordReviewResult =
+  | {
+      outcome: "recorded";
+      vocab_id: string;
+      urdu: string;
+      grade: string;
+      // False when prompt support meant the schedule was left alone.
+      counted: boolean;
+      applied_delta: number;
+      mastery: string;
+      due_at: string | null;
+    }
+  | { outcome: "unmatched" | "stale"; reason: string };
+
+export type VoiceToolResult = GetVocabResult | AddToVaultResult | RecordReviewResult;

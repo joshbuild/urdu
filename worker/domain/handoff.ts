@@ -19,7 +19,7 @@ import { createVocab, toItem, type VocabRow } from "./vocab";
 // A handoff_id already used by the other kind of paste is a conflict, not a repeat.
 export const ID_CONFLICT = "id_conflict";
 
-async function storedOutcome<T>(
+export async function storedOutcome<T>(
   db: D1Database,
   id: string,
   status: HandoffStatus,
@@ -34,7 +34,7 @@ async function storedOutcome<T>(
 }
 
 // OR IGNORE: if a concurrent paste of the same id got there first, its row stands.
-function recordHandoff(
+export function recordHandoff(
   db: D1Database,
   id: string,
   payload: unknown,

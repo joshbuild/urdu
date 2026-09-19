@@ -1,6 +1,6 @@
 # Feature Plan — Coach Client
 
-**Status**: ⚪ DRAFT — *planned 2026-09-18; sponsor questions settled (DECISIONS 260918h); ready for `/pm-stress-test` and `/pm-open`.*
+**Status**: 🟡 IN PROGRESS — *s01 broker and s02 tools built, `pnpm check` green (2026-09-18); s03 Voice screen next.*
 **Handle**: `f07`
 **Created**: *2026-09-18* · **Updated**: *2026-09-18*
 
@@ -92,15 +92,27 @@ This replaces the ChatGPT Voice + Airtable loop. The sponsor opens the installed
 
 s01–s02 can be built and fully tested without the sponsor. s03 onwards needs a desktop mic session with a real key (a few cents).
 
+### Stress-test resolutions (2026-09-18)
+
+Agent-resolved from the code; none changes scope.
+
+1. **A supported answer leaves the schedule untouched.** The draft said "applies delta 0", but `scheduleReview` with delta 0 still resets `last_reviewed_at` and `due_at`, which contradicts Done When ("a hinted answer leaves the schedule unchanged"). Resolved: an event with `prompt_support ≠ none` is logged with `applied_delta` 0 and before = after on every schedule field; the vocab row is not written.
+2. **Where `call_id` idempotency lives.** f06's `handoffs` table is reused (its status is free text by design): row id `voice:<sessionId>:<callId>`, status `voice_add` / `voice_review`, the tool result as the outcome. A repeat returns the stored result. The review event's `handoff_id` is the voice session id.
+3. **The hard-cap check needs s04's table.** s01 ships the broker without the cap refusal; s04 adds it with migration 0003 and its test. Done When is unchanged.
+4. **OpenAI errors.** The 502 carries OpenAI's status only. The body is logged server-side, never returned, because OpenAI's auth errors quote a masked key.
+5. **`get_vocab` bounds.** Default 10 due items, at most 50; `scope: "due" | "all"`, optional `tag`.
+
 ## Status
 
 ### Recently Completed
 
+- 2026-09-18: s01 broker and s02 tool routes built; 21 Worker tests, `pnpm check` green at 417.
+- 2026-09-18: stress-tested (five resolutions above) and opened.
 - 2026-09-18: drafted from PRD FR-G/FR-B5, the mp02 journal and the TODO carry-forwards.
 
 ### Next Steps
 
-- `/pm-stress-test` f07, then `/pm-open` it. s01–s02 need no sponsor and can run alongside the open smoke tests.
+- s03 Voice screen: WebRTC connect, event reducer, tool relay. The desktop run needs `OPENAI_API_KEY` in `.dev.vars` (sponsor).
 
 ### Open Questions
 

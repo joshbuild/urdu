@@ -40,7 +40,7 @@ const SORT_ORDER: Readonly<Record<VocabSort, string>> = {
   mastery: "interval_seconds ASC, added_at ASC, id ASC",
 };
 
-async function findIdByKey(db: D1Database, key: string): Promise<string | null> {
+export async function findIdByKey(db: D1Database, key: string): Promise<string | null> {
   const row = await db
     .prepare("SELECT id FROM vocab WHERE urdu_key = ?")
     .bind(key)

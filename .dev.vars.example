@@ -1,2 +1,3 @@
 # Copy to .dev.vars (gitignored) for local `pnpm dev`. Production values are set with `pnpm wrangler secret put`.
 UNLOCK_SECRET="replace-with-a-random-string-of-24-plus-chars"
+OPENAI_API_KEY="sk-replace-with-a-key-with-realtime-and-responses-access"

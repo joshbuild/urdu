@@ -1,6 +1,7 @@
 // Review service (FR-A4). The one place a tracked review changes an item's schedule: PWA reviews
-// call it with source "pwa"; f06's POST /coach/reviews calls it with source "coach" and a
-// handoff id. The arithmetic is shared/ladders.ts scheduleReview.
+// call it with source "pwa"; the f07 voice Coach's record_review calls it with source "coach", the
+// voice session id as handoff id, and its prompt support. The arithmetic is shared/ladders.ts
+// scheduleReview.
 
 import type {
   PromptSupport,
@@ -51,6 +52,7 @@ export async function applyReview(
   now: Date,
   activeLadderId: number,
 ): Promise<ReviewResult> {
+  if ((input.promptSupport ?? "none") !== "none") return logSupported(db, current, input, now);
   const at = now.toISOString();
   const next = scheduleReview(current, input.grade, input.direction, activeLadderId, at);
   const item: VocabItem = {
@@ -138,4 +140,66 @@ export async function applyReview(
       : { ok: false, error: "not_found" };
   }
   return { ok: true, item, event };
+}
+
+// Helped recall (a hint, the answer said first, repetition) is not evidence of memory
+// (DECISIONS 260918b, f07): the event is logged with delta 0 and before = after, and the item's
+// schedule is left exactly as it was, due time included.
+async function logSupported(
+  db: D1Database,
+  current: VocabItem,
+  input: ReviewInput,
+  now: Date,
+): Promise<ReviewResult> {
+  const at = now.toISOString();
+  const event: ReviewEvent = {
+    id: ulid(now.getTime()),
+    vocab_id: current.id,
+    reviewed_at: at,
+    grade: input.grade,
+    direction: input.direction,
+    source: input.source,
+    handoff_id: input.handoffId ?? null,
+    prompt_support: input.promptSupport ?? "none",
+    applied_delta: 0,
+    ladder_before_id: current.ladder_id,
+    step_before: current.ladder_step,
+    interval_before: current.interval_seconds,
+    due_before: current.due_at,
+    ladder_id: current.ladder_id,
+    step_after: current.ladder_step,
+    interval_after: current.interval_seconds,
+    due_after: current.due_at,
+  };
+  const inserted = await db
+    .prepare(
+      `INSERT INTO review_events (id, vocab_id, reviewed_at, grade, direction, source,
+         handoff_id, prompt_support, applied_delta, ladder_before_id, step_before,
+         interval_before, due_before, ladder_id, step_after, interval_after, due_after)
+       SELECT ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
+       WHERE EXISTS (SELECT 1 FROM vocab WHERE id = ?)`,
+    )
+    .bind(
+      event.id,
+      event.vocab_id,
+      event.reviewed_at,
+      event.grade,
+      event.direction,
+      event.source,
+      event.handoff_id,
+      event.prompt_support,
+      event.applied_delta,
+      event.ladder_before_id,
+      event.step_before,
+      event.interval_before,
+      event.due_before,
+      event.ladder_id,
+      event.step_after,
+      event.interval_after,
+      event.due_after,
+      current.id,
+    )
+    .run();
+  if (inserted.meta.changes === 0) return { ok: false, error: "not_found" };
+  return { ok: true, item: current, event };
 }
