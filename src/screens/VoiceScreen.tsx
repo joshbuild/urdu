@@ -1,14 +1,19 @@
-// f07 s03: the Voice tab (FR-G Option 2). Start / End / Mute, a live transcript, elapsed time, the
-// running cost estimate and a line per tool call. Leaving the tab or hiding the app ends the session
-// so the mic is never left open. The Coach's writes go through Urdu Core (connection.ts).
+// f07 s03/s04: the Voice tab (FR-G Option 2). Start / End / Mute, a live transcript, elapsed time,
+// this session's and today's cost, and a line per tool call. Leaving the tab or hiding the app ends
+// the session so the mic is never left open. The Coach's writes go through Urdu Core
+// (connection.ts). Past the soft cap the screen warns; at the hard cap it ends the session, and the
+// broker refuses the next one (FR-G, FR-I1).
 
 import { useCallback, useEffect, useReducer, useRef, useState } from "react";
+import { formatUsd } from "../../shared/voice-cost";
 import { connectVoice, type VoiceConnection } from "../voice/connection";
 import {
-  estimateCost,
+  capState,
   formatElapsed,
   initialVoice,
+  sessionUsd,
   stripMarkdown,
+  todayUsd,
   voiceReducer,
 } from "../voice/events";
 
@@ -35,7 +40,8 @@ export function VoiceScreen({ onLocked }: { onLocked: () => void }) {
     startedAt.current = performance.now();
     setNow(startedAt.current);
     connection.current = connectVoice({
-      onCreated: (sessionId) => dispatch({ type: "created", sessionId }),
+      onCreated: (sessionId, spend) => dispatch({ type: "created", sessionId, spend }),
+      onSpend: (spend, usd) => dispatch({ type: "spend", spend, sessionUsd: usd }),
       onEvent: (event) => {
         switch (event.kind) {
           case "started":
@@ -44,6 +50,8 @@ export function VoiceScreen({ onLocked }: { onLocked: () => void }) {
             return dispatch({ type: "transcript", who: event.who, delta: event.delta });
           case "usage":
             return dispatch({ type: "usage", seconds: event.seconds });
+          case "backend_usage":
+            return dispatch({ type: "backend_usage", input: event.input, output: event.output });
           case "function_call":
             return dispatch({ type: "tool_call", call: event.call });
           case "error":
@@ -101,6 +109,13 @@ export function VoiceScreen({ onLocked }: { onLocked: () => void }) {
   }, [state.turns, state.tools.length]);
 
   const elapsed = state.phase === "idle" ? 0 : now - startedAt.current;
+  const cap = capState(state);
+
+  // The hard cap ends the live session on the running estimate; the broker refuses the next one.
+  // It follows the billed seconds the server reports, so it can only act once usage has arrived.
+  useEffect(() => {
+    if (cap === "hard" && active) end();
+  }, [cap, active, end]);
 
   return (
     <section className="panel voice">
@@ -110,10 +125,23 @@ export function VoiceScreen({ onLocked }: { onLocked: () => void }) {
           {PHASE_LABELS[state.phase]}
         </span>
         <span>{formatElapsed(elapsed)}</span>
-        <span title="Estimate from billed seconds">
-          ${estimateCost(state.phase === "idle" ? 0 : state.seconds).toFixed(2)}
+        <span title="This session, estimated from billed seconds">
+          {formatUsd(sessionUsd(state))}
         </span>
+        {state.spend && (
+          <span title={`Today, against a ${formatUsd(state.spend.hard_cap_usd)} cap`}>
+            {formatUsd(todayUsd(state))} today
+          </span>
+        )}
       </div>
+
+      {cap !== "under" && state.spend && (
+        <p className={cap === "hard" ? "error" : "hint"} role="status">
+          {cap === "hard"
+            ? `Today's ${formatUsd(state.spend.hard_cap_usd)} voice cap is reached. Raise it in Settings, or come back tomorrow.`
+            : `Past today's ${formatUsd(state.spend.soft_cap_usd)} soft cap. Sessions stop at ${formatUsd(state.spend.hard_cap_usd)}.`}
+        </p>
+      )}
 
       <div className="voice-controls">
         {active ? (

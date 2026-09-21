@@ -1,6 +1,6 @@
 # Feature Plan — Coach Client
 
-**Status**: 🟡 IN PROGRESS — *s01–s03 built, deployed, and voice add verified on the phone (2026-09-21); s04 spend next.*
+**Status**: 🟡 IN PROGRESS — *s01–s04 built; voice add verified on the phone (2026-09-21). s05 prompt tuning next; migration 0003 is local-only.*
 **Handle**: `f07`
 **Created**: *2026-09-18* · **Updated**: *2026-09-21*
 
@@ -86,7 +86,7 @@ This replaces the ChatGPT Voice + Airtable loop. The sponsor opens the installed
 1. **s01 broker:** `OPENAI_API_KEY` secret wiring, `POST /api/voice/session`, in-repo prompt and tool schemas, Worker tests with stubbed `fetch`. Sponsor: `wrangler secret put OPENAI_API_KEY` (a key with Realtime request + Responses write, per mp02).
 2. **s02 tools:** `/api/voice/tools/*` cookie routes over the f06 domain functions, FR-F3 review resolution, `record_review` with `prompt_support`, `call_id` idempotency.
 3. **s03 Voice screen:** WebRTC connect, event reducer, transcript, tool loop, lifecycle (hide / leave → close).
-4. **s04 spend:** migration 0003 `voice_sessions`, usage report route, Settings display and cap editing, soft/hard caps.
+4. ~~**s04 spend:** migration 0003 `voice_sessions`, usage report route, Settings display and cap editing, soft/hard caps.~~ *(done 2026-09-21)*
 5. **s05 prompt tuning** against the six notes, and the desktop run.
 6. **s06 phone:** sponsor deploys (with migration 0003 remote), smoke-test-07. Then delete `spikes/gpt-live/` and close.
 
@@ -106,6 +106,7 @@ Agent-resolved from the code; none changes scope.
 
 ### Recently Completed
 
+- 2026-09-21: s04 spend built. Migration 0003 `voice_sessions` (one row per brokered session, `day` in `HOME_TZ`, cumulative usage) and the two cap rows; `shared/voice-cost.ts` prices voice seconds and luna backend tokens for both the Worker and the browser; `GET /api/voice/spend`, `POST /api/voice/usage`, the broker's 429 `cap_reached` refusal, and caps on `PATCH /api/settings`. The Voice tab shows this session and today and ends itself at the hard cap; Settings shows today's spend and edits both caps. 27 new tests, `pnpm check` green at 465.
 - 2026-09-21: deployed with the key as a Worker secret; adding vocab by voice works on the phone. The OpenAI key stays out of `.dev.vars` (260921a), so live checks run against the deployment.
 - 2026-09-18: s03 Voice screen built (Voice tab, WebRTC connect, event reducer, tool relay, hide/leave ends the session); 13 client tests, `pnpm check` green at 430. Not yet run against OpenAI.
 - 2026-09-18: s01 broker and s02 tool routes built; 21 Worker tests, `pnpm check` green at 417.
@@ -115,7 +116,8 @@ Agent-resolved from the code; none changes scope.
 ### Next Steps
 
 - The remaining s03 checks (duplicate add, tracked quiz, hide-to-end, spend) ride smoke-test-07.
-- s04 spend: migration 0003 `voice_sessions`, usage report, Settings display and caps.
+- s05 prompt tuning against the six mp02 notes. The OpenAI key is a Cloudflare secret only (260921a), so tuning is judged against the deployment, not `pnpm dev`.
+- s06: the sponsor applies migration 0003 remotely and deploys, then smoke-test-07 (written at s06). Until then the deployed Worker has no `voice_sessions` table, so **do not deploy s04 without the migration** — every session create would fail.
 
 ### Open Questions
 

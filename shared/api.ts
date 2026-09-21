@@ -74,8 +74,13 @@ export type StatusResponse = {
   active_ladder_id: number;
 };
 
-export type SettingsResponse = { active_ladder_id: number };
-export type UpdateSettingsRequest = { active_ladder_id: number };
+export type SettingsResponse = {
+  active_ladder_id: number;
+  // Daily voice spend caps in dollars (f07 s04).
+  voice_soft_cap_usd: number;
+  voice_hard_cap_usd: number;
+};
+export type UpdateSettingsRequest = Partial<SettingsResponse>;
 
 export const REVIEW_DIRECTIONS = ["ur_en", "en_ur", "oral"] as const;
 export type ReviewDirection = (typeof REVIEW_DIRECTIONS)[number];
@@ -273,7 +278,33 @@ export type RevisionsResponse = {
 export type IncompleteResponse = { items: VocabItem[]; total: number };
 
 // f07 voice Coach (FR-B5, FR-F1..F3 through cookie routes, DECISIONS 260918h).
-export type VoiceSessionResponse = { sessionId: string; sdp: string };
+// The spend figures ride the create response so the screen can warn at the soft cap from its first
+// frame, without a second round trip (f07 s04).
+export type VoiceSessionResponse = { sessionId: string; sdp: string } & VoiceSpendResponse;
+
+// f07 s04 spend (FR-G, FR-I1). Dollars, already priced by shared/voice-cost.ts.
+export type VoiceSpendResponse = {
+  // The HOME_TZ calendar day these totals cover.
+  day: string;
+  today_usd: number;
+  soft_cap_usd: number;
+  hard_cap_usd: number;
+};
+
+// What the browser reports from the data channel. Cumulative, so a repeat is not additive.
+export type VoiceUsageRequest = {
+  session_id: string;
+  seconds: number;
+  backend_input_tokens?: number;
+  backend_output_tokens?: number;
+  // The session is over: stamps ended_at.
+  ended?: boolean;
+};
+
+export type VoiceUsageResponse = VoiceSpendResponse & { session_usd: number };
+
+// The broker's refusal once today's spend has reached the hard cap.
+export type VoiceCapReachedResponse = { error: "cap_reached" } & VoiceSpendResponse;
 
 // Every tool route takes this envelope. `arguments` is the tool call's parsed JSON; the session
 // and call ids make a retried call return its first result.

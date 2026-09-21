@@ -6,17 +6,10 @@ import type {
   AddToVaultResult,
   GetVocabResult,
   RecordReviewResult,
+  VoiceSpendResponse,
   VoiceToolResult,
 } from "../../shared/api";
-
-// mp02 pricing: about $0.05 a minute of session audio, plus ~15 s charged at create. An estimate
-// for the running display and the client-side cap; s04 records the reported usage.
-export const VOICE_RATE_PER_SECOND = 0.05 / 60;
-export const CREATE_CHARGE_SECONDS = 15;
-
-export function estimateCost(seconds: number): number {
-  return (seconds + CREATE_CHARGE_SECONDS) * VOICE_RATE_PER_SECOND;
-}
+import { sessionCost } from "../../shared/voice-cost";
 
 export type Speaker = "user" | "coach";
 export type Turn = { who: Speaker; text: string };
@@ -39,6 +32,12 @@ export type VoiceState = {
   tools: ToolLine[];
   // Billed session seconds as last reported by the server.
   seconds: number;
+  // Delegated backend tokens, summed over the responses the data channel reported (f07 s04).
+  backendInput: number;
+  backendOutput: number;
+  // Today's spend and the caps, as of session create. `todayBeforeUsd` excludes this session, so
+  // the running total stays monotone while the session is live.
+  spend: (VoiceSpendResponse & { todayBeforeUsd: number }) | null;
   muted: boolean;
   error: string | null;
 };
@@ -49,18 +48,47 @@ export const initialVoice: VoiceState = {
   turns: [],
   tools: [],
   seconds: 0,
+  backendInput: 0,
+  backendOutput: 0,
+  spend: null,
   muted: false,
   error: null,
 };
+
+// What this session has cost so far, and what the day stands at with it included.
+export function sessionUsd(state: VoiceState): number {
+  if (state.phase === "idle") return 0;
+  return sessionCost({
+    seconds: state.seconds,
+    backend_input_tokens: state.backendInput,
+    backend_output_tokens: state.backendOutput,
+  });
+}
+
+export function todayUsd(state: VoiceState): number {
+  return (state.spend?.todayBeforeUsd ?? 0) + sessionUsd(state);
+}
+
+export type CapState = "under" | "soft" | "hard";
+
+export function capState(state: VoiceState): CapState {
+  if (!state.spend) return "under";
+  const total = todayUsd(state);
+  if (total >= state.spend.hard_cap_usd) return "hard";
+  return total >= state.spend.soft_cap_usd ? "soft" : "under";
+}
 
 export type FunctionCall = { name: string; callId: string; arguments: string };
 
 export type VoiceAction =
   | { type: "connect" }
-  | { type: "created"; sessionId: string }
+  | { type: "created"; sessionId: string; spend: VoiceSpendResponse }
   | { type: "started" }
   | { type: "transcript"; who: Speaker; delta: string }
   | { type: "usage"; seconds: number }
+  | { type: "backend_usage"; input: number; output: number }
+  // The server's figures after a usage report; `sessionUsd` is what it recorded for this session.
+  | { type: "spend"; spend: VoiceSpendResponse; sessionUsd: number }
   | { type: "tool_call"; call: FunctionCall }
   | { type: "tool_result"; callId: string; ok: boolean; detail: string }
   | { type: "mute"; muted: boolean }
@@ -76,7 +104,13 @@ export function voiceReducer(state: VoiceState, action: VoiceAction): VoiceState
       }
       return { ...initialVoice, phase: "connecting" };
     case "created":
-      return state.phase === "connecting" ? { ...state, sessionId: action.sessionId } : state;
+      return state.phase === "connecting"
+        ? {
+            ...state,
+            sessionId: action.sessionId,
+            spend: { ...action.spend, todayBeforeUsd: action.spend.today_usd },
+          }
+        : state;
     case "started":
       return state.phase === "connecting" ? { ...state, phase: "live" } : state;
     case "transcript": {
@@ -92,6 +126,22 @@ export function voiceReducer(state: VoiceState, action: VoiceAction): VoiceState
     }
     case "usage":
       return action.seconds >= state.seconds ? { ...state, seconds: action.seconds } : state;
+    case "backend_usage":
+      // Each response reports its own tokens, so these accumulate rather than replace.
+      return {
+        ...state,
+        backendInput: state.backendInput + action.input,
+        backendOutput: state.backendOutput + action.output,
+      };
+    case "spend":
+      // Rebased so the display keeps showing the day total the server just confirmed.
+      return {
+        ...state,
+        spend: {
+          ...action.spend,
+          todayBeforeUsd: Math.max(0, action.spend.today_usd - action.sessionUsd),
+        },
+      };
     case "tool_call": {
       if (state.tools.some((t) => t.callId === action.call.callId)) return state;
       const line: ToolLine = {
@@ -130,6 +180,7 @@ export type ChannelEvent =
   | { kind: "started" }
   | { kind: "transcript"; who: Speaker; delta: string }
   | { kind: "usage"; seconds: number }
+  | { kind: "backend_usage"; input: number; output: number }
   | { kind: "function_call"; call: FunctionCall }
   | { kind: "closed" }
   | { kind: "error"; message: string };
@@ -175,6 +226,14 @@ export function parseChannelEvent(raw: string): ChannelEvent[] {
     case "response.event": {
       // Delegated backend events arrive wrapped; a finished function_call item is a tool call (mp02).
       const inner = obj(ev.event);
+      // A finished backend response carries the delegation's token usage (mp02 read it the same way).
+      if (inner?.type === "response.completed") {
+        const usage = obj(obj(inner.response)?.usage);
+        const count = (v: unknown) => (typeof v === "number" && Number.isFinite(v) ? v : 0);
+        const input = count(usage?.input_tokens);
+        const output = count(usage?.output_tokens);
+        return input || output ? [{ kind: "backend_usage", input, output }] : [];
+      }
       if (inner?.type !== "response.output_item.done") return [];
       const item = obj(inner.item);
       if (item?.type !== "function_call") return [];

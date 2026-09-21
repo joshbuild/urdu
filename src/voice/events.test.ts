@@ -1,16 +1,20 @@
 import { describe, expect, it } from "vitest";
 import {
-  estimateCost,
+  capState,
   type FunctionCall,
   formatElapsed,
   initialVoice,
   parseChannelEvent,
+  sessionUsd,
   stripMarkdown,
+  todayUsd,
   toolLabel,
   toolSummary,
   type VoiceAction,
   voiceReducer,
 } from "./events";
+
+const SPEND = { day: "2026-09-21", today_usd: 0, soft_cap_usd: 0.5, hard_cap_usd: 1 };
 
 const run = (actions: VoiceAction[], from = initialVoice) => actions.reduce(voiceReducer, from);
 const call = (name: string, args: object, callId = "c1"): FunctionCall => ({
@@ -21,7 +25,7 @@ const call = (name: string, args: object, callId = "c1"): FunctionCall => ({
 
 describe("voiceReducer", () => {
   it("goes idle → connecting → live → closing → ended", () => {
-    let s = run([{ type: "connect" }, { type: "created", sessionId: "s1" }]);
+    let s = run([{ type: "connect" }, { type: "created", sessionId: "s1", spend: SPEND }]);
     expect(s).toMatchObject({ phase: "connecting", sessionId: "s1" });
     s = run([{ type: "started" }], s);
     expect(s.phase).toBe("live");
@@ -188,9 +192,103 @@ describe("helpers", () => {
     expect(stripMarkdown("**بہت** اچھا\n## Note")).toBe("بہت اچھا\nNote");
   });
 
-  it("formats elapsed time and estimates cost", () => {
+  it("formats elapsed time", () => {
     expect(formatElapsed(65_400)).toBe("1:05");
     expect(formatElapsed(-5)).toBe("0:00");
-    expect(estimateCost(45)).toBeCloseTo(0.05);
+  });
+});
+
+describe("spend and caps", () => {
+  const live = () =>
+    run([
+      { type: "connect" },
+      { type: "created", sessionId: "s1", spend: SPEND },
+      { type: "started" },
+    ]);
+
+  it("prices the session from billed seconds and backend tokens", () => {
+    // 45 s + the 15 s create charge = one minute at $0.05, plus a token or two.
+    const s = run(
+      [
+        { type: "usage", seconds: 45 },
+        { type: "backend_usage", input: 1_000_000, output: 0 },
+      ],
+      live(),
+    );
+    expect(sessionUsd(s)).toBeCloseTo(0.05 + 0.2, 5);
+    expect(sessionUsd(initialVoice)).toBe(0);
+  });
+
+  it("accumulates backend usage across responses", () => {
+    const s = run(
+      [
+        { type: "backend_usage", input: 1000, output: 50 },
+        { type: "backend_usage", input: 2000, output: 60 },
+      ],
+      live(),
+    );
+    expect(s).toMatchObject({ backendInput: 3000, backendOutput: 110 });
+  });
+
+  it("adds this session to the day total the broker reported", () => {
+    const opened = run([{ type: "connect" }], initialVoice);
+    const s = run(
+      [
+        { type: "created", sessionId: "s1", spend: { ...SPEND, today_usd: 0.3 } },
+        { type: "started" },
+        { type: "usage", seconds: 45 },
+      ],
+      opened,
+    );
+    expect(todayUsd(s)).toBeCloseTo(0.35, 5);
+  });
+
+  it("warns past the soft cap and stops at the hard cap", () => {
+    const opened = run([{ type: "connect" }], initialVoice);
+    const base = run(
+      [
+        { type: "created", sessionId: "s1", spend: { ...SPEND, today_usd: 0.4 } },
+        { type: "started" },
+      ],
+      opened,
+    );
+    expect(capState(base)).toBe("under");
+    // With the day at $0.40, 145 billed seconds (plus the create charge) adds $0.13.
+    expect(capState(run([{ type: "usage", seconds: 145 }], base))).toBe("soft");
+    expect(capState(run([{ type: "usage", seconds: 800 }], base))).toBe("hard");
+  });
+
+  it("has no cap opinion before the broker answers", () => {
+    expect(capState(initialVoice)).toBe("under");
+    expect(capState(run([{ type: "connect" }]))).toBe("under");
+  });
+
+  it("rebases the day total on the server's figure after reporting usage", () => {
+    const s = run(
+      [
+        { type: "usage", seconds: 45 },
+        { type: "spend", spend: { ...SPEND, today_usd: 0.62 }, sessionUsd: 0.05 },
+      ],
+      live(),
+    );
+    expect(todayUsd(s)).toBeCloseTo(0.62, 5);
+  });
+});
+
+describe("backend usage events", () => {
+  it("reads token counts off a completed delegated response", () => {
+    const raw = JSON.stringify({
+      type: "response.event",
+      event: {
+        type: "response.completed",
+        response: { usage: { input_tokens: 2342, output_tokens: 90 } },
+      },
+    });
+    expect(parseChannelEvent(raw)).toEqual([{ kind: "backend_usage", input: 2342, output: 90 }]);
+  });
+
+  it("ignores a completed response that reports no usage", () => {
+    const raw = JSON.stringify({ type: "response.event", event: { type: "response.completed" } });
+    expect(parseChannelEvent(raw)).toEqual([]);
   });
 });

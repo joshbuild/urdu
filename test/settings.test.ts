@@ -27,14 +27,16 @@ describe("GET/PATCH /api/settings", () => {
   it("defaults to Moderate (3)", async () => {
     expect(await json<SettingsResponse>(await api("GET", "/api/settings"))).toEqual({
       active_ladder_id: 3,
+      voice_soft_cap_usd: 0.5,
+      voice_hard_cap_usd: 1,
     });
   });
 
   it.each([2, 3, 4, 5, 6])("switches to preset %i", async (id) => {
-    expect(await json(await api("PATCH", "/api/settings", { active_ladder_id: id }))).toEqual({
-      active_ladder_id: id,
-    });
-    expect(await json(await api("GET", "/api/settings"))).toEqual({ active_ladder_id: id });
+    expect(await json(await api("PATCH", "/api/settings", { active_ladder_id: id }))).toMatchObject(
+      { active_ladder_id: id },
+    );
+    expect(await json(await api("GET", "/api/settings"))).toMatchObject({ active_ladder_id: id });
     expect(await json(await api("GET", "/api/status"))).toMatchObject({ active_ladder_id: id });
   });
 
@@ -48,7 +50,7 @@ describe("GET/PATCH /api/settings", () => {
     expect(await json(await api("PATCH", "/api/settings", body), 400)).toMatchObject({
       error: "invalid_request",
     });
-    expect(await json(await api("GET", "/api/settings"))).toEqual({ active_ladder_id: 3 });
+    expect(await json(await api("GET", "/api/settings"))).toMatchObject({ active_ladder_id: 3 });
   });
 
   it("requires a session", async () => {

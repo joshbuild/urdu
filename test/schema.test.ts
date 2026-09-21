@@ -79,6 +79,7 @@ describe("migrations", () => {
       "settings",
       "tags",
       "vocab",
+      "voice_sessions",
     ]);
   });
 

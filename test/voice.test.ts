@@ -99,7 +99,7 @@ describe("POST /api/voice/session", () => {
     const body = await json<VoiceSessionResponse>(
       await api("POST", "/api/voice/session", { sdp: OFFER }),
     );
-    expect(body).toEqual({ sessionId: "sess_abc", sdp: ANSWER });
+    expect(body).toMatchObject({ sessionId: "sess_abc", sdp: ANSWER });
 
     const [, init] = spy.mock.calls.find(([input]) => String(input) === LIVE_SESSIONS_URL) ?? [];
     const headers = new Headers(init?.headers);

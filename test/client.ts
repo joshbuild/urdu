@@ -7,13 +7,27 @@ const COOKIE = "__Host-urdu_session";
 
 let ipCounter = 0;
 
-export const TABLES = ["review_events", "vocab", "handoffs", "tags", "sessions"] as const;
+export const TABLES = [
+  "review_events",
+  "vocab",
+  "handoffs",
+  "tags",
+  "sessions",
+  "voice_sessions",
+] as const;
 
-// Also puts the active ladder back to the default (Moderate, id 3).
+// Also puts the settings rows back to their defaults: the Moderate ladder (id 3) and the f07
+// spend caps ($0.50 soft / $1.00 hard).
 export async function clearTables(): Promise<void> {
   await env.DB.batch([
     ...TABLES.map((t) => env.DB.prepare(`DELETE FROM ${t}`)),
     env.DB.prepare("INSERT OR REPLACE INTO settings (key, value) VALUES ('active_ladder_id', '3')"),
+    env.DB.prepare(
+      "INSERT OR REPLACE INTO settings (key, value) VALUES ('voice_soft_cap_usd', '0.5')",
+    ),
+    env.DB.prepare(
+      "INSERT OR REPLACE INTO settings (key, value) VALUES ('voice_hard_cap_usd', '1')",
+    ),
   ]);
 }
 

@@ -705,7 +705,8 @@ button.link {
 /* f07 s03: the Voice tab. Coach turns sit left, the learner's right; tool lines are quiet. */
 .voice-status {
   display: flex;
-  gap: 16px;
+  flex-wrap: wrap;
+  gap: 4px 16px;
   align-items: center;
   font-variant-numeric: tabular-nums;
 }

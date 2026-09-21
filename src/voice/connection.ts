@@ -3,11 +3,21 @@
 // each tool call on the data channel to /api/voice/tools/* with the session cookie. Every result,
 // failure included, goes back to the Coach so it never confirms a write that did not happen.
 
-import type { VoiceSessionResponse, VoiceToolRequest, VoiceToolResult } from "../../shared/api";
+import type {
+  VoiceSessionResponse,
+  VoiceSpendResponse,
+  VoiceToolRequest,
+  VoiceToolResult,
+  VoiceUsageRequest,
+  VoiceUsageResponse,
+} from "../../shared/api";
+import { NO_USAGE, type VoiceUsage } from "../../shared/voice-cost";
 import { type ChannelEvent, type FunctionCall, parseChannelEvent, toolSummary } from "./events";
 
 export type ConnectionHandlers = {
-  onCreated: (sessionId: string) => void;
+  onCreated: (sessionId: string, spend: VoiceSpendResponse) => void;
+  // The server's spend figures after this session's usage was recorded.
+  onSpend: (spend: VoiceSpendResponse, sessionUsd: number) => void;
   onEvent: (event: ChannelEvent) => void;
   onToolResult: (callId: string, ok: boolean, detail: string) => void;
   // The session is over (closed, failed or torn down); `error` explains a failure.
@@ -30,6 +40,8 @@ function sessionError(status: number, body: unknown): string {
   const error = (body as { error?: unknown } | null)?.error;
   if (error === "voice_unconfigured")
     return "Voice is not set up on the server yet (no OpenAI key).";
+  if (error === "cap_reached")
+    return "Today's voice spending cap has been reached. Raise it in Settings, or come back tomorrow.";
   if (status === 502) return "OpenAI refused to start the session. Try again in a moment.";
   return "Could not start a voice session. Try again.";
 }
@@ -79,6 +91,26 @@ export function connectVoice(handlers: ConnectionHandlers): VoiceConnection {
   let audio: HTMLAudioElement | null = null;
   let sessionId = "";
   let graceTimer: ReturnType<typeof setTimeout> | undefined;
+  // Usage is tracked here as well as in the reducer, so the final report does not depend on React
+  // having re-rendered before teardown.
+  const usage: VoiceUsage = { ...NO_USAGE };
+
+  // Reporting is best effort: the Worker already recorded the session's create charge, so a lost
+  // report understates one session rather than losing the day.
+  async function reportUsage() {
+    if (!sessionId) return;
+    const body: VoiceUsageRequest = { session_id: sessionId, ended: true, ...usage };
+    try {
+      const response = await fetch("/api/voice/usage", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+      if (!response.ok) return;
+      const data = (await response.json()) as VoiceUsageResponse;
+      handlers.onSpend(data, data.session_usd);
+    } catch {}
+  }
 
   function stopMic() {
     for (const track of mic?.getTracks() ?? []) track.stop();
@@ -97,6 +129,7 @@ export function connectVoice(handlers: ConnectionHandlers): VoiceConnection {
     stopMic();
     if (audio) audio.srcObject = null;
     handlers.onClosed(error);
+    void reportUsage();
   }
 
   function send(message: object) {
@@ -122,6 +155,11 @@ export function connectVoice(handlers: ConnectionHandlers): VoiceConnection {
 
   function onMessage(data: unknown) {
     for (const event of parseChannelEvent(String(data))) {
+      if (event.kind === "usage") usage.seconds = Math.max(usage.seconds, event.seconds);
+      if (event.kind === "backend_usage") {
+        usage.backend_input_tokens += event.input;
+        usage.backend_output_tokens += event.output;
+      }
       if (event.kind === "function_call") void relay(event.call);
       handlers.onEvent(event);
       if (event.kind === "closed") teardown();
@@ -173,7 +211,7 @@ export function connectVoice(handlers: ConnectionHandlers): VoiceConnection {
       if (closed) return;
       const session = data as VoiceSessionResponse;
       sessionId = session.sessionId;
-      handlers.onCreated(sessionId);
+      handlers.onCreated(sessionId, session);
       await peer.setRemoteDescription({ type: "answer", sdp: session.sdp });
     } catch {
       teardown("Could not connect to the Coach. Check your connection and try again.");

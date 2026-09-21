@@ -2,7 +2,7 @@
 
 *Verbose per-front record. Hub: `pm/STATUS.md`; doc: `f07-coach-client.md`.*
 
-**Current state:** 🟡 in progress; s01–s03 built and green, voice add verified on the phone 2026-09-21; s04 spend next.
+**Current state:** 🟡 in progress; s01–s04 built and green, voice add verified on the phone 2026-09-21; s05 prompt tuning next, and migration 0003 still needs applying remotely.
 
 ## 2026-09-18 — drafted; sponsor questions settled
 
@@ -33,3 +33,39 @@ New Voice tab between Review and Settings. `src/voice/events.ts` is pure: `parse
 The sponsor put `OPENAI_API_KEY` in as a Worker secret (interactively, never on disk) and deployed. Adding vocabulary by voice worked on the phone: the session connected and the add landed in the vault. That is the first live evidence for s01–s03 end to end. The rest of the s03 checks (duplicate add, tracked quiz, hide-to-end, spend) are smoke-test-07's job.
 
 Decided in passing: the OpenAI key lives only in Cloudflare, not in `.dev.vars`, so no agent on this machine can read it; live voice checks run against the deployment instead of `pnpm dev`. Two sponsor captures went to the Inbox — Coach-side correcting/amending of existing items (with an opt-in interval reset), and kept transcripts with an expiry setting, re-openable and tappable to speak, which reverses an f07 exclusion.
+
+## 2026-09-21 — s04 spend built
+
+Migration 0003 adds `voice_sessions`: one row per brokered session, written by the broker itself so
+a session that never reports back still costs its 15 s create charge. `day` is the `HOME_TZ`
+calendar day the session started on, stored rather than derived — the daily total is an indexed
+equality scan and a session running across local midnight stays on the day it began. Usage columns
+take `max(stored, reported)`, because the data channel's figures are cumulative and a late or
+retried report must never lower a session's recorded spend. Cost is *not* a column:
+`shared/voice-cost.ts` prices the stored usage, so a corrected rate reprices history instead of
+stranding old rows on an old price.
+
+`shared/voice-cost.ts` is the single source of truth the Worker and the browser share (mp02's
+pricing read: $0.05/min voice + 15 s at create; luna $0.20/$1.20 per 1M tokens). It replaced the
+client-only `estimateCost`. Its test caught a real bug: `capOrDefault` used `Number(stored)`, and
+`Number(null)` is 0 — a valid cap — so a missing settings row would have silently meant "refuse
+every session" rather than falling back to the default.
+
+Routes: `GET /api/voice/spend`, `POST /api/voice/usage` (404s an id this Worker never brokered, so
+a stray client cannot invent spend), and the broker's 429 `cap_reached` — checked *before* the
+OpenAI call, with a test asserting `fetch` was never reached. `PATCH /api/settings` now takes both
+caps and is partial; it refuses a soft cap above the hard cap, which would otherwise warn only
+after the session had already been refused. A zero cap is legal and stops voice entirely.
+
+Client: the reducer tracks backend tokens (parsed from the wrapped `response.completed` usage) and
+keeps `todayBeforeUsd` from the create response, so the running day total is monotone while live
+and is rebased on the server's figure once usage is reported. The Voice tab shows this session and
+today, warns past the soft cap and ends itself at the hard cap; Settings shows today's spend and
+edits both caps. The connection reports final usage from its own counters at teardown rather than
+from React state, so the report does not depend on a re-render happening first.
+
+27 new tests (`test/voice-spend.test.ts` 16, `shared/voice-cost.test.ts` 11, plus client cases);
+`pnpm check` green at 465. Three existing test files were widened for the new response fields.
+
+**Not deployable on its own:** migration 0003 is local only. Deploying s04 before the sponsor
+applies it remotely would make every session create fail on a missing table.
