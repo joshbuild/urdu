@@ -1,8 +1,8 @@
 # Feature Plan — Coach Client
 
-**Status**: 🟡 IN PROGRESS — *s01 broker, s02 tools and s03 Voice screen built, `pnpm check` green (2026-09-18); s03 awaits a desktop run with a real key; s04 spend next.*
+**Status**: 🟡 IN PROGRESS — *s01–s03 built, deployed, and voice add verified on the phone (2026-09-21); s04 spend next.*
 **Handle**: `f07`
-**Created**: *2026-09-18* · **Updated**: *2026-09-18*
+**Created**: *2026-09-18* · **Updated**: *2026-09-21*
 
 **Owner docs it serves**:
 - `pm/PRD.md` — FR-G Option 2, FR-B3, FR-B5, FR-F1..F3, FR-I1, Appendix D result
@@ -106,6 +106,7 @@ Agent-resolved from the code; none changes scope.
 
 ### Recently Completed
 
+- 2026-09-21: deployed with the key as a Worker secret; adding vocab by voice works on the phone. The OpenAI key stays out of `.dev.vars` (260921a), so live checks run against the deployment.
 - 2026-09-18: s03 Voice screen built (Voice tab, WebRTC connect, event reducer, tool relay, hide/leave ends the session); 13 client tests, `pnpm check` green at 430. Not yet run against OpenAI.
 - 2026-09-18: s01 broker and s02 tool routes built; 21 Worker tests, `pnpm check` green at 417.
 - 2026-09-18: stress-tested (five resolutions above) and opened.
@@ -113,7 +114,7 @@ Agent-resolved from the code; none changes scope.
 
 ### Next Steps
 
-- s03 desktop run: `pnpm dev`, Voice tab, a short session with an add and a duplicate add. Needs `OPENAI_API_KEY` in `.dev.vars` (sponsor).
+- The remaining s03 checks (duplicate add, tracked quiz, hide-to-end, spend) ride smoke-test-07.
 - s04 spend: migration 0003 `voice_sessions`, usage report, Settings display and caps.
 
 ### Open Questions

@@ -2,7 +2,7 @@
 
 *Verbose per-front record. Hub: `pm/STATUS.md`; doc: `f07-coach-client.md`.*
 
-**Current state:** 🟡 in progress; s01–s03 built and green; s03 desktop run (needs a key in `.dev.vars`), then s04 spend.
+**Current state:** 🟡 in progress; s01–s03 built and green, voice add verified on the phone 2026-09-21; s04 spend next.
 
 ## 2026-09-18 — drafted; sponsor questions settled
 
@@ -27,3 +27,9 @@ Sponsor before s03: add `OPENAI_API_KEY` to `.dev.vars` (then `pnpm types` shoul
 New Voice tab between Review and Settings. `src/voice/events.ts` is pure: `parseChannelEvent` maps the mp02-observed data-channel events (session.started, transcript deltas, usage, session.closed, error, and `response.event` wrapping a finished `function_call`) and `voiceReducer` merges transcript fragments per speaker, tracks each tool call pending → done/failed by `call_id`, and keeps billed seconds. `toolSummary` marks an add failed unless every item was created, so a duplicate reads as "failed: already in vault". `src/voice/connection.ts` owns the WebRTC peer, relays each call to `/api/voice/tools/*`, and returns every result, errors included (401, 4xx message, network), to the Coach with `response.item.create` + `response.create`. `connectVoice` returns its handle synchronously so leaving mid-connect cancels cleanly. Lifecycle: End and leaving the tab send `session.close` (mic muted at once, 20 s grace for final usage); hiding the app ends the session; `pagehide` tears down at once. Running cost is the mp02 estimate (seconds + 15 s create × $0.05/min); s04 records real usage and enforces caps.
 
 13 client tests; `pnpm check` green at 430. Not run against OpenAI: `.dev.vars` has no `OPENAI_API_KEY` yet.
+
+## 2026-09-21 — phone check: voice add works
+
+The sponsor put `OPENAI_API_KEY` in as a Worker secret (interactively, never on disk) and deployed. Adding vocabulary by voice worked on the phone: the session connected and the add landed in the vault. That is the first live evidence for s01–s03 end to end. The rest of the s03 checks (duplicate add, tracked quiz, hide-to-end, spend) are smoke-test-07's job.
+
+Decided in passing: the OpenAI key lives only in Cloudflare, not in `.dev.vars`, so no agent on this machine can read it; live voice checks run against the deployment instead of `pnpm dev`. Two sponsor captures went to the Inbox — Coach-side correcting/amending of existing items (with an opt-in interval reset), and kept transcripts with an expiry setting, re-openable and tappable to speak, which reverses an f07 exclusion.

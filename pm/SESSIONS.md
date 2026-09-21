@@ -7,6 +7,7 @@
 
 ## Log
 *Newest at top.*
+- 260921a · f07 coach-client · sponsor put the OpenAI key in as a Worker secret (never local — agents cannot read it) and deployed; adding vocab by voice worked on the phone, first live evidence for s01–s03; two sponsor captures to the Inbox (Coach-side edits with optional interval reset; kept transcripts with expiry, re-openable and tap-to-speak) → `features/f07-coach-client-journal.md`
 - 260918h · f07 coach-client · built s03 Voice tab: data-channel parser + reducer, WebRTC connect and tool relay (failures returned to the Coach), hide/leave closes the session; 13 client tests, `pnpm check` green at 430; desktop run awaits a key in `.dev.vars` → `features/f07-coach-client-journal.md`
 - 260918g · f07 coach-client · stress-tested (supported recall now leaves the schedule untouched; call-id idempotency via `handoffs`) and opened; built s01 `POST /api/voice/session` with in-repo prompt/tools and s02 `/api/voice/tools/*` (get_vocab, add_to_vault, record_review); 21 tests, `pnpm check` green at 417 → `features/f07-coach-client-journal.md`
 - 260918f · f07 coach-client · drafted the f07 plan (broker, cookie tool routes, Voice screen, spend caps, mp02 prompt tuning folded from TODO); sponsor accepted all four recommendations: tools via cookie routes, bearer `/coach/*` + OpenAPI to v1, caps $0.50 soft / $1.00 hard, voice `marin` (DECISIONS 260918h); f06 Stage 3 re-homed; docs only → `features/f07-coach-client-journal.md`
@@ -28,7 +29,5 @@
 - 260916a · f01 / Codex handoff · oriented Codex, installed 12 adapters to canonical Claude PM skills, aligned agent guidance; typecheck passes, full checks/dev blocked by Windows subprocess EPERM; no product slices advanced → `features/f01-urdu-core-foundation-journal.md`
 - 260914j · f01 urdu-core-foundation · s06 review + export found uncommitted after an interrupted session; no other loose ends; verified (`pnpm check` green, 194 tests) and committed → `features/f01-urdu-core-foundation-journal.md`
 - 260914i · f01 urdu-core-foundation · s05 vocab + due + status found uncommitted after an interrupted session; verified (`pnpm check` green, 175 tests) and committed; spike vars gone from `Env` → `features/f01-urdu-core-foundation-journal.md`
-- 260914h · f01 urdu-core-foundation · s02 shared rules, s03 schema, s04 auth built (s04 finished after an interrupted session); `pnpm check` green, 130 tests → `features/f01-urdu-core-foundation-journal.md`
-- 260914g · f01 urdu-core-foundation · opened f01 (doc + 8 slices); sponsor answered Q1–Q5 (Hono chosen); s01 scaffold built, `pnpm check` green; sponsor dropped npm lockfile and created D1 `urdu` → `features/f01-urdu-core-foundation-journal.md`
 
-- 260914f · mp02 gpt-live-spike · sponsor deleted spike Worker (curl 000); closed and archived mp02; Phase 0 done, Phase 1 current → `mini-plans/archive/mp02-gpt-live-spike-journal-archive.md`
+*Older lines roll off; the journals and git history keep them.*

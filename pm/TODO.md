@@ -8,6 +8,9 @@
 ## Inbox
 *Untriaged captures. Drain via `/pm-triage`.*
 
+- Let the Coach correct or amend an existing vocab item mid-conversation (Roman, English, notes, tags — the fields f06's revisions path already fills), with an option to reset the review interval, defaulting to **no reset**. Sponsor capture 2026-09-21 after the phone voice-add run. Today the Coach can only add and review; f07 excludes mid-session edits and points to the Vocab tab. Likely a fourth voice tool plus its FR-F contract row. #agent-triage
+- Keep conversation transcripts: a setting for expiry (default 7 days), a way to reopen past sessions, and tapping a speech bubble to hear it read aloud. Sponsor capture 2026-09-21. **Reverses an f07 exclusion** ("saved transcripts … a non-goal and a privacy cost"), so it needs a scope decision and storage (which surface, D1 or local, and what the export does). Probably its own feature rather than an f07 slice. #agent-triage
+
 
 ## Tasks
 *Bullets, each tagged.*

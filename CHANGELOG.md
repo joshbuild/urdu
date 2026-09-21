@@ -4,6 +4,8 @@
 
 ### Added
 
+- Voice tab: talk Urdu with the Coach, with a live transcript, elapsed time and a running cost; ask it to add a word and see each add succeed or fail before it confirms. Leaving the tab or hiding the app ends the session.
+
 - ChatGPT round trip on the Vocab tab: copy a prompt, paste ChatGPT's JSON reply to add new words (duplicates flagged), or copy the incomplete items and paste back their missing fields, previewed before saving.
 - Review spacing setting with five presets (Dense to Very wide, Moderate by default); reviews start at 3 hours and reach up to 10 years, and changing the setting moves no due dates. Each preset lists its intervals grouped by hours, days, weeks, months and years.
 - Reviews are scheduled to the hour: lists show "Due in 7 h", and mastery pills show the level and interval ("Firm • 3 wk").

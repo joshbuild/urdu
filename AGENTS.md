@@ -145,6 +145,8 @@ retaining the handle and adding `-archive`; update live references.
 
 ## Execution notes
 
+The OpenAI key (`OPENAI_API_KEY`) is a Cloudflare Worker secret only and is deliberately absent from `.dev.vars`, so agents on this machine cannot read it (DECISIONS 260921a); `pnpm dev` therefore reports `voice_unconfigured` on the Voice tab and live voice checks run against the deployment.
+
 Use the sponsor runbook in the active f01 doc for production secrets,
 remote migrations, deployment and phone verification. Local checks do not
 establish production readiness. Never print `.dev.vars` secret values.
