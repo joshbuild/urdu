@@ -7,6 +7,7 @@
 
 ## Log
 *Newest at top.*
+- 260922a · f09 srs-ladder · finished smoke-test-09 (A5 made paste-safe with `read -rs` after bash history expansion ate the secret; A3 reworded; A4 confirmed from the deployed CSS; 23/23 from `scripts/smoke.ts`; Part B green on the phone) and closed the front — badge 🟢 shipped, doc/journal/smoke archived, roster + STATUS repointed; sponsor capture folded into f08 → `features/archive/f09-srs-ladder-journal-archive.md`
 - 260921a · f07 coach-client · sponsor put the OpenAI key in as a Worker secret (never local — agents cannot read it) and deployed; adding vocab by voice worked on the phone, first live evidence for s01–s03; two sponsor captures to the Inbox (Coach-side edits with optional interval reset; kept transcripts with expiry, re-openable and tap-to-speak) → `features/f07-coach-client-journal.md`
 - 260918h · f07 coach-client · built s03 Voice tab: data-channel parser + reducer, WebRTC connect and tool relay (failures returned to the Coach), hide/leave closes the session; 13 client tests, `pnpm check` green at 430; desktop run awaits a key in `.dev.vars` → `features/f07-coach-client-journal.md`
 - 260918g · f07 coach-client · stress-tested (supported recall now leaves the schedule untouched; call-id idempotency via `handoffs`) and opened; built s01 `POST /api/voice/session` with in-repo prompt/tools and s02 `/api/voice/tools/*` (get_vocab, add_to_vault, record_review); 21 tests, `pnpm check` green at 417 → `features/f07-coach-client-journal.md`
@@ -28,6 +29,5 @@
 
 - 260916a · f01 / Codex handoff · oriented Codex, installed 12 adapters to canonical Claude PM skills, aligned agent guidance; typecheck passes, full checks/dev blocked by Windows subprocess EPERM; no product slices advanced → `features/f01-urdu-core-foundation-journal.md`
 - 260914j · f01 urdu-core-foundation · s06 review + export found uncommitted after an interrupted session; no other loose ends; verified (`pnpm check` green, 194 tests) and committed → `features/f01-urdu-core-foundation-journal.md`
-- 260914i · f01 urdu-core-foundation · s05 vocab + due + status found uncommitted after an interrupted session; verified (`pnpm check` green, 175 tests) and committed; spike vars gone from `Env` → `features/f01-urdu-core-foundation-journal.md`
 
 *Older lines roll off; the journals and git history keep them.*

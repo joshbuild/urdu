@@ -1,8 +1,16 @@
 # f09 srs-ladder — Journal
 
-**Current state (2026-09-18):** built, `pnpm check` green (359 tests). Remote migration 0002 applied by the sponsor (after a first deploy showed "vault unavailable"; the deploy had run before the migration). Next: redeploy for the spacing layout, finish smoke-test-09 from A3, then `/pm-close`.
+**Current state (2026-09-22):** 🟢 shipped and closed. `pnpm check` green at 465 tests; migration 0002 live in production D1; smoke-test-09 green A–D on the phone, including 23/23 from `scripts/smoke.ts` against the deployment. Front archived; the live truth is the code (`shared/ladders.ts`, `shared/mastery.ts`), PRD Appendix A and the AGENTS.md invariants.
 
 ## Sessions
+
+### 260922a — smoke-test-09 finished, front closed
+
+- A5 failed for the sponsor with `bash: !N: event not found`: interactive bash expands `!` inside double quotes, so an inline `URDU_SECRET="…!…"` left the variable unset. Rewrote the A5 step as a fenced `read -rs` block and put the same note on the `scripts/smoke.ts` line in AGENTS.md (9f431d6).
+- A3 reworded: the `on_legacy == vocab` equality only holds immediately after the migration. The sponsor's 42 / 55 / 35 / 3 reading is recorded as a pass rather than a red gate.
+- A4 verified from evidence rather than the deploy log: production `/assets/index-CbucbO0t.css` serves the `grade--wrong` custom properties and the `@media (hover: hover)` block, so the deploy carries the f05 button-colour fix (0970283).
+- A5 green: 23/23 from `scripts/smoke.ts` against the deployment. Part B run on the phone and confirmed green by the sponsor; the ticks were written on that confirmation and the Result line says so.
+- `/pm-close` executed: badge 🟢 shipped, tombstone written, doc + journal + smoke-test archived in place, PLAN roster and SESSIONS links repointed, STATUS workfront dropped and pointers renumbered (783b368). `pnpm check` re-run green at 465.
 
 ### 260918d — production migration, spacing layout
 

@@ -33,8 +33,8 @@
 - f03 `reader` (🟢 shipped 2026-09-17): FR-C1..C8 including the selection action bar, Add to vocab form, Define ladder, voice picker.
 - f04 `vocab-ui` (🟢 shipped 2026-09-18): FR-D1..D3 and Settings (FR-I1 minus voice spend).
 - f05 `review`: FR-E1..E4.
-- f08 `vocab-enrich` (planned, added 2026-09-17): an LLM drafts every field of a new vocab item from the Add form (reader and FR-D3), the sponsor reviews before save. Server-side through Urdu Core, capped spend, same OpenAI key as f07. Manual entry stays as the fallback. Handle is f08 because f06/f07 were already taken. **On hold 2026-09-18** (DECISIONS 260918f) in favour of the ChatGPT paste path.
-- f09 `srs-ladder` (added 2026-09-18): the SRS redesign from `research/urdu-vocabulary-srs-research-and-design.md` (DECISIONS 260918c/d/e). Built right after f05; needs remote migration 0002 before its deploy.
+- f08 `vocab-enrich` (planned, added 2026-09-17): an LLM drafts every field of a new vocab item from the Add form (reader and FR-D3), the sponsor reviews before save. Server-side through Urdu Core, capped spend, same OpenAI key as f07. Manual entry stays as the fallback. Handle is f08 because f06/f07 were already taken. Sponsor capture 2026-09-22 sharpens the entry point: a **Complete empty fields** button on the Add-vocab screen, enabled only when at least one of the English, transliteration or Urdu term fields is non-blank, which sends what is there and fills the rest. **On hold 2026-09-18** (DECISIONS 260918f) in favour of the ChatGPT paste path.
+- f09 `srs-ladder` (🟢 shipped 2026-09-22): the SRS redesign from `research/urdu-vocabulary-srs-research-and-design.md` (DECISIONS 260918c/d/e). Versioned geometric ladders, timestamp scheduling, richer review events; migration 0002 applied to production before its deploy.
 - **Exit:** Sponsor uses the app for reading and review on the phone for several consecutive days without needing Airtable.
 
 ### Phase 3 — Coach connection
