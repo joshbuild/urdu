@@ -16,6 +16,14 @@ git pull
 pnpm run deploy
 ```
 
+> **Voice is expected to be broken after this deploy.** `main` now carries f07
+> s04, whose migration 0003 has not been applied to production D1. Creating a
+> voice session will fail on the missing `voice_sessions` table until the
+> sponsor runs `pnpm wrangler d1 migrations apply urdu --remote`. Nothing in
+> this checklist touches voice: `GET /api/settings` falls back to the default
+> caps when the rows are absent, and Settings simply omits the spend line. Note
+> it and carry on.
+
 - [ ] A1 Deploy succeeds. On the phone, the Vocab tab shows a **CHATGPT**
       section under the list with four buttons: Copy prompt, Paste new vocab,
       Copy fill-in prompt, Paste fill-ins.

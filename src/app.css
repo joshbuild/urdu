@@ -89,25 +89,33 @@ input {
   color: #173e40;
 }
 
+/* Every button fill is a pair of custom properties, so a variant declares its resting and hover
+   colour in one place. A variant that set `background` directly lost to `button:hover` — (0,2,1)
+   beats (0,1,1) — which is what made a grade button look teal on the phone (smoke-test-05 D2):
+   Android Chrome leaves :hover on the spot it last tapped, so tapping Reveal left the button that
+   took its place hovered until the next tap moved it. */
 button {
-  background: #054e51;
+  --btn-bg: #054e51;
+  --btn-bg-hover: #123f41;
+  background: var(--btn-bg);
   color: #fffef9;
   font-weight: 600;
   cursor: pointer;
 }
 
-button:hover:not(:disabled) {
-  background: #123f41;
+/* Hover styling only where a pointer can actually hover. On touch the state sticks after the
+   finger lifts, so the fill would lie about which button is under the thumb. */
+@media (hover: hover) {
+  button:hover:not(:disabled) {
+    background: var(--btn-bg-hover);
+  }
 }
 
 button.secondary {
+  --btn-bg: transparent;
+  --btn-bg-hover: #e8f0ec;
   margin-top: 12px;
-  background: transparent;
   color: #054e51;
-}
-
-button.secondary:hover:not(:disabled) {
-  background: #e8f0ec;
 }
 
 :focus-visible {
@@ -174,20 +182,18 @@ button.secondary:hover:not(:disabled) {
 .tab {
   flex: 1;
   min-height: 56px;
+  --btn-bg: transparent;
+  --btn-bg-hover: #e8f0ec;
   border: 1px solid transparent;
   border-radius: 12px;
-  background: transparent;
   color: #526967;
   font-size: 0.9rem;
   font-weight: 600;
 }
 
-.tab:hover:not(:disabled) {
-  background: #e8f0ec;
-}
-
 .tab[aria-current="page"] {
-  background: #e8f0ec;
+  --btn-bg: #e8f0ec;
+  --btn-bg-hover: #e8f0ec;
   border-color: #b7cdc5;
   color: #054e51;
 }
@@ -318,11 +324,8 @@ select {
   margin: 0;
   border: 0;
   border-radius: 0;
-  background: rgb(23 62 64 / 35%);
-}
-
-.sheet-scrim:hover:not(:disabled) {
-  background: rgb(23 62 64 / 35%);
+  --btn-bg: rgb(23 62 64 / 35%);
+  --btn-bg-hover: rgb(23 62 64 / 35%);
 }
 
 .sheet {
@@ -430,18 +433,15 @@ label.check input {
 }
 
 button.vocab-row {
+  --btn-bg: white;
+  --btn-bg-hover: #e8f0ec;
   display: grid;
   gap: 2px;
   padding: 8px 16px;
   border-color: #d5dfd9;
-  background: white;
   color: #173e40;
   font-weight: 400;
   text-align: left;
-}
-
-button.vocab-row:hover:not(:disabled) {
-  background: #e8f0ec;
 }
 
 /* Roman left, Urdu right with 0.6 of the width; each wraps within its own column. */
@@ -468,17 +468,19 @@ button.vocab-row:hover:not(:disabled) {
 }
 
 button.back {
+  --btn-bg: transparent;
+  --btn-bg-hover: transparent;
   width: auto;
   margin-bottom: 16px;
   padding: 12px 0;
   border: 0;
-  background: transparent;
   color: #054e51;
 }
 
-button.back:hover:not(:disabled) {
-  background: transparent;
-  text-decoration: underline;
+@media (hover: hover) {
+  button.back:hover:not(:disabled) {
+    text-decoration: underline;
+  }
 }
 
 .vocab-headword {
@@ -493,13 +495,10 @@ button.save {
 }
 
 button.danger {
+  --btn-bg: #8a2920;
+  --btn-bg-hover: #6e1f18;
   margin-top: 12px;
   border-color: #8a2920;
-  background: #8a2920;
-}
-
-button.danger:hover:not(:disabled) {
-  background: #6e1f18;
 }
 
 /* f05: review session. Grades sit in a fixed order at the bottom of the card so the thumb
@@ -577,17 +576,20 @@ button.danger:hover:not(:disabled) {
 }
 
 button.grade--wrong {
-  background: #8a2920;
+  --btn-bg: #8a2920;
+  --btn-bg-hover: #6e1f18;
   border-color: #8a2920;
 }
 
 button.grade--partial {
-  background: #a4552a;
+  --btn-bg: #a4552a;
+  --btn-bg-hover: #85431f;
   border-color: #a4552a;
 }
 
 button.grade--hesitant {
-  background: #6b6a3a;
+  --btn-bg: #6b6a3a;
+  --btn-bg-hover: #55542d;
   border-color: #6b6a3a;
 }
 
@@ -693,7 +695,8 @@ button.grade--hesitant {
 }
 
 button.link {
-  background: none;
+  --btn-bg: transparent;
+  --btn-bg-hover: transparent;
   border: none;
   padding: 0 0 0 8px;
   margin: 0;

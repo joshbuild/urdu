@@ -52,11 +52,19 @@ pnpm run deploy
 
 ## Part D — English → Urdu
 
-- [ ] D1 — **Review** → pick **English → Urdu** → **Start review**: the card
+- [x] D1 — **Review** → pick **English → Urdu** → **Start review**: the card
       shows the English in large type, with no Urdu and no **Speak** button.
-- [ ] D2 — **Reveal**: the Urdu appears, along with **Speak**, and **Speak**
+- [x] D2 — **Reveal**: the Urdu appears, along with **Speak**, and **Speak**
       works. English isn't shown again in the answer.
-- [ ] D3 — grade one word, then **End session**.
+  - [ ] okay, but button colors are off. 3 are green. the colours fixed after hitting ‘speak’ #agent-fixed
+  - **Fixed 2026-09-21, recheck in Part F.** Android Chrome keeps `:hover` on the
+    spot it last tapped, and `button:hover` (0,2,1) outranked `button.grade--wrong`
+    (0,1,1), so the grade button that landed under the Reveal tap painted teal until
+    the next tap — Speak — moved the hover away. Button fills are now a pair of
+    custom properties and hover styling is gated behind `@media (hover: hover)`, so
+    a touch device gets no hover fill at all. Same trap fixed on Delete, tabs and
+    vocab rows.
+- [x] D3 — grade one word, then **End session**.
 
 ## Part E — failures and edges
 
@@ -71,6 +79,14 @@ pnpm run deploy
 
 ## Part F — add-ons from this run (redeploy first: `git pull && pnpm run deploy`)
 
+> **Voice is expected to be broken after this deploy.** `main` now carries f07
+> s04, whose migration 0003 has not been applied to production D1. Creating a
+> voice session will fail on the missing `voice_sessions` table until the
+> sponsor runs `pnpm wrangler d1 migrations apply urdu --remote`. Nothing in
+> this checklist touches voice: `GET /api/settings` falls back to the default
+> caps when the rows are absent, and Settings simply omits the spend line. Note
+> it and carry on.
+
 - [ ] F1 — **Review** shows a **Review ahead (days)** box set to 0. Set it to
       7: the hint says it also includes items due in the next 7 days, and
       **Start review** works even when nothing is due today. Items due soonest
@@ -80,6 +96,11 @@ pnpm run deploy
       the same pill next to Mastery.
 - [ ] F3 — set **Sort** to Mastery, swipe the app away and reopen it: the Vocab
       list is still sorted by Mastery. Search and the other filters start empty.
+
+- [ ] F5 — the D2 colour bug is gone: **Reveal**, then look before touching
+      anything. Wrong is red, Partially correct orange, Hesitantly correct olive,
+      and only the two Correct buttons are teal — no tap needed to settle them.
+      Same after tapping **Delete** on a vocab item and after switching tabs.
 
 - [ ] F4 — **English → Urdu** grading is gentler on misses. Note a word's
       level (say 3 • Firm), review it English → Urdu and grade it **Wrong**: it

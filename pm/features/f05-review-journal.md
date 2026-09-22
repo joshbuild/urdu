@@ -27,3 +27,19 @@
 - the Coach recall-only rule.
 
 The sponsor then kept the shipped deltas instead (DECISIONS 260918d), so the refactor takes only the ladder, timestamp and event-model changes. This is a schema and domain refactor, not an f05 tweak. It was recorded as DECISIONS 260918c, and planning it is the next session's first job. Nothing was implemented from the report. The sponsor's `design/spaced-repetition-intervals.xlsx` was left uncommitted.
+
+**Sticky hover on the phone (smoke-test-05 D2, fixed 2026-09-21).** The sponsor saw three teal
+grade buttons instead of two on the English → Urdu reveal, and the colours corrected themselves
+after tapping Speak. Not a React problem: `speak()` sets no state, so no re-render happens on that
+tap — which is what pins it on CSS state rather than data. Android Chrome keeps `:hover` on the
+place it last tapped, and `button:hover:not(:disabled)` (0,2,1) outranked `button.grade--wrong`
+(0,1,1), so whichever grade button landed under the Reveal tap wore the generic teal hover fill
+until the next tap moved the hover elsewhere. The same trap sat on Delete, the tab bar and vocab
+rows, where a tapped control kept its hover fill and read as selected.
+
+The fix is in the cascade, not in a `!important`. Every button now declares `--btn-bg` and
+`--btn-bg-hover`, the base rule paints `var(--btn-bg)`, and hover paints `var(--btn-bg-hover)` —
+so a variant's hover colour can no longer be outranked by the generic one. On top of that, hover
+styling lives inside `@media (hover: hover)`, so a touch device never gets a hover fill at all.
+`pnpm check` green at 465. Unverified on a device: smoke-test-05 F5 is the recheck, after the
+Part F redeploy.
