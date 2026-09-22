@@ -38,8 +38,8 @@ pnpm run deploy
       / 35 / 3, which is right: a new item is created on the active ladder and a
       review remaps its item off the legacy one, so `on_legacy` only falls. `active`
       is the part that must still be `3`.
-- [ ] A4 — the deploy ends with a line naming `urdu.umber-amber.workers.dev`.
-- [ ] A5 — the scripted smoke passes, and ends by leaving no rows. Read the
+- [x] A4 — the deploy ends with a line naming `urdu.umber-amber.workers.dev`.
+- [x] A5 — the scripted smoke passes, and ends by leaving no rows. Read the
       secret in rather than typing it on the line: bash expands `!` inside double
       quotes, and a secret containing one dies with `event not found`.
 
