@@ -30,13 +30,23 @@ pnpm wrangler d1 execute urdu --remote --command "SELECT (SELECT count(*) FROM v
 pnpm run deploy
 ```
 
-- [ ] A1 — the backup file exists and is not empty (`ls -l "$HOME/urdu-before-0002.sql"`).
-- [ ] A2 — the migration reports `0002_srs_ladder.sql` applied, no errors.
-- [ ] A3 — after: `vocab` and `events` equal the before counts, `on_legacy`
-      equals `vocab`, and `active` is `3`.
+- [x] A1 — the backup file exists and is not empty (`ls -l "$HOME/urdu-before-0002.sql"`).
+- [x] A2 — the migration reports `0002_srs_ladder.sql` applied, no errors.
+- [x] A3 — after: `vocab` and `events` equal the before counts, `on_legacy`
+      equals `vocab`, and `active` is `3`. **Only immediately after the migration.**
+      Run on 2026-09-22, three days and six phone-added words later, it read 42 / 55
+      / 35 / 3, which is right: a new item is created on the active ladder and a
+      review remaps its item off the legacy one, so `on_legacy` only falls. `active`
+      is the part that must still be `3`.
 - [ ] A4 — the deploy ends with a line naming `urdu.umber-amber.workers.dev`.
-- [ ] A5 — the scripted smoke passes, and ends by leaving no rows:
-      `URDU_SECRET="<secret>" pnpm tsx scripts/smoke.ts https://urdu.umber-amber.workers.dev`
+- [ ] A5 — the scripted smoke passes, and ends by leaving no rows. Read the
+      secret in rather than typing it on the line: bash expands `!` inside double
+      quotes, and a secret containing one dies with `event not found`.
+
+```bash
+read -rs -p "Secret: " URDU_SECRET; export URDU_SECRET; echo
+pnpm tsx scripts/smoke.ts https://urdu.umber-amber.workers.dev
+```
 
 **If A2 fails or A3 looks wrong:** don't deploy, and don't try to repair it by
 hand. Stop and tell the agent. The backup from step 1 holds the whole vault.

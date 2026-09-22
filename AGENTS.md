@@ -55,7 +55,7 @@ Commands (pnpm; Node 22):
 - `pnpm types` — regenerate `worker/worker-configuration.d.ts` after editing `wrangler.jsonc`.
 - `pnpm wrangler d1 migrations apply urdu --local` — local schema. `--remote`, `wrangler secret put`, and `pnpm run deploy` (not `pnpm deploy`, a pnpm built-in) are run by the sponsor.
 - `pnpm tsx scripts/airtable-import.ts [--dry-run | <base-url>]` — f02 Airtable import (FR-H). `--dry-run` maps and cross-checks the CSVs in `data/airtable/` with no origin contact; a base URL unlocks and writes. Exits 0 only when the cross-check report is empty. Reads `URDU_SECRET` from the environment.
-- `pnpm tsx scripts/smoke.ts <base-url>` — end-to-end smoke against a running origin (unlock → create → review → export → delete → lock, leaving no rows). Reads the secret from `URDU_SECRET`; never pass it as an argument.
+- `pnpm tsx scripts/smoke.ts <base-url>` — end-to-end smoke against a running origin (unlock → create → review → export → delete → lock, leaving no rows). Reads the secret from `URDU_SECRET`; never pass it as an argument. Read it in with `read -rs` rather than assigning it inline: interactive bash expands `!` inside double quotes, so a secret containing one fails with `event not found` and leaves the variable unset.
 
 Test-run discipline (this workstation has been wedged by concurrent Vitest runs):
 - Only one agent may run Vitest at a time. Never launch `pnpm test` or `pnpm check`
