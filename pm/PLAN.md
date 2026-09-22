@@ -60,4 +60,4 @@
 | f06 | `features/f06-coach-contract.md` | 🟡 in progress (Stages 1–2 built, smoke-test-06 open) | Coach tool routes, bearer auth, clipboard handoff import with Copy prompt, OpenAPI description. |
 | f07 | `features/f07-coach-client.md` | 🟡 in progress | In-app GPT-Live-1 voice Coach (FR-G Option 2, chosen by mp02). |
 | f08 | `features/f08-vocab-enrich.md` | on hold | LLM drafts all fields of a new vocab item for review before save (Phase 2, after f05). |
-| f09 | `features/f09-srs-ladder.md` | 🟡 in progress (built) | Versioned geometric review ladders, timestamp scheduling, richer review events (DECISIONS 260918c/e). |
+| f09 | `features/archive/f09-srs-ladder-archive.md` | 🟢 shipped 2026-09-22 | Versioned geometric review ladders, timestamp scheduling, richer review events (DECISIONS 260918c/e). |

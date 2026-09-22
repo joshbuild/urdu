@@ -55,41 +55,42 @@ hand. Stop and tell the agent. The backup from step 1 holds the whole vault.
 
 Swipe the installed app away and reopen it.
 
-- [ ] B1 — **Review** shows the same due count as before the migration (give or
+- [x] B1 — **Review** shows the same due count as before the migration (give or
       take items that came due overnight), and "Spacing: Moderate".
-- [ ] B2 — **Vocab**: pills read like "Firm • 4 wk" or "Learning • 1 d" for
+- [x] B2 — **Vocab**: pills read like "Firm • 4 wk" or "Learning • 1 d" for
       imported words, and "New" for never-reviewed ones. The band names match
       the levels the words had before.
-- [ ] B3 — open a word that is not due: "Due in …" matches when it was due
+- [x] B3 — open a word that is not due: "Due in …" matches when it was due
       before (for example "Due in 3 wk"), then "· last <date>".
-- [ ] B4 — sort by **Mastery**: New items first, then shortest intervals.
+- [x] B4 — sort by **Mastery**: New items first, then shortest intervals.
 
 ## Part C — the new ladder (phone)
 
-- [ ] C1 — add a new word (Vocab › **New item**). Its pill says "New" and it is
+- [x] C1 — add a new word (Vocab › **New item**). Its pill says "New" and it is
       "Due now".
-- [ ] C2 — review it Urdu → English and grade **Correct**. In Vocab its pill is
+- [x] C2 — review it Urdu → English and grade **Correct**. In Vocab its pill is
       "Learning • 7 h" and it is "Due in 7 h".
-- [ ] C3 — review an imported, due word and grade **Correct**. It moves onto
+- [x] C3 — review an imported, due word and grade **Correct**. It moves onto
       the Moderate ladder one rung above its old interval (a level-2 word, 5
       days, becomes about 10 days: "Due in 10 d").
-- [ ] C4 — open a word › **Edit**: the Mastery list shows intervals from "3 h ·
+- [x] C4 — open a word › **Edit**: the Mastery list shows intervals from "3 h ·
       Learning" to "10 y · Permanent". Change nothing and **Save**: nothing
       changes. Pick a different interval and **Save**: the due time moves to
       match and no review is counted.
-- [ ] C5 — delete the word from C1.
+- [x] C5 — delete the word from C1.
 
 ## Part D — changing the spacing (phone)
 
-- [ ] D1 — **Settings › Review spacing** lists Dense, Moderate (selected),
+- [x] D1 — **Settings › Review spacing** lists Dense, Moderate (selected),
       Balanced, Wide and Very wide, each with its multiplier and intervals.
-- [ ] D2 — pick **Balanced**. Go to Vocab: every "Due in …" is unchanged.
-- [ ] D3 — **Review** says "Spacing: Balanced". Grade one due word **Correct**;
+- [x] D2 — pick **Balanced**. Go to Vocab: every "Due in …" is unchanged.
+- [x] D3 — **Review** says "Spacing: Balanced". Grade one due word **Correct**;
       its new interval comes from the Balanced ladder.
-- [ ] D4 — switch back to **Moderate** (or keep Balanced if you prefer it; the
+- [x] D4 — switch back to **Moderate** (or keep Balanced if you prefer it; the
       choice is yours to make, and nothing else depends on it).
 
 ---
 
-**Result:** ☐ all green → tell the agent, who closes f09. ☐ something failed →
-note the step and what you saw.
+**Result:** ☑ all green, sponsor 2026-09-22 ("smokes 09 all green"). Part B was run
+but left unticked in the file; ticked by the agent on that confirmation. f09 closed the
+same day.

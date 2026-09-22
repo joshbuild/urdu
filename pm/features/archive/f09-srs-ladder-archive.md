@@ -1,6 +1,6 @@
 # Feature Plan — SRS Ladder
 
-**Status**: 🟡 IN PROGRESS — *planned and built 2026-09-18; smoke-test-09 awaiting the sponsor.*
+**Status**: 🟢 SHIPPED — *closed 2026-09-22. s01–s04 done; migration 0002 applied remotely; smoke-test-09 green on the phone.*
 **Handle**: `f09`
 **Created**: *2026-09-18* · **Updated**: *2026-09-18*
 
@@ -10,6 +10,39 @@
 - `pm/VISION.md` §6, `AGENTS.md` invariants — the ladder wording
 
 > **One-line:** Replace the fixed 0/1/5/25/125/625/3125-day ladder with immutable, versioned geometric ladders (3 h to 10 y, five presets, Moderate 2^1.25 default), exact due timestamps, richer review events and non-retroactive ladder switches. Grade deltas are unchanged.
+
+
+## Archived — as shipped (2026-09-22)
+
+**Status:** 🟢 shipped. All three Done-When conditions met: `pnpm check` green at 465 tests;
+migration 0002 applied to production D1 on 2026-09-18 with no row or event lost and no due time
+moved; `smoke-tests/archive/smoke-test-09_archive.md` green end to end (Parts A–D), including the
+23/23 scripted smoke against the deployment.
+
+**What shipped:** versioned immutable ladders in `shared/ladders.ts` (id 1 Legacy ×5, ids 2–6
+geometric 3 h → 10 y, Moderate id 3 the default), each literal pinned to its generator by test;
+one schedule per item (`ladder_id`, `ladder_step`, `interval_seconds`, `last_reviewed_at`,
+`due_at`) replacing `mastery`/`last_reviewed_on`/`next_review_on`; `scheduleReview` with
+log-nearest remapping for items on a non-active ladder (ties → shorter); review events carrying
+the full before/after transition plus `applied_delta` and `prompt_support`; a `settings` table with
+`active_ladder_id` and `GET`/`PATCH /api/settings`; migration 0002 rebuilding both tables with
+legacy dates at 08:00 UTC; mastery as a display band derived from the interval ("Firm • 3 wk");
+the Settings review-spacing picker; and the import/export/smoke ripples.
+
+**Verified in production:** on 2026-09-22 the vault read 42 vocab / 55 events / 35 on the legacy
+ladder / active 3 — the six words added and the one item reviewed since the migration having moved
+to the active ladder exactly as `scheduleReview` and vocab creation intend. Changing the preset
+moved no due time (D2).
+
+**Where the truth lives now:** `shared/ladders.ts` and `shared/mastery.ts` with their tests are the
+authority on intervals, grading and bands; `migrations/0002_srs_ladder.sql`;
+`worker/domain/review.ts`, `worker/domain/settings.ts`; `src/screens/SettingsScreen.tsx`. The rules
+are mirrored in `pm/PRD.md` Appendix A and the AGENTS.md invariants — code wins if they drift.
+
+**Carried forward:** the deferred SRS follow-ups (per-direction statistics and automatic direction
+choice, due-time and workload analytics, an apply-immediately ladder remap with preview,
+same-session relearning) sit in `pm/TODO.md` under `#agent-research`, to revisit once a few weeks
+of review history exist. Every input they need is already on the review event.
 
 ## Intent
 
@@ -87,3 +120,4 @@ Mapped to the report's §10 acceptance criteria (AC):
 ### Recently Completed
 
 - 2026-09-18 — Opened, planned and built s01–s04 in one session.
+- 2026-09-22 — smoke-test-09 green on the phone; closed and archived.
