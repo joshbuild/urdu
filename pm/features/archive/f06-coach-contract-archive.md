@@ -1,6 +1,6 @@
 # Feature Plan — Coach Contract
 
-**Status**: 🟡 IN PROGRESS — *Stages 1–2 built 2026-09-18 (`pnpm check` green, 396 tests); awaiting smoke-test-06 on the phone. Stage 3 re-homed (DECISIONS 260918h): FR-F1/F3 logic to f07, bearer routes and OpenAPI to v1. f06 closes after smoke-test-06.*
+**Status**: 🟢 SHIPPED — *closed 2026-09-23. Stages 1–2 done; smoke-test-06 green on the phone (B1–B2 waived for the `vocab-json` path). Stage 3 re-homed (DECISIONS 260918h): FR-F1/F3 logic to f07, bearer routes and OpenAPI to v1.*
 **Handle**: `f06`
 **Created**: *2026-09-18* · **Updated**: *2026-09-23*
 
@@ -9,6 +9,8 @@
 - `pm/DECISIONS.md` — 260911a (contract), 260918f (ChatGPT paste path first), 260918g (fill-in round trip)
 
 > **One-line:** Urdu Core's Coach contract and the clipboard handoff, built paste-path first: Copy prompt → ChatGPT web chat → paste JSON, for new vocab and for filling in incomplete items, applied deterministically.
+
+> **As shipped (2026-09-23).** A CHATGPT section at the top of the Vocab tab: Copy prompt / Paste new vocab (FR-F2, F4, F6) and Copy fill-in prompt / Paste fill-ins with preview (FR-F7). In daily use the new-vocab path starts from the sponsor's ChatGPT "Urdu Coach" Project, whose standing instructions add a `vocab-json` command (`src/handoff/chatgpt-project-instructions.md`); the chat mints its own `handoff_id`. Live truth: `worker/domain/handoff*.ts`, `worker/routes/api-handoff.ts`, `src/handoff/`, tests `test/handoff.test.ts` and `src/handoff/prompts.test.ts`; decisions 260918f, 260918g, 260918h and §Decisions below. Evidence: `smoke-tests/archive/smoke-test-06_archive.md`. Two polish fixes from the smoke (buttons above the list, fill-in recount after save) are committed and ride the next deploy. The execution record below is historical.
 
 ## Intent
 
@@ -62,13 +64,13 @@ Vocab drafting should cost nothing beyond the ChatGPT subscription. The app hand
 ### Recently Completed
 
 - 2026-09-18: opened.
+- 2026-09-23: smoke-test-06 green (B5–B7, C1–C6, D1); fixed the two smoke findings (buttons moved above the list; fill-in note recounts after save). Closed.
 - 2026-09-23: `vocab-json` Project instructions; first real ChatGPT paste on the phone added words (smoke-test-06 A1, B3–B4).
-- 2026-09-18: Stages 1–2 built. `POST /api/handoffs`, `POST /api/handoffs/revisions[?preview=1]` and `GET /api/vocab/incomplete` (`worker/domain/handoff*.ts`, `worker/routes/api-handoff.ts`); prompts and paste parsing in `src/handoff/prompts.ts`; `HandoffPanel` under the Vocab list. 28 Worker + 9 client tests. `smoke-tests/smoke-test-06.md` written.
+- 2026-09-18: Stages 1–2 built. `POST /api/handoffs`, `POST /api/handoffs/revisions[?preview=1]` and `GET /api/vocab/incomplete` (`worker/domain/handoff*.ts`, `worker/routes/api-handoff.ts`); prompts and paste parsing in `src/handoff/prompts.ts`; `HandoffPanel` under the Vocab list. 28 Worker + 9 client tests. `smoke-tests/smoke-test-06.md` written (now `smoke-tests/archive/smoke-test-06_archive.md`).
 
 ### Next Steps
 
-- Sponsor: finish `smoke-tests/smoke-test-06.md` — B5–B7 and Part C (A1, B3–B4 green 2026-09-23 via `vocab-json`). Tighten the prompts from whatever the app rejects.
-- `/pm-close` after smoke-test-06.
+- None; closed 2026-09-23. The phone check of the two polish fixes is a TODO item.
 
 ### Open Questions
 

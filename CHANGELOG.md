@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+### Changed
+
+- The ChatGPT buttons sit at the top of the Vocab tab instead of below the list, and saving fill-ins updates the count of items still missing fields.
+
 ### Added
 
 - Settings › About shows the app's version (the commit it was built from), when that commit was made and when the app was built.

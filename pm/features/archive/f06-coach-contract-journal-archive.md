@@ -1,6 +1,10 @@
 # f06 coach-contract — journal
 
-**Current state (2026-09-23):** Stages 1–2 deployed (`07d51e5`). smoke-test-06 A1 and B3–B4 pass through the ChatGPT Project `vocab-json` command; B5–B7 and Part C remain, then close. Stage 3 re-homed (260918h).
+**Current state (2026-09-23):** 🟢 closed. smoke-test-06 green; the two polish fixes ride the next deploy.
+
+## 2026-09-23 (260923b) — smoke-test-06 green, two fixes, closed
+
+The sponsor ran B5–B7 and all of Parts C and D: green. B1–B2 (Copy prompt) waived, since `vocab-json` replaces it in practice; the button stays as the fallback. Two findings, both fixed and committed: the CHATGPT section moved above the list (`bbdd132`), and saving fill-ins now replaces the stale "Fill-in prompt copied (N items…)" note with a fresh count (`48786f6`). `pnpm check` green at 465; one earlier run had a single unidentified test failure that did not recur in three runs. Closed; the phone check of both fixes went to TODO.
 
 ## 2026-09-23 (260923a session) — vocab-json Project instructions, first real paste
 

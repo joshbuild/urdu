@@ -14,6 +14,8 @@
 ## Tasks
 *Bullets, each tagged.*
 
+- After the next deploy, on the phone: the CHATGPT section sits above the Vocab list, and saving fill-ins replaces the "Fill-in prompt copied" note with a fresh count (f06 polish, `bbdd132`, `48786f6`). #sponsor-respond
+
 - SRS follow-ups deferred by f09 (DECISIONS 260918e): per-direction statistics and automatic direction choice, including keeping one item from meeting both directions on the same day (report §4.2, §5.4, AC11); due-time success and workload by direction, interval band and ladder (§9, AC13; review events now carry every input); an "apply immediately" ladder remap with a preview (§6.2); same-session relearning after a first-rung miss (§11). Revisit once a few weeks of review history exist. #agent-research
 
 - Before a work session, turn AVG **Hardened Mode** and **CyberCapture** off; turn them back on after. Measured 2026-09-17: off = 8 s for the worker test project and 32.7 s for `pnpm check`; on = runner timeouts and minutes. Do **not** add AVG exceptions — a repo folder exception measured 492 s and reinstated the failures, apparently by triggering a console policy re-sync (DECISIONS 260917b). #agent-implement

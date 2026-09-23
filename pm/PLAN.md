@@ -58,7 +58,7 @@
 | f03 | `features/archive/f03-reader-archive.md` | 🟢 shipped 2026-09-17 | Paste-and-read in Nastaliq with tap-to-speak, selection action bar, add and define. |
 | f04 | `features/archive/f04-vocab-ui-archive.md` | 🟢 shipped 2026-09-18 | Browse, search, edit, and create vocabulary; settings. |
 | f05 | `features/archive/f05-review-archive.md` | 🟢 shipped 2026-09-22 | Due-item review session with five-grade self-scoring. |
-| f06 | `features/f06-coach-contract.md` | 🟡 in progress (Stages 1–2 built, smoke-test-06 open) | Coach tool routes, bearer auth, clipboard handoff import with Copy prompt, OpenAPI description. |
+| f06 | `features/archive/f06-coach-contract-archive.md` | 🟢 shipped 2026-09-23 (Stages 1–2; Stage 3 re-homed) | Coach tool routes, bearer auth, clipboard handoff import with Copy prompt, OpenAPI description. |
 | f07 | `features/f07-coach-client.md` | 🟡 in progress | In-app GPT-Live-1 voice Coach (FR-G Option 2, chosen by mp02). |
 | f08 | `features/f08-vocab-enrich.md` | on hold | LLM drafts all fields of a new vocab item for review before save (Phase 2, after f05). |
 | f09 | `features/archive/f09-srs-ladder-archive.md` | 🟢 shipped 2026-09-22 | Versioned geometric review ladders, timestamp scheduling, richer review events (DECISIONS 260918c/e). |

@@ -7,7 +7,7 @@
 **Owner docs it serves**:
 - `pm/PRD.md` — FR-G Option 2, FR-B3, FR-B5, FR-F1..F3, FR-I1, Appendix D result
 - `pm/DECISIONS.md` — 260911a (contract, ~$0.50/day), 260914b/c (Live Sessions API, Option 2 chosen), 260918b (oral counts only for unprompted recall)
-- `pm/features/f06-coach-contract.md` — its FR-F1/F3 logic is built here; its bearer routes and OpenAPI moved to v1 (260918h)
+- `pm/features/archive/f06-coach-contract-archive.md` — its FR-F1/F3 logic is built here; its bearer routes and OpenAPI moved to v1 (260918h)
 - Reference code: `spikes/gpt-live/` (SDP route, data-channel tool loop); prompt source `pm/mini-plans/mp02-coach-instructions.md`; evidence `pm/mini-plans/archive/mp02-gpt-live-spike-journal-archive.md`
 
 > **One-line:** A Voice tab where the sponsor talks Urdu with a GPT-Live-1 Coach through a Worker-brokered WebRTC session. The Coach can read due vocab, add words and record tracked oral reviews mid-conversation through Urdu Core, and spend is shown and capped.
