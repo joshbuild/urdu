@@ -41,11 +41,12 @@
 **Goal:** Words from conversation reach the vault with near-zero friction; v0 done.
 - f06 `coach-contract`: FR-F1..F6; its paste path (FR-F2, F4, F6, F7: Copy prompt → ChatGPT chat → paste JSON, for new items and for filling in incomplete ones) is built first, straight after f05/f09, ahead of the rest of Phase 3 (DECISIONS 260918f). Full scope: (Coach routes, bearer auth, handoff idempotency, OpenAPI description, PWA paste-handoff screen).
 - f07 `coach-client`: FR-G Option 2 (chosen by mp02). Voice screen, Worker-brokered GPT-Live-1 WebRTC session (FR-B5), Coach prompt in-repo (start from `mini-plans/mp02-coach-instructions.md` and the TODO tuning notes), tools through cookie routes over the f06 domain logic (260918h), spend display and caps. f06 Stage 3's bearer routes and OpenAPI move to v1.
+- f10 `coach-followups` (planned, added 2026-09-22, DECISIONS 260922a): opens straight after f07 closes. Three small slices sharing one phone smoke: a Coach vocab-edit voice tool (FR-F8) with an optional interval reset, tappable Urdu in transcript bubbles, and the most recent transcript kept on the device.
 - **Exit:** After a Voice session, new vocabulary and quiz results are in D1 via the Coach client, with the clipboard handoff verified as a working fallback. v0 is complete; amend `VISION.md` §16 line on custom voice tutors to match the shipped option.
 
 ### Phase 4 — v1 (coarse)
 **Goal:** Broaden without changing the core.
-- Windows Chrome parity (right-click menu, desktop layout), saved passages and recent texts, tag and favourite UI, review statistics, CSV export, hosted TTS as an option, the FR-G Option 1 Custom GPT if still wanted, fuzzy duplicate suggestions.
+- Windows Chrome parity (right-click menu, desktop layout), saved passages and recent texts, tag and favourite UI, review statistics, CSV export, hosted TTS as an option, the FR-G Option 1 Custom GPT if still wanted, fuzzy duplicate suggestions, Coach session history with transcript expiry (260922a).
 
 ## Features Index
 *The roster of every feature (`f##`). Each row → its doc in `pm/features/`. Numbers are assigned by roster order, monotonic, never reused (archived items included). See `pm-glossary.md` §1. Spikes are mini-plans (`mp##`) and live in `pm/mini-plans.md` once `/pm-open` stands it up.*
@@ -61,3 +62,4 @@
 | f07 | `features/f07-coach-client.md` | 🟡 in progress | In-app GPT-Live-1 voice Coach (FR-G Option 2, chosen by mp02). |
 | f08 | `features/f08-vocab-enrich.md` | on hold | LLM drafts all fields of a new vocab item for review before save (Phase 2, after f05). |
 | f09 | `features/archive/f09-srs-ladder-archive.md` | 🟢 shipped 2026-09-22 | Versioned geometric review ladders, timestamp scheduling, richer review events (DECISIONS 260918c/e). |
+| f10 | `features/f10-coach-followups.md` | planned | Coach vocab edits by voice, tappable Urdu in transcripts, last transcript kept on device (DECISIONS 260922a). |

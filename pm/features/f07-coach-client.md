@@ -36,8 +36,8 @@ This replaces the ChatGPT Voice + Airtable loop. The sponsor opens the installed
 
 - The Custom GPT (Option 1), FR-B3's bearer-token `/coach/*` routes and the FR-F5 OpenAPI description are v1 (260918h). Nothing in v0 calls them.
 - A sideband Durable Object. mp02 proved tool events reach the browser data channel, so it isn't needed unless that stops being true.
-- Mid-session vocab edits, favourites, retagging and ladder changes by voice. The Coach says it can't do them and points to the Vocab tab.
-- Saved transcripts or session history beyond the spend row. It's a non-goal and a privacy cost, with no v0 user story.
+- Mid-session vocab edits, favourites, retagging and ladder changes by voice. The Coach says it can't do them and points to the Vocab tab. (Edits by voice follow in f10, DECISIONS 260922a.)
+- Saved transcripts or session history beyond the spend row. It's a non-goal and a privacy cost, with no v0 user story. (f10 later keeps the most recent transcript on the device; history is v1, DECISIONS 260922a.)
 - Text chat with the Coach (the f06 ChatGPT paste path covers text).
 - Deleting `spikes/gpt-live/` is a close step here (TODO), not a build slice.
 
