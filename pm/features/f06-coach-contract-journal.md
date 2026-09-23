@@ -1,6 +1,14 @@
 # f06 coach-contract — journal
 
-**Current state (2026-09-18):** Stages 1–2 built and committed (`145f36e`); awaiting the sponsor's deploy and `smoke-tests/smoke-test-06.md`. Stage 3 waits for f07.
+**Current state (2026-09-23):** Stages 1–2 deployed (`07d51e5`). smoke-test-06 A1 and B3–B4 pass through the ChatGPT Project `vocab-json` command; B5–B7 and Part C remain, then close. Stage 3 re-homed (260918h).
+
+## 2026-09-23 (260923a session) — vocab-json Project instructions, first real paste
+
+Sponsor's ask: Airtable is superseded, so the only way to add words was typing them in; could a ChatGPT chat add its end-of-conversation vocab list? Laid out the options: Stage 1 was already built and deployed; ChatGPT writing directly stays v1 (260918f); f08 would spend on parsing ChatGPT does free.
+
+- `src/handoff/chatgpt-project-instructions.md`: a standing version of `newVocabPrompt` for the sponsor's "Urdu Coach" ChatGPT Project. Typing `vocab-json` turns the chat's latest list into a handoff. The chat mints its own `handoff_id` (`vocab-YYYYMMDD-` + 6 random), which the Worker accepts as is (any non-empty string ≤ 100). `prompts.ts` points to it; the sponsor restructured it under a Commands heading.
+- The sponsor pasted it into the Project, got clean JSON, and pasted it into **Paste new vocab** on the phone: new words added. Recorded in smoke-test-06 (A1, B3, B4); B1–B2's Copy prompt is superseded in practice by `vocab-json`.
+- Not yet known: whether ChatGPT reliably mints a fresh id per command (a reused one shows "already imported"), and B5–B7 / Part C.
 
 ## 2026-09-18 (260918e session) — Stages 1–2 built
 

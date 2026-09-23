@@ -2,7 +2,7 @@
 
 **Status**: 🟡 IN PROGRESS — *Stages 1–2 built 2026-09-18 (`pnpm check` green, 396 tests); awaiting smoke-test-06 on the phone. Stage 3 re-homed (DECISIONS 260918h): FR-F1/F3 logic to f07, bearer routes and OpenAPI to v1. f06 closes after smoke-test-06.*
 **Handle**: `f06`
-**Created**: *2026-09-18* · **Updated**: *2026-09-18*
+**Created**: *2026-09-18* · **Updated**: *2026-09-23*
 
 **Owner docs it serves**:
 - `pm/PRD.md` — FR-B3, FR-F1..F7, Appendix A `handoffs`
@@ -62,11 +62,12 @@ Vocab drafting should cost nothing beyond the ChatGPT subscription. The app hand
 ### Recently Completed
 
 - 2026-09-18: opened.
+- 2026-09-23: `vocab-json` Project instructions; first real ChatGPT paste on the phone added words (smoke-test-06 A1, B3–B4).
 - 2026-09-18: Stages 1–2 built. `POST /api/handoffs`, `POST /api/handoffs/revisions[?preview=1]` and `GET /api/vocab/incomplete` (`worker/domain/handoff*.ts`, `worker/routes/api-handoff.ts`); prompts and paste parsing in `src/handoff/prompts.ts`; `HandoffPanel` under the Vocab list. 28 Worker + 9 client tests. `smoke-tests/smoke-test-06.md` written.
 
 ### Next Steps
 
-- Sponsor: deploy and run `smoke-tests/smoke-test-06.md` (real ChatGPT round trips for both stages). Tighten the prompt from whatever the app rejects.
+- Sponsor: finish `smoke-tests/smoke-test-06.md` — B5–B7 and Part C (A1, B3–B4 green 2026-09-23 via `vocab-json`). Tighten the prompts from whatever the app rejects.
 - `/pm-close` after smoke-test-06.
 
 ### Open Questions
@@ -77,5 +78,6 @@ Vocab drafting should cost nothing beyond the ChatGPT subscription. The app hand
 
 - 2026-09-18: Handoff contract as built. The app writes a fresh ULID `handoff_id` (and `session_at`) into each copied prompt, and the chat echoes them back, so a re-paste is a no-op. `handoffs.status` is `applied` (proposals) or `revised` (fill-ins). An id reused by the other kind of paste is a 409. A payload with any invalid field is rejected whole with the field path (`proposals[2].roman`) and no handoff row, so a corrected reply can reuse the id. Per-item outcomes are only for vault facts: created, duplicate, or no Urdu letters. `results` is refused until Stage 3. A surrounding markdown code fence is stripped client-side as packaging; the JSON inside is never repaired.
 - 2026-09-18: Fill-ins also cover `example_english` (FR-F7 lists four fields; the fifth is the same kind of empty text). The echoed `urdu` is matched by `urdu_key`, so tashkeel differences don't reject a row. Fills use `COALESCE`, so text written between preview and save is never overwritten. The incomplete list puts items missing Roman or English first, max 20.
+- 2026-09-23: Standing ChatGPT Project instructions (`src/handoff/chatgpt-project-instructions.md`) with a `vocab-json` command. The chat mints its own `handoff_id` because there is no Copy prompt step; the contract already accepts any non-empty id, so no code changed. A reused id reads as "already imported", which is safe. Kept in step with `newVocabPrompt` by hand.
 - 2026-09-18: Stages 1–2 use the PWA session cookie, not the Coach bearer token. The sponsor is the one pasting, so FR-B3's bearer applies only to the Stage 3 `/coach/*` routes.
 - 2026-09-18: Stage 3 leaves f06 (sponsor, DECISIONS 260918h). Voice tools run through cookie routes in f07, so nothing in v0 calls bearer routes; they and the OpenAPI description go to v1 with the Custom GPT. Handoff `results` stay refused.

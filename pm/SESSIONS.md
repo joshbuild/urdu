@@ -7,6 +7,7 @@
 
 ## Log
 *Newest at top.*
+- 260923a · f06 coach-contract · sponsor lost Airtable as an entry path; wrote `src/handoff/chatgpt-project-instructions.md` (a `vocab-json` command for the ChatGPT "Urdu Coach" Project, chat-minted `handoff_id`), first real paste added words on the phone (smoke-06 A1/B3/B4); Settings › About now shows the build's commit, commit time and build time; sponsor applied migration 0003 remotely and deployed `07d51e5` → `features/f06-coach-contract-journal.md`
 - 260922b · pm triage · drained the Inbox to nil: both 2026-09-21 Coach captures reverse stated f07 exclusions, so each went to `#sponsor-decide` with a framed v0-or-v1 call — mid-conversation vocab edits (recommended v0 as an f06 Stage-2 extension, since the revisions path already fills those fields and already leaves the schedule alone) and kept transcripts (split into tap-to-speak / reopening past sessions / expiry; recommended tap-to-speak into f07, the rest to v1) → `TODO.md`
 - 260922a · f09 srs-ladder · finished smoke-test-09 (A5 made paste-safe with `read -rs` after bash history expansion ate the secret; A3 reworded; A4 confirmed from the deployed CSS; 23/23 from `scripts/smoke.ts`; Part B green on the phone) and closed the front — badge 🟢 shipped, doc/journal/smoke archived, roster + STATUS repointed; sponsor capture folded into f08 → `features/archive/f09-srs-ladder-journal-archive.md`
 - 260921a · f07 coach-client · sponsor put the OpenAI key in as a Worker secret (never local — agents cannot read it) and deployed; adding vocab by voice worked on the phone, first live evidence for s01–s03; two sponsor captures to the Inbox (Coach-side edits with optional interval reset; kept transcripts with expiry, re-openable and tap-to-speak) → `features/f07-coach-client-journal.md`
@@ -28,6 +29,5 @@
 - 260917b · f01 urdu-core-foundation · runtime blocker resolved: AVG (not Windows permissions) — Hardened Mode + CyberCapture off gives 8 s worker runs and a 33 s green `pnpm check`, while exceptions measured harmful; s07 committed with browser verification still open; Vitest capped at 2 workers after restart-forcing saturation → `features/f01-urdu-core-foundation-journal.md`
 - 260917a · f01 urdu-core-foundation · s07 shell + manifest/icons implemented; typecheck passes, Windows executable denial reproduced in sponsor Git Bash; uncommitted handoff to Claude Code for verification → `features/f01-urdu-core-foundation-journal.md`
 
-- 260916a · f01 / Codex handoff · oriented Codex, installed 12 adapters to canonical Claude PM skills, aligned agent guidance; typecheck passes, full checks/dev blocked by Windows subprocess EPERM; no product slices advanced → `features/f01-urdu-core-foundation-journal.md`
 
 *Older lines roll off; the journals and git history keep them.*
