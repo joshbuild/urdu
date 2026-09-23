@@ -59,23 +59,27 @@ pnpm run deploy
 
 `jml` still relevant?
 
-- [ ] C1 Tap **Copy fill-in prompt**. The note gives a count, e.g. "(20 items
+- [x] C1 Tap **Copy fill-in prompt**. The note gives a count, e.g. "(20 items
       of 31; repeat for the rest)". `ٹیسٹ` should be among them.
-- [ ] C2 Paste it into a new ChatGPT chat and copy its JSON reply.
-- [ ] C3 Tap **Paste fill-ins**, paste, then **Preview**. Each item shows the
+- [x] C2 Paste it into a new ChatGPT chat and copy its JSON reply.
+- [x] C3 Tap **Paste fill-ins**, paste, then **Preview**. Each item shows the
       fields it would gain. Nothing is saved yet: open an item in another
       tab, or back out, to confirm if you like.
-- [ ] C4 Tap **Save N items**. Open two filled items: the new fields are
+- [x] C4 Tap **Save N items**. Open two filled items: the new fields are
       there, text they already had is unchanged, and "due in" is the same as
       before.
-- [ ] C5 Paste the same reply again and Preview. Expected: "This reply was
+- [x] C5 Paste the same reply again and Preview. Expected: "This reply was
       already applied" and a Done button only.
-- [ ] C6 Copy fill-in prompt again. Expected: the items just filled are gone
+- [x] C6 Copy fill-in prompt again. Expected: the items just filled are gone
       from the count, unless ChatGPT left some fields out.
+- [ ] just need to refresh the message showing how many fill-in items after saving the items, to save refreshing to update
+  - Agent 2026-09-23: fixed — saving fill-ins replaces the stale "Fill-in prompt copied (N
+    items…)" note with a fresh count ("Fill-ins saved. N items still have empty fields.").
+    Rides the next deploy; not a close blocker.
 
 ## Part D — record
 
-- [ ] D1 Note anything ChatGPT did that the app rejected (paste the red
+- [x] D1 Note anything ChatGPT did that the app rejected (paste the red
       message here). That tells us whether the prompt needs tightening.
 
 Notes:

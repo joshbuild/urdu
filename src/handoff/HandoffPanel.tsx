@@ -73,6 +73,25 @@ export function HandoffPanel({
   const [busy, setBusy] = useState(false);
   const [pasting, setPasting] = useState<"new" | "fill" | null>(null);
 
+  // After fill-ins save, the note from Copy fill-in prompt counts items that may now be complete,
+  // so it is replaced with a fresh count.
+  async function recount() {
+    try {
+      const response = await fetch("/api/vocab/incomplete", { cache: "no-store" });
+      if (!response.ok) throw new Error("incomplete failed");
+      const { total } = (await response.json()) as IncompleteResponse;
+      setCopied({
+        kind: "copied",
+        note:
+          total === 0
+            ? "Fill-ins saved. Every item is complete."
+            : `Fill-ins saved. ${total} ${total === 1 ? "item still has" : "items still have"} empty fields.`,
+      });
+    } catch {
+      setCopied({ kind: "none" });
+    }
+  }
+
   async function copyFillIn() {
     setBusy(true);
     try {
@@ -150,7 +169,13 @@ export function HandoffPanel({
         />
       )}
       {pasting === "fill" && (
-        <PasteFillSheet onClose={() => setPasting(null)} onChanged={onChanged} />
+        <PasteFillSheet
+          onClose={() => setPasting(null)}
+          onChanged={() => {
+            onChanged();
+            void recount();
+          }}
+        />
       )}
     </div>
   );
