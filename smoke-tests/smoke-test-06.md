@@ -27,28 +27,37 @@ pnpm run deploy
 - [x] A1 Deploy succeeds. On the phone, the Vocab tab shows a **CHATGPT**
       section under the list with four buttons: Copy prompt, Paste new vocab,
       Copy fill-in prompt, Paste fill-ins.
+- [ ] `jml` issue: the buttons are at the bottom of the vocab list, which will get long. need to be at the top. #agent-fix.
+  - Agent 2026-09-23: fixed — the CHATGPT section now sits between **New item** and the
+    search/filters. Tick after the next deploy shows it there.
 
 ## Part B — new vocab round trip (Stage 1)
 
 - [ ] B1 Tap **Copy prompt**. The note says "Prompt copied". (If the clipboard
       is refused, the prompt appears in a box to copy by hand. Note it if so.)
+  - [ ] `jml`: not tested. i think the add-command-to-chat-project path is superior–less to do for me on the fly.
 - [ ] B2 In a new ChatGPT chat, paste the prompt and add 3 words after it:
       one new Urdu word, one English word, and one word **already in your
       vault**. Send it.
+  - [ ] `jml` not tested per above
+  - Agent 2026-09-23: B1–B2 waived by the sponsor. The Copy prompt button stays as the
+    fallback for a chat outside the Project; B3–B7 cover the same import path.
 - [x] B3 ChatGPT replies with JSON only (a ```json fence around it is fine).
       Copy the reply.
 - [x] B4 Tap **Paste new vocab**, paste, then **Save to vault**. Expected: two
       lines read "Added" and the vault word reads "Already in your vault",
       each with an Open link.
-- [ ] B5 Open one of the added words. Its fields match the reply, and it is
+- [x] B5 Open one of the added words. Its fields match the reply, and it is
       due now.
-- [ ] B6 Paste **the same reply** again. Expected: "This reply was already
+- [x] B6 Paste **the same reply** again. Expected: "This reply was already
       imported; nothing new was saved", the same lines, and the vocab count
       unchanged.
-- [ ] B7 Paste `{"handoff_id": "x"}`. Expected: a red "Rejected: session_at
+- [x] B7 Paste `{"handoff_id": "x"}`. Expected: a red "Rejected: session_at
       …" message, and nothing saved.
 
 ## Part C — fill-in round trip (Stage 2)
+
+`jml` still relevant?
 
 - [ ] C1 Tap **Copy fill-in prompt**. The note gives a count, e.g. "(20 items
       of 31; repeat for the rest)". `ٹیسٹ` should be among them.

@@ -1,4 +1,4 @@
-// f06 Stages 1-2: the ChatGPT round trip at the bottom of the Vocab list. Copy a prompt, run it
+// f06 Stages 1-2: the ChatGPT round trip at the top of the Vocab list. Copy a prompt, run it
 // in any ChatGPT chat, paste the JSON reply back. New vocab (FR-F4/F6) saves on paste; fill-ins
 // (FR-F7) are previewed and saved only on confirmation.
 

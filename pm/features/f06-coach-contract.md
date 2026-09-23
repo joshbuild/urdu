@@ -72,7 +72,7 @@ Vocab drafting should cost nothing beyond the ChatGPT subscription. The app hand
 
 ### Open Questions
 
-- None open. (Button placement resolved to the agent default: all four at the bottom of the Vocab list.)
+- None open. (Button placement: first the agent default, all four at the bottom of the Vocab list; moved above the list 2026-09-23 after smoke-test-06, since a long list buried them.)
 
 ## Decisions
 

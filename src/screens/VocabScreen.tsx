@@ -60,17 +60,17 @@ export function VocabScreen({
           <button type="button" onClick={() => setAdding(true)}>
             New item
           </button>
-          <VocabList
-            filters={filters}
-            onFilters={changeFilters}
-            now={new Date().toISOString()}
-            onOpen={open}
-          />
           <HandoffPanel
             onChanged={() => {
               onChanged();
               setFilters((current) => ({ ...current }));
             }}
+            onOpen={open}
+          />
+          <VocabList
+            filters={filters}
+            onFilters={changeFilters}
+            now={new Date().toISOString()}
             onOpen={open}
           />
         </>

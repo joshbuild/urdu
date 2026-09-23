@@ -648,11 +648,11 @@ button.grade--hesitant {
   color: #fffef9;
 }
 
-/* f06: the ChatGPT round trip below the Vocab list. */
+/* f06: the ChatGPT round trip above the Vocab list, where a long list cannot bury it. */
 .handoff {
-  margin-top: 28px;
-  padding-top: 16px;
-  border-top: 1px solid #d5dfdd;
+  margin: 16px 0 20px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #d5dfdd;
 }
 
 .handoff-buttons {
