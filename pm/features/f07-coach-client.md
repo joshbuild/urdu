@@ -1,6 +1,6 @@
 # Feature Plan — Coach Client
 
-**Status**: 🟡 IN PROGRESS — *s01–s04 built; voice add verified on the phone (2026-09-21). s05 prompt tuning next; migration 0003 is local-only.*
+**Status**: 🟡 IN PROGRESS — *s01–s04 built; voice add verified on the phone (2026-09-21). s05 prompt tuning next; migration 0003 applied remotely and deployed 2026-09-23.*
 **Handle**: `f07`
 **Created**: *2026-09-18* · **Updated**: *2026-09-21*
 
@@ -117,7 +117,7 @@ Agent-resolved from the code; none changes scope.
 
 - The remaining s03 checks (duplicate add, tracked quiz, hide-to-end, spend) ride smoke-test-07.
 - s05 prompt tuning against the six mp02 notes. The OpenAI key is a Cloudflare secret only (260921a), so tuning is judged against the deployment, not `pnpm dev`.
-- s06: the sponsor applies migration 0003 remotely and deploys, then smoke-test-07 (written at s06). Until then the deployed Worker has no `voice_sessions` table, so **do not deploy s04 without the migration** — every session create would fail.
+- s06: smoke-test-07 (written at s06). Migration 0003 was applied remotely and deployed by the sponsor on 2026-09-23.
 
 ### Open Questions
 

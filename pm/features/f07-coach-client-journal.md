@@ -69,3 +69,9 @@ from React state, so the report does not depend on a re-render happening first.
 
 **Not deployable on its own:** migration 0003 is local only. Deploying s04 before the sponsor
 applies it remotely would make every session create fail on a missing table.
+
+## 2026-09-23 — migration 0003 remote, s04 deployed
+
+The sponsor applied migration 0003 remotely, then deployed (build `07d51e5`, which also carries
+Settings › About). The deployed Worker now has `voice_sessions`, so s04 spend is live. Not yet
+confirmed by a voice session on the phone.
