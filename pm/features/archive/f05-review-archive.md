@@ -1,8 +1,8 @@
 # Feature Plan — Review
 
-**Status**: 🟡 IN PROGRESS — *s01–s04 built 2026-09-18; smoke-test-05 awaiting the sponsor.*
+**Status**: 🟢 SHIPPED — *closed 2026-09-22. s01–s05 done; smoke-test-05 green on the phone.*
 **Handle**: `f05`
-**Created**: *2026-09-18* · **Updated**: *2026-09-18*
+**Created**: *2026-09-18* · **Updated**: *2026-09-22*
 
 **Owner docs it serves**:
 - `pm/PRD.md` — FR-E1..E4 (uses FR-A4 recording, FR-A7 due selection, FR-I1 session limit)
@@ -10,6 +10,31 @@
 - `shared/mastery.ts` — grade names and order (display only; the Worker applies them)
 
 > **One-line:** A due-item review session on the phone: pick a direction, flip each card, grade it on the five-step ladder or skip, and see a short tally at the end.
+
+## Archived — as shipped (2026-09-22)
+
+**Status:** 🟢 shipped. All three Done-When conditions met: `smoke-tests/archive/smoke-test-05_archive.md`
+green end to end on the installed phone PWA (Parts A–F), graded items verified in the Vocab tab
+with skipped items unchanged, and `pnpm check` green on the deployed build.
+
+**What shipped:** the Review tab — start panel with due count, direction choice (Urdu → English
+default, English → Urdu), session limit and a **review ahead (days)** field (`GET /api/vocab/due?ahead=N`,
+0–365); the card with Nastaliq prompt, Speak, Reveal and the full answer face; five grade buttons in
+ladder order plus Skip; end early and an end tally. A failed grade stays on the card with a retry, a
+404 counts as a skip, a 401 hands off to the lock screen. The session is a pure reducer in
+`src/review/session.ts`. Sponsor add-ons folded in: remembered Vocab sort, colour-coded mastery pills,
+and gentler production grading (−1/0/0/+1/+2, DECISIONS 260918b). The D2 finding — Android Chrome's
+sticky `:hover` painting the wrong grade button teal — was fixed in `e501266` (hover gated behind
+`@media (hover: hover)`) and confirmed in F5.
+
+**Where the truth lives now:** `src/review/session.ts` and its tests, `src/screens/ReviewScreen.tsx`;
+grading and scheduling in `shared/mastery.ts` / `shared/ladders.ts` (re-based by f09); the due route's
+`ahead` parameter in the Worker's vocab routes; PRD FR-E1..E4. User-facing changes are in `CHANGELOG.md`
+`[Unreleased]`.
+
+**Carried forward:** tag-filtered sessions and undo-a-grade stay deferred (see Exclusions) — raise them
+only if the sponsor asks. The SRS follow-ups (per-direction statistics, automatic direction choice)
+already sit in `pm/TODO.md` from f09.
 
 ## Intent
 

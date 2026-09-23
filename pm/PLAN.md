@@ -32,7 +32,7 @@
 **Goal:** The daily loop works on the phone: paste, read, hear, save, review.
 - f03 `reader` (🟢 shipped 2026-09-17): FR-C1..C8 including the selection action bar, Add to vocab form, Define ladder, voice picker.
 - f04 `vocab-ui` (🟢 shipped 2026-09-18): FR-D1..D3 and Settings (FR-I1 minus voice spend).
-- f05 `review`: FR-E1..E4.
+- f05 `review` (🟢 shipped 2026-09-22): FR-E1..E4.
 - f08 `vocab-enrich` (planned, added 2026-09-17): an LLM drafts every field of a new vocab item from the Add form (reader and FR-D3), the sponsor reviews before save. Server-side through Urdu Core, capped spend, same OpenAI key as f07. Manual entry stays as the fallback. Handle is f08 because f06/f07 were already taken. Sponsor capture 2026-09-22 sharpens the entry point: a **Complete empty fields** button on the Add-vocab screen, enabled only when at least one of the English, transliteration or Urdu term fields is non-blank, which sends what is there and fills the rest. **On hold 2026-09-18** (DECISIONS 260918f) in favour of the ChatGPT paste path.
 - f09 `srs-ladder` (🟢 shipped 2026-09-22): the SRS redesign from `research/urdu-vocabulary-srs-research-and-design.md` (DECISIONS 260918c/d/e). Versioned geometric ladders, timestamp scheduling, richer review events; migration 0002 applied to production before its deploy.
 - **Exit:** Sponsor uses the app for reading and review on the phone for several consecutive days without needing Airtable.
@@ -57,7 +57,7 @@
 | f02 | `features/archive/f02-airtable-import-archive.md` | 🟢 shipped 2026-09-17 | One-time idempotent import of the Airtable "Urdu Vocab" base into D1. |
 | f03 | `features/archive/f03-reader-archive.md` | 🟢 shipped 2026-09-17 | Paste-and-read in Nastaliq with tap-to-speak, selection action bar, add and define. |
 | f04 | `features/archive/f04-vocab-ui-archive.md` | 🟢 shipped 2026-09-18 | Browse, search, edit, and create vocabulary; settings. |
-| f05 | `features/f05-review.md` | 🟡 in progress (s01) | Due-item review session with five-grade self-scoring. |
+| f05 | `features/archive/f05-review-archive.md` | 🟢 shipped 2026-09-22 | Due-item review session with five-grade self-scoring. |
 | f06 | `features/f06-coach-contract.md` | 🟡 in progress (Stages 1–2 built, smoke-test-06 open) | Coach tool routes, bearer auth, clipboard handoff import with Copy prompt, OpenAPI description. |
 | f07 | `features/f07-coach-client.md` | 🟡 in progress | In-app GPT-Live-1 voice Coach (FR-G Option 2, chosen by mp02). |
 | f08 | `features/f08-vocab-enrich.md` | on hold | LLM drafts all fields of a new vocab item for review before save (Phase 2, after f05). |

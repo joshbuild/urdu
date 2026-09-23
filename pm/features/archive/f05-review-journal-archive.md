@@ -2,9 +2,15 @@
 
 *Verbose per-session narration for f05. The feature doc (`f05-review.md`) is canonical for scope, plan and decisions; this file is the story of how it went. Newest session at the top.*
 
+## 260922b — smoke-test-05 green, closed
+
+**Current state**: 🟢 shipped 2026-09-22.
+
+The sponsor finished smoke-test-05 on the redeployed build: Parts D–F all green. F5 confirmed the D2 button-colour fix (`e501266`, sticky `:hover` on Android Chrome), and F4 confirmed English → Urdu Wrong drops one level. `pnpm check` green, then `/pm-close`: tombstone, doc, journal and smoke test archived, PLAN and STATUS updated.
+
 ## 260918b — opened, s01–s05, sponsor add-ons, grading rethink
 
-**Current state**: 🟡 in progress. Smoke-test-05 is part-way green on the phone (A–C ticked); D, E and F are open. The sponsor needs to redeploy for Part F.
+**State then**: 🟡 in progress. Smoke-test-05 is part-way green on the phone (A–C ticked); D, E and F are open. The sponsor needs to redeploy for Part F.
 
 **Opening.** The due and review routes already existed from f01, so the first build was client-only. `src/review/session.ts` is a pure reducer: start → reveal → submit → recorded/failed, skip, end, reset, and `promptSide` for the direction. The Reveal gate and the in-flight guard are both enforced there. `ReviewScreen` has the start panel, the card, the grade bar and the tally. A 404 on a grade counts as a skip, and a 401 hands off to App's lock. `pnpm check` was green at 307.
 
