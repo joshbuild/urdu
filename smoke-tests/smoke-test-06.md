@@ -24,7 +24,7 @@ pnpm run deploy
 > caps when the rows are absent, and Settings simply omits the spend line. Note
 > it and carry on.
 
-- [ ] A1 Deploy succeeds. On the phone, the Vocab tab shows a **CHATGPT**
+- [x] A1 Deploy succeeds. On the phone, the Vocab tab shows a **CHATGPT**
       section under the list with four buttons: Copy prompt, Paste new vocab,
       Copy fill-in prompt, Paste fill-ins.
 
@@ -35,9 +35,9 @@ pnpm run deploy
 - [ ] B2 In a new ChatGPT chat, paste the prompt and add 3 words after it:
       one new Urdu word, one English word, and one word **already in your
       vault**. Send it.
-- [ ] B3 ChatGPT replies with JSON only (a ```json fence around it is fine).
+- [x] B3 ChatGPT replies with JSON only (a ```json fence around it is fine).
       Copy the reply.
-- [ ] B4 Tap **Paste new vocab**, paste, then **Save to vault**. Expected: two
+- [x] B4 Tap **Paste new vocab**, paste, then **Save to vault**. Expected: two
       lines read "Added" and the vault word reads "Already in your vault",
       each with an Open link.
 - [ ] B5 Open one of the added words. Its fields match the reply, and it is
@@ -70,3 +70,11 @@ pnpm run deploy
       message here). That tells us whether the prompt needs tightening.
 
 Notes:
+
+- 2026-09-23: deployed as `07d51e5` with migration 0003 applied remotely first, so
+  Part A's voice warning no longer applies. Part B was run through the standing ChatGPT
+  Project instructions (`src/handoff/chatgpt-project-instructions.md`, command
+  `vocab-json` after a real conversation) instead of B1–B2's Copy prompt: the chat
+  minted its own `handoff_id`, and the paste added the new words. Whether the reply
+  included a word already in the vault (B4's duplicate line) was not reported. B1–B2
+  (Copy prompt), B5–B7 and Part C are still to run.
