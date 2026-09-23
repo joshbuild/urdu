@@ -6,6 +6,9 @@ dist/
 
 data/
 
+# Production D1 dumps (wrangler d1 export). Real vocab and session hashes; never commit.
+backups/
+
 # f03: the Google Fonts zip and extracted TTFs. The served subset is checked in
 # under public/fonts/; regenerate it with scripts/subset-font.sh.
 font/
