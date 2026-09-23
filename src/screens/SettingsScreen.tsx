@@ -1,6 +1,7 @@
 // f03 s01/s04, f04 s06, f09, f07 s04. Lock this device (from the f01 shell), the voice picker, the
 // review session limit (FR-I1), review spacing (the active ladder) and the voice Coach's spend
-// (today's total and the two daily caps, FR-G / FR-I1).
+// (today's total and the two daily caps, FR-G / FR-I1). About shows the commit this build came
+// from, to match the deployed app against the repo.
 
 import { useEffect, useState } from "react";
 import type { VoiceSpendResponse } from "../../shared/api";
@@ -260,8 +261,20 @@ export function SettingsScreen({
       <button type="button" className="secondary" onClick={onLock} disabled={busy}>
         {busy ? "Locking…" : "Lock this device"}
       </button>
+
+      <h2>About</h2>
+      <p className="hint">
+        Version <strong>{__BUILD__.commit}</strong>
+        {__BUILD__.dirty && " + local changes"}
+        {__BUILD__.committedAt && <>, committed {when(__BUILD__.committedAt)}</>}. Built{" "}
+        {when(__BUILD__.builtAt)}.
+      </p>
     </section>
   );
+}
+
+function when(iso: string): string {
+  return new Date(iso).toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" });
 }
 
 // A dollar cap. Edits stay local while typing; a valid amount saves when the field is left, and

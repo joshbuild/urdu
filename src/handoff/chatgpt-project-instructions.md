@@ -1,7 +1,7 @@
 # ChatGPT "Urdu Coach" Project instructions
 
 Paste everything below the line into the ChatGPT Project's custom instructions. Then, after
-the chat gives you a vocab list, type `vocab-json`; copy the reply and use **Paste handoff**
+the chat gives you a vocab list, type `vocab-json`; copy the reply and use **Paste new vocab**
 at the bottom of the app's Vocab tab.
 
 This is a standing version of `newVocabPrompt` in `prompts.ts`: same conventions and JSON
