@@ -34,6 +34,9 @@ export type VocabItem = {
   due_at: string | null;
   source: VocabSource;
   airtable_id: string | null;
+  // UTC instant this item was last in an applied accuracy check (f11); null means never checked.
+  // Only the check apply writes it, and a stamp is not an edit, so updated_at is left alone.
+  checked_at: string | null;
   created_at: string;
   updated_at: string;
 };
@@ -205,8 +208,16 @@ export const MAX_HANDOFF_REVISIONS = 20;
 export const MAX_HANDOFF_ID_LENGTH = 100;
 
 // handoffs.status values (Appendix A leaves them to f06). The voice ones (f07) key one tool call
-// each, `voice:<session id>:<call id>`, so a retried call returns its first result.
-export const HANDOFF_STATUSES = ["applied", "revised", "voice_add", "voice_review"] as const;
+// each, `voice:<session id>:<call id>`, so a retried call returns its first result. A check batch
+// (f11) is `check_issued` from Copy check prompt until its corrections are applied, then `checked`.
+export const HANDOFF_STATUSES = [
+  "applied",
+  "revised",
+  "voice_add",
+  "voice_review",
+  "check_issued",
+  "checked",
+] as const;
 export type HandoffStatus = (typeof HANDOFF_STATUSES)[number];
 
 // FR-F2 candidate shape.
@@ -276,6 +287,18 @@ export type RevisionsResponse = {
 };
 
 export type IncompleteResponse = { items: VocabItem[]; total: number };
+
+// f11 accuracy check (FR-F9). A batch is the least recently checked items, recorded by the Worker
+// under a handoff_id it mints, so the corrections paste can be judged against it.
+export const MAX_CHECK_BATCH = 20;
+
+export type CheckBatchResponse = {
+  // Null only when the vault is empty: nothing to check, and nothing recorded.
+  handoff_id: string | null;
+  items: VocabItem[];
+  // Items in the whole vault never checked, for the copy note.
+  never_checked: number;
+};
 
 // f07 voice Coach (FR-B5, FR-F1..F3 through cookie routes, DECISIONS 260918h).
 // The spend figures ride the create response so the screen can warn at the soft cap from its first

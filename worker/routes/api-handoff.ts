@@ -1,9 +1,10 @@
-// Clipboard handoff routes (f06 Stages 1-2, FR-F4/F6/F7). Mounted behind requireSession: the
-// sponsor pastes the chat's reply into the PWA, so the session cookie is the right credential.
-// The bearer-token /coach/* routes are Stage 3.
+// Clipboard handoff routes (f06 Stages 1-2, FR-F4/F6/F7; f11 accuracy check, FR-F9). Mounted
+// behind requireSession: the sponsor pastes the chat's reply into the PWA, so the session cookie
+// is the right credential. The bearer-token /coach/* routes are Stage 3.
 
 import { Hono } from "hono";
-import type { ConflictResponse, IncompleteResponse } from "../../shared/api";
+import type { CheckBatchResponse, ConflictResponse, IncompleteResponse } from "../../shared/api";
+import { issueCheckBatch } from "../domain/check";
 import { ID_CONFLICT, importHandoff, incompleteVocab, reviseVocab } from "../domain/handoff";
 import { parseHandoff, parseRevisions } from "../domain/handoff-input";
 import { activeLadderId } from "../domain/settings";
@@ -42,6 +43,12 @@ handoffRoutes.post("/api/handoffs/revisions", async (c) => {
   const preview = c.req.query("preview") === "1";
   const result = await reviseVocab(c.env.DB, parsed.value, new Date(), preview);
   return result === ID_CONFLICT ? c.json(conflict, 409) : c.json(result);
+});
+
+// f11: selects and records the next check batch. The body is ignored.
+handoffRoutes.post("/api/handoffs/check-batch", async (c) => {
+  const body: CheckBatchResponse = await issueCheckBatch(c.env.DB, new Date());
+  return c.json(body);
 });
 
 handoffRoutes.get("/api/vocab/incomplete", async (c) => {

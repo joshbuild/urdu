@@ -1,6 +1,6 @@
 # Feature Plan — Vocab Check
 
-**Status**: 🟡 IN PROGRESS — *opened 2026-09-23; s00 planning done 2026-09-24 (questions settled, stress-tested); s01 next.*
+**Status**: 🟡 IN PROGRESS — *opened 2026-09-23; s00 planning done 2026-09-24 (questions settled, stress-tested); s01 rotation built 2026-09-24; s02 corrections next.*
 **Handle**: `f11`
 **Created**: *2026-09-23* · **Updated**: *2026-09-24*
 
@@ -173,9 +173,9 @@ subscription, and the AI only proposes (VISION invariant): Urdu Core validates a
 ### Roadmap
 
 0. **s00 plan:** ✅ questions settled 2026-09-23; stress-tested 2026-09-24.
-1. **s01 rotation:** migration 0004 (`checked_at`, `vocab_check` index) and its test;
+1. **s01 rotation:** ✅ 2026-09-24. Migration 0004 (`checked_at`, `vocab_check` index) and its test;
    `VocabItem.checked_at`; `HANDOFF_STATUSES` += `check_issued`, `checked`;
-   `POST /api/handoffs/check-batch`; batch tests.
+   `POST /api/handoffs/check-batch` (`worker/domain/check.ts`); batch tests (`test/check.test.ts`).
 2. **s02 corrections:** `parseCorrections` (preview and apply shapes);
    `POST /api/handoffs/corrections` with `?preview=1`; plan, field-guarded apply, guarded reset,
    stamping, handoff row transition; tests.
@@ -196,10 +196,13 @@ key involved.
   round trip), grounded in the FR-F7 revisions code.
 - 2026-09-24: stress-tested; sponsor chose the Worker-recorded batch and per-field ticks; plan
   hardened (see Decisions).
+- 2026-09-24: s01 rotation built: migration 0004 (applied to local D1: 36 rows, all `checked_at`
+  null), `POST /api/handoffs/check-batch`, `VocabItem.checked_at`, the two new handoff statuses.
+  `pnpm check` green at 472.
 
 ### Next Steps
 
-- s01 rotation.
+- s02 corrections.
 
 ### Open Questions
 
@@ -222,6 +225,8 @@ key involved.
   item outside the batch. Cost accepted: one row per copy, abandoned ones kept.
 - 2026-09-24 (sponsor, stress test): **per-field ticks, on by default,** over per-item ticks
   (on or off): a mixed suggestion keeps its good fields without a hand edit.
+- 2026-09-24 (agent, s01): on an empty vault `check-batch` returns `handoff_id: null` (nothing is
+  recorded, so there is no id to paste against). Issuing a batch stamps nothing; only apply does.
 - 2026-09-24 (agent, stress test):
   - The never-clobber guard is per field: apply sends the old value the preview showed for each
     accepted field and each write is conditioned on it. An item-level `updated_at` token was

@@ -2,7 +2,16 @@
 
 *Verbose per-front record. Hub: `pm/STATUS.md`; doc: `f11-vocab-check.md`.*
 
-**Current state:** 🟡 in progress; s00 planning done (stress-tested 2026-09-24). s01 rotation is next (migration 0004 `checked_at`, `POST /api/handoffs/check-batch`). No code written yet.
+**Current state:** 🟡 in progress; s01 rotation built 2026-09-24. s02 corrections is next (`parseCorrections`, `POST /api/handoffs/corrections` with preview, field-guarded apply, guarded reset, stamping). Migration 0004 is applied locally only; the sponsor applies it remotely before the s04 deploy.
+
+## 2026-09-24 — s01 rotation built
+
+- `migrations/0004_vocab_check.sql`: `vocab.checked_at` (nullable) and the index `vocab_check (checked_at, added_at)`. It's applied to local D1, where all 36 rows now have `checked_at` null.
+- `shared/api.ts`: `VocabItem.checked_at`, `HANDOFF_STATUSES` += `check_issued`, `checked`, `MAX_CHECK_BATCH = 20`, `CheckBatchResponse`. `createVocab` sets `checked_at: null`. Every read is `SELECT *` through `toItem`, so the list, the item, due and export all carry the column without further edits.
+- `worker/domain/check.ts` `issueCheckBatch`, mounted as `POST /api/handoffs/check-batch`. It orders by `checked_at ASC NULLS FIRST, added_at ASC, id ASC`, limit 20, counts `never_checked` across the vault, and inserts a `check_issued` handoffs row with payload `{vocab_ids}` and a SQL-null outcome. Each copy mints a new ULID. An empty vault returns `handoff_id: null` and records nothing.
+- Tests: `test/check.test.ts` (6) covers the order with every tiebreak, the cap of 20 with a vault-wide `never_checked`, one row per copy, the empty vault, and `checked_at` surviving an edit (including a rung change), a review and an Airtable re-import, plus the export carrying it. `test/migration.test.ts` gained 0004 on seeded rows: `checked_at` null, rows otherwise equal, index present. Client fixtures gained `checked_at: null`.
+- `pnpm check` green: 33 files, 472 tests. It took 73 s, so the AVG toggles were holding.
+- Toolchain note: a `git stash` round trip rewrote the touched files with CRLF and Biome flagged them all as format errors. Restored with `sed -i 's/$//'`. Avoid stashing to compare lint baselines here.
 
 ## 2026-09-24 — stress-tested
 

@@ -1,5 +1,6 @@
-// 0001 → 0002 on a scratch D1 holding legacy rows (f09): the ladder migration must keep every
-// row and event, put them on the legacy ladder, and leave due times where they were.
+// Migrations on a scratch D1 holding rows. 0001 → 0002 (f09): the ladder migration must keep
+// every row and event, put them on the legacy ladder, and leave due times where they were.
+// 0003 → 0004 (f11): checked_at arrives null on every row, the rows otherwise untouched.
 import { env } from "cloudflare:workers";
 import { beforeEach, describe, expect, it } from "vitest";
 
@@ -28,6 +29,7 @@ beforeEach(async () => {
     "tags",
     "sessions",
     "settings",
+    "voice_sessions",
   ];
   await db.batch(tables.map((t) => db.prepare(`DROP TABLE IF EXISTS ${t}`)));
   await apply("0001");
@@ -164,5 +166,36 @@ describe("migration 0002_srs_ladder", () => {
     await apply("0002");
     const row = await db.prepare("SELECT count(*) AS n FROM vocab").first<{ n: number }>();
     expect(row?.n).toBe(0);
+  });
+});
+
+describe("migration 0004_vocab_check", () => {
+  const IDS = ["01J00000000000000000000001", "01J00000000000000000000002"];
+
+  it("adds checked_at as null on every row, keeps the rows, and indexes the rotation", async () => {
+    await apply("0002");
+    await apply("0003");
+    await db.batch(
+      IDS.map((id, i) =>
+        db
+          .prepare(
+            `INSERT INTO vocab (id, urdu, urdu_key, kind, english, ladder_id, ladder_step,
+               interval_seconds, added_at, last_reviewed_at, due_at, source, created_at, updated_at)
+             VALUES (?, ?, ?, 'word', 'x', 3, 2, 25000, ?, ?, ?, 'manual', ?, ?)`,
+          )
+          .bind(id, `w${i}`, `w${i}`, NOW, NOW, NOW, NOW, NOW),
+      ),
+    );
+    const before = (await db.prepare("SELECT * FROM vocab ORDER BY id").all()).results;
+
+    await apply("0004");
+
+    const after = (await db.prepare("SELECT * FROM vocab ORDER BY id").all()).results;
+    expect(after).toEqual(before.map((row) => ({ ...row, checked_at: null })));
+
+    const index = await db
+      .prepare("SELECT sql FROM sqlite_master WHERE type = 'index' AND name = 'vocab_check'")
+      .first<{ sql: string }>();
+    expect(index?.sql).toContain("(checked_at, added_at)");
   });
 });
