@@ -42,7 +42,7 @@
 - f06 `coach-contract`: FR-F1..F6; its paste path (FR-F2, F4, F6, F7: Copy prompt → ChatGPT chat → paste JSON, for new items and for filling in incomplete ones) is built first, straight after f05/f09, ahead of the rest of Phase 3 (DECISIONS 260918f). Full scope: (Coach routes, bearer auth, handoff idempotency, OpenAPI description, PWA paste-handoff screen).
 - f07 `coach-client`: FR-G Option 2 (chosen by mp02). Voice screen, Worker-brokered GPT-Live-1 WebRTC session (FR-B5), Coach prompt in-repo (start from `mini-plans/mp02-coach-instructions.md` and the TODO tuning notes), tools through cookie routes over the f06 domain logic (260918h), spend display and caps. f06 Stage 3's bearer routes and OpenAPI move to v1.
 - f10 `coach-followups` (planned, added 2026-09-22, DECISIONS 260922a): opens straight after f07 closes. Three small slices sharing one phone smoke: a Coach vocab-edit voice tool (FR-F8) with an optional interval reset, tappable Urdu in transcript bubbles, and the most recent transcript kept on the device.
-- f11 `vocab-check` (🟡 in progress, opened 2026-09-23): a ChatGPT copy–paste round trip that checks existing entries for accuracy; per-item old → new preview, accepted fields overwritten, schedule untouched (FR-F9).
+- f11 `vocab-check` (🟡 in progress, opened 2026-09-23): a ChatGPT copy–paste round trip that checks existing entries for accuracy; per-field old → new preview, ticked fields overwritten, schedule untouched (FR-F9).
 - **Exit:** After a Voice session, new vocabulary and quiz results are in D1 via the Coach client, with the clipboard handoff verified as a working fallback. v0 is complete; amend `VISION.md` §16 line on custom voice tutors to match the shipped option.
 
 ### Phase 4 — v1 (coarse)
@@ -64,4 +64,4 @@
 | f08 | `features/f08-vocab-enrich.md` | on hold | LLM drafts all fields of a new vocab item for review before save (Phase 2, after f05). |
 | f09 | `features/archive/f09-srs-ladder-archive.md` | 🟢 shipped 2026-09-22 | Versioned geometric review ladders, timestamp scheduling, richer review events (DECISIONS 260918c/e). |
 | f10 | `features/f10-coach-followups.md` | planned | Coach vocab edits by voice, tappable Urdu in transcripts, last transcript kept on device (DECISIONS 260922a). |
-| f11 | `features/f11-vocab-check.md` | 🟡 in progress (s00 planning) | ChatGPT round trip that checks existing vocab for accuracy and overwrites accepted corrections (FR-F9). |
+| f11 | `features/f11-vocab-check.md` | 🟡 in progress (s01 next) | ChatGPT round trip that checks existing vocab for accuracy and overwrites accepted corrections (FR-F9). |
