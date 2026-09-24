@@ -64,4 +64,4 @@
 | f08 | `features/f08-vocab-enrich.md` | on hold | LLM drafts all fields of a new vocab item for review before save (Phase 2, after f05). |
 | f09 | `features/archive/f09-srs-ladder-archive.md` | 🟢 shipped 2026-09-22 | Versioned geometric review ladders, timestamp scheduling, richer review events (DECISIONS 260918c/e). |
 | f10 | `features/f10-coach-followups.md` | planned | Coach vocab edits by voice, tappable Urdu in transcripts, last transcript kept on device (DECISIONS 260922a). |
-| f11 | `features/f11-vocab-check.md` | 🟡 in progress (s01 next) | ChatGPT round trip that checks existing vocab for accuracy and overwrites accepted corrections (FR-F9). |
+| f11 | `features/f11-vocab-check.md` | 🟡 in progress (s01 built, s02 next) | ChatGPT round trip that checks existing vocab for accuracy and overwrites accepted corrections (FR-F9). |
