@@ -14,7 +14,8 @@
 ## Tasks
 *Bullets, each tagged.*
 
-- After the next deploy, on the phone: the CHATGPT section sits above the Vocab list, and saving fill-ins replaces the "Fill-in prompt copied" note with a fresh count (f06 polish, `bbdd132`, `48786f6`). #sponsor-respond
+- f07 spend check (Done When): after today's voice sessions, compare Settings › today's voice spend with the OpenAI dashboard (it showed $0.15 on 2026-09-23 for under 5 minutes). Within a cent or two passes; the app lower suggests lost seconds or a missed final usage report. Mind the dashboard's UTC day and lag. #sponsor-respond
+- On the phone, next time fill-ins are saved: the "Fill-in prompt copied" note is replaced by a fresh count (f06 polish, `48786f6`). The CHATGPT section above the Vocab list was confirmed 2026-09-23. #sponsor-respond
 
 - SRS follow-ups deferred by f09 (DECISIONS 260918e): per-direction statistics and automatic direction choice, including keeping one item from meeting both directions on the same day (report §4.2, §5.4, AC11); due-time success and workload by direction, interval band and ladder (§9, AC13; review events now carry every input); an "apply immediately" ladder remap with a preview (§6.2); same-session relearning after a first-rung miss (§11). Revisit once a few weeks of review history exist. #agent-research
 
