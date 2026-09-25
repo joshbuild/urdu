@@ -1,10 +1,17 @@
 // f06 Stages 1-2: the ChatGPT round trip at the top of the Vocab list. Copy a prompt, run it
 // in any ChatGPT chat, paste the JSON reply back. New vocab (FR-F4/F6) saves on paste; fill-ins
-// (FR-F7) are previewed and saved only on confirmation.
+// (FR-F7) are previewed and saved only on confirmation; f11 corrections (FR-F9) are previewed
+// with a tick per change and apply only the ticked ones.
 
 import { useState } from "react";
 import type {
+  CheckBatchResponse,
   ConflictResponse,
+  CorrectionPlan,
+  CorrectionResult,
+  CorrectionsResponse,
+  FieldChange,
+  FillableField,
   HandoffResponse,
   IncompleteResponse,
   InvalidRequestResponse,
@@ -14,6 +21,16 @@ import type {
 } from "../../shared/api";
 import { Sheet } from "../reader/Sheet";
 import {
+  acceptList,
+  defaultTicks,
+  isReported,
+  isShown,
+  type Ticks,
+  toggleField,
+  toggleReset,
+} from "./check";
+import {
+  checkPrompt,
   describeInvalid,
   FIELD_LABELS,
   fillInPrompt,
@@ -71,7 +88,7 @@ export function HandoffPanel({
 }) {
   const [copied, setCopied] = useState<Copied>({ kind: "none" });
   const [busy, setBusy] = useState(false);
-  const [pasting, setPasting] = useState<"new" | "fill" | null>(null);
+  const [pasting, setPasting] = useState<"new" | "fill" | "check" | null>(null);
 
   // After fill-ins save, the note from Copy fill-in prompt counts items that may now be complete,
   // so it is replaced with a fresh count.
@@ -116,6 +133,25 @@ export function HandoffPanel({
     }
   }
 
+  // The Worker picks and records the batch, so the prompt waits on it.
+  async function copyCheck() {
+    setBusy(true);
+    const posted = await postJson<CheckBatchResponse>("/api/handoffs/check-batch", {});
+    setBusy(false);
+    if (!posted.ok) return setCopied({ kind: "copied", note: posted.message });
+    const { handoff_id, items, never_checked } = posted.body;
+    if (handoff_id === null) {
+      return setCopied({ kind: "copied", note: "Your vault is empty; nothing to check." });
+    }
+    const fresh = never_checked > 0 ? `; ${never_checked} never checked in the vault` : "";
+    setCopied(
+      await copy(
+        checkPrompt(items, handoff_id),
+        `Check prompt copied (${items.length} items${fresh}). Paste it into ChatGPT.`,
+      ),
+    );
+  }
+
   return (
     <div className="handoff">
       <p className="eyebrow">CHATGPT</p>
@@ -142,6 +178,12 @@ export function HandoffPanel({
         </button>
         <button type="button" className="secondary" onClick={() => setPasting("fill")}>
           Paste fill-ins
+        </button>
+        <button type="button" className="secondary" onClick={copyCheck} disabled={busy}>
+          Copy check prompt
+        </button>
+        <button type="button" className="secondary" onClick={() => setPasting("check")}>
+          Paste corrections
         </button>
       </div>
       {copied.kind === "copied" && (
@@ -174,6 +216,16 @@ export function HandoffPanel({
           onChanged={() => {
             onChanged();
             void recount();
+          }}
+        />
+      )}
+      {pasting === "check" && (
+        <PasteCheckSheet
+          onClose={() => setPasting(null)}
+          onChanged={onChanged}
+          onOpen={(id) => {
+            setPasting(null);
+            onOpen(id);
           }}
         />
       )}
@@ -393,6 +445,272 @@ function PasteFillSheet({ onClose, onChanged }: { onClose: () => void; onChanged
           </button>
         </>
       )}
+    </Sheet>
+  );
+}
+
+// A phone is too narrow for old and new side by side, so each change takes two lines, old struck out.
+function ChangeValue({ change, side }: { change: FieldChange; side: "old" | "new" }) {
+  const value = change[side];
+  const props =
+    change.field === "example_urdu"
+      ? { className: "urdu-inline", dir: "rtl", lang: "ur" }
+      : { dir: "auto" as const };
+  if (side === "old") {
+    return value === null ? (
+      <span className="change-empty">(empty)</span>
+    ) : (
+      <del {...props}>{value}</del>
+    );
+  }
+  return (
+    <span>
+      →{" "}
+      {value === null ? (
+        <span className="change-empty">(removed)</span>
+      ) : (
+        <ins {...props}>{value}</ins>
+      )}
+    </span>
+  );
+}
+
+function Flag({ suggestion }: { suggestion: string }) {
+  return (
+    <p className="hint">
+      Suggested spelling:{" "}
+      <span className="urdu-inline" dir="rtl" lang="ur">
+        {suggestion}
+      </span>{" "}
+      (not applied; edit the item if you agree)
+    </p>
+  );
+}
+
+function PlanLine({
+  plan,
+  ticks,
+  onTicks,
+}: {
+  plan: CorrectionPlan;
+  ticks: Ticks;
+  onTicks: (ticks: Ticks) => void;
+}) {
+  const item = ticks[plan.vocab_id];
+  return (
+    <li>
+      <span className="urdu-inline" dir="rtl" lang="ur">
+        {plan.urdu}
+      </span>
+      {plan.outcome === "rejected" ? (
+        <> · Rejected ({plan.reason})</>
+      ) : (
+        <>
+          <p className="hint">{plan.reason}</p>
+          {plan.changes.map((change) => (
+            <label key={change.field} className="check change">
+              <input
+                type="checkbox"
+                checked={item?.fields[change.field] ?? false}
+                onChange={() => onTicks(toggleField(ticks, plan.vocab_id, change.field))}
+              />
+              <span className="change-body">
+                <span className="change-field">{FIELD_LABELS[change.field]}</span>
+                <ChangeValue change={change} side="old" />
+                <ChangeValue change={change} side="new" />
+              </span>
+            </label>
+          ))}
+          {plan.urdu_suggestion !== undefined && <Flag suggestion={plan.urdu_suggestion} />}
+          <label className="check">
+            <input
+              type="checkbox"
+              checked={item?.reset ?? false}
+              onChange={() => onTicks(toggleReset(ticks, plan.vocab_id))}
+            />
+            Reset to first rung
+          </label>
+        </>
+      )}
+    </li>
+  );
+}
+
+const RESET_LABEL = {
+  applied: "Reset to the first rung.",
+  skipped: "Not reset: the item was reviewed after the preview.",
+} as const;
+
+function fieldList(fields: readonly FillableField[]): string {
+  return fields.map((f) => FIELD_LABELS[f]).join(", ");
+}
+
+function ResultLine({
+  result,
+  onOpen,
+}: {
+  result: CorrectionResult;
+  onOpen: (id: string) => void;
+}) {
+  return (
+    <li>
+      <span className="urdu-inline" dir="rtl" lang="ur">
+        {result.urdu}
+      </span>
+      {result.outcome === "rejected" ? (
+        <> · Rejected ({result.reason})</>
+      ) : (
+        <>
+          <button type="button" className="link" onClick={() => onOpen(result.vocab_id)}>
+            Open
+          </button>
+          {result.written.length > 0 && (
+            <p className="hint">Saved: {fieldList(result.written.map((c) => c.field))}</p>
+          )}
+          {result.kept.length > 0 && (
+            <p className="hint">Not saved, edited after the preview: {fieldList(result.kept)}</p>
+          )}
+          {result.declined.length > 0 && (
+            <p className="hint">Unticked, left as they were: {fieldList(result.declined)}</p>
+          )}
+          {result.reset !== "not_asked" && <p className="hint">{RESET_LABEL[result.reset]}</p>}
+          {result.urdu_suggestion !== undefined && <Flag suggestion={result.urdu_suggestion} />}
+        </>
+      )}
+    </li>
+  );
+}
+
+type Previewed = Extract<CorrectionsResponse, { preview: true }>;
+type Applied = Extract<CorrectionsResponse, { preview: false }>;
+
+function PasteCheckSheet({
+  onClose,
+  onChanged,
+  onOpen,
+}: {
+  onClose: () => void;
+  onChanged: () => void;
+  onOpen: (id: string) => void;
+}) {
+  const [text, setText] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+  const [payload, setPayload] = useState<object>({});
+  const [plan, setPlan] = useState<Previewed | null>(null);
+  const [ticks, setTicks] = useState<Ticks>({});
+  const [applied, setApplied] = useState<Applied | null>(null);
+
+  async function preview() {
+    const pasted = parsePasted(text);
+    if (!pasted.ok) return setError(pasted.message);
+    setBusy(true);
+    setError("");
+    const posted = await postJson<CorrectionsResponse>(
+      "/api/handoffs/corrections?preview=1",
+      pasted.value,
+    );
+    setBusy(false);
+    if (!posted.ok) return setError(posted.message);
+    // An already-applied batch answers with its stored outcome, so there is nothing to tick.
+    if (!posted.body.preview) return setApplied(posted.body);
+    // The Worker accepted it, so it is an object.
+    setPayload(pasted.value as object);
+    setPlan(posted.body);
+    setTicks(defaultTicks(posted.body.results));
+  }
+
+  const accept = plan ? acceptList(plan.results, ticks) : [];
+
+  async function apply() {
+    setBusy(true);
+    setError("");
+    const posted = await postJson<CorrectionsResponse>("/api/handoffs/corrections", {
+      ...payload,
+      accept,
+    });
+    setBusy(false);
+    if (!posted.ok) return setError(posted.message);
+    if (posted.body.preview) return setError("Could not save. Please try again.");
+    setApplied(posted.body);
+    onChanged();
+  }
+
+  const errorLine = error && (
+    <p className="error" role="alert">
+      {error}
+    </p>
+  );
+
+  if (applied) {
+    const reported = applied.results.filter(isReported);
+    return (
+      <Sheet label="Check applied" onClose={onClose}>
+        <p className="eyebrow">CHECK APPLIED</p>
+        <p className="hint">
+          {applied.repeat
+            ? "This reply was already applied; nothing changed."
+            : `${applied.batch_size} ${applied.batch_size === 1 ? "item" : "items"} marked checked.`}
+        </p>
+        {reported.length > 0 && (
+          <ul className="handoff-results">
+            {reported.map((r) => (
+              <ResultLine key={r.vocab_id} result={r} onOpen={onOpen} />
+            ))}
+          </ul>
+        )}
+        <button type="button" onClick={onClose}>
+          Done
+        </button>
+      </Sheet>
+    );
+  }
+
+  if (plan) {
+    const shown = plan.results.filter(isShown);
+    const suggested = shown.filter((p) => p.outcome !== "rejected").length;
+    return (
+      <Sheet label="Preview corrections" onClose={onClose}>
+        <p className="eyebrow">PREVIEW CORRECTIONS</p>
+        <p className="hint">
+          {plan.batch_size} {plan.batch_size === 1 ? "item" : "items"} in this batch;{" "}
+          {suggested === 0
+            ? "the chat found nothing to change."
+            : `${suggested} with suggestions. Untick any you disagree with.`}
+        </p>
+        {shown.length > 0 && (
+          <ul className="handoff-results">
+            {shown.map((p) => (
+              <PlanLine key={p.vocab_id} plan={p} ticks={ticks} onTicks={setTicks} />
+            ))}
+          </ul>
+        )}
+        {errorLine}
+        <button type="button" onClick={apply} disabled={busy}>
+          {busy
+            ? "Saving…"
+            : accept.length === 0
+              ? "Mark checked"
+              : `Apply to ${accept.length} ${accept.length === 1 ? "item" : "items"}`}
+        </button>
+        <button type="button" className="secondary" onClick={onClose}>
+          Cancel
+        </button>
+      </Sheet>
+    );
+  }
+
+  return (
+    <Sheet label="Paste corrections" onClose={onClose}>
+      <p className="eyebrow">PASTE CORRECTIONS</p>
+      <PasteBox value={text} onChange={setText} />
+      {errorLine}
+      <button type="button" onClick={preview} disabled={busy}>
+        {busy ? "Checking…" : "Preview"}
+      </button>
+      <button type="button" className="secondary" onClick={onClose}>
+        Cancel
+      </button>
     </Sheet>
   );
 }

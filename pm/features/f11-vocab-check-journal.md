@@ -2,7 +2,17 @@
 
 *Verbose per-front record. Hub: `pm/STATUS.md`; doc: `f11-vocab-check.md`.*
 
-**Current state:** 🟡 in progress; s01 rotation and s02 corrections built 2026-09-24. s03 client is next (`checkPrompt`, Copy check prompt / Paste corrections, the preview with per-field and reset ticks, the result screen, smoke-test-11). Migration 0004 is applied locally only; the sponsor applies it remotely before the s04 deploy.
+**Current state:** 🟡 in progress; s01–s03 built 2026-09-24. s04 phone is next: the sponsor applies migration 0004 remotely **before** deploying, then runs `smoke-tests/smoke-test-11.md`. Migration 0004 is applied locally only.
+
+## 2026-09-24 — s03 client built
+
+- `src/handoff/prompts.ts` `checkPrompt(items, handoffId)`: self-contained like `fillInPrompt`. It carries the id the Worker minted, lists each item's id, urdu and present fields, spells out what to check, and asks for corrections only (null removes a field, `reason` is required, `urdu` is never changed, a doubtful spelling goes in `urdu_suggestion`, `[]` if all fine). The two prompts now share a `listItems` helper.
+- `src/handoff/check.ts`, the tick model: `isShown` (hides an unflagged `nothing` row), `tickable`, `defaultTicks` (every change on, reset off), `toggleField` / `toggleReset`, `acceptList` (the ticked fields with the old values the preview showed; an entry per item with a field or reset ticked; empty means Mark checked), `isReported` for the result screen.
+- `src/handoff/HandoffPanel.tsx`: **Copy check prompt** posts `/api/handoffs/check-batch` and copies the prompt (an empty vault gets a note instead). **Paste corrections** opens `PasteCheckSheet`: paste → Preview → per-change ticks and a reset tick → Apply / Mark checked → result screen with Saved / Not saved (edited after the preview) / Unticked / reset lines, the spelling flag, and Open links. A repeat goes straight to the result screen. `app.css` gained the stacked change rows.
+- Tests: `src/handoff/check.test.ts` (8) and a `checkPrompt` case in `prompts.test.ts`.
+- `smoke-tests/smoke-test-11.md`: migrate then deploy, plant two mistakes in the oldest batch, one round trip with all-ticked / partly-unticked / reset items, a repeat paste, rotation to a fresh batch, and an optional all-fine Mark checked.
+- Not run in a browser: unlocking `pnpm dev` needs the secret typed in, so the sheet's look at phone width is left to smoke-test-11 C3–C4.
+- `pnpm check` green: 35 files, 502 tests, ~62 s.
 
 ## 2026-09-24 — s02 corrections built
 

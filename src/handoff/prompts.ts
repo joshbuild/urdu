@@ -6,6 +6,7 @@
 import {
   FILLABLE_FIELDS,
   type FillableField,
+  MAX_CHECK_BATCH,
   MAX_HANDOFF_PROPOSALS,
   type VocabItem,
 } from "../../shared/api";
@@ -47,7 +48,8 @@ export function missingFields(item: VocabItem): FillableField[] {
   return FILLABLE_FIELDS.filter((field) => item[field] === null);
 }
 
-export function fillInPrompt(items: readonly VocabItem[], handoffId: string = ulid()): string {
+// Each item as the chat sees it: its id, its urdu and every field it has.
+function listItems(items: readonly VocabItem[]): string {
   const listed = items.map((item) => {
     const entry: Record<string, string> = { vocab_id: item.id, urdu: item.urdu };
     for (const field of FILLABLE_FIELDS) {
@@ -56,12 +58,16 @@ export function fillInPrompt(items: readonly VocabItem[], handoffId: string = ul
     }
     return entry;
   });
+  return JSON.stringify(listed, null, 2);
+}
+
+export function fillInPrompt(items: readonly VocabItem[], handoffId: string = ulid()): string {
   return `You are helping me complete entries in my Urdu vocabulary app. Each item below is missing some fields. For each item, supply only the fields it lacks, among: ${FILLABLE_FIELDS.join(", ")}. Do not repeat or change fields it already has, and keep "urdu" exactly as given so I can match your reply to the item.
 
 ${CONVENTIONS}
 
 Items:
-${JSON.stringify(listed, null, 2)}
+${listItems(items)}
 
 Return exactly this JSON shape, copying handoff_id as given, one revision per item, with vocab_id and urdu copied from the item:
 
@@ -73,6 +79,33 @@ Return exactly this JSON shape, copying handoff_id as given, one revision per it
 }
 
 ${JSON_ONLY}
+`;
+}
+
+// f11 (FR-F9): the accuracy check. The handoff_id comes from the Worker, which recorded the batch
+// under it, so unlike the other prompts it is never minted here.
+export function checkPrompt(items: readonly VocabItem[], handoffId: string): string {
+  return `You are checking entries in my Urdu vocabulary app for accuracy. Check every field of each item below against these conventions:
+
+${CONVENTIONS}
+
+In particular: is "english" the right meaning in everyday Pakistani use; is "roman" the spelling Pakistanis actually type; is "example_urdu" natural everyday Urdu, and does "example_english" translate it; are the "notes" accurate?
+
+Items:
+${listItems(items)}
+
+Return only the items with something wrong. For each, copy vocab_id and urdu exactly as given; include only the fields you would change, with their corrected values; set a field to null to remove it; add a missing field only if the entry needs it; and give one short "reason". Never change "urdu". If you think its spelling is wrong, put the spelling you suggest in "urdu_suggestion".
+
+Return exactly this JSON shape, copying handoff_id as given:
+
+{
+  "handoff_id": "${handoffId}",
+  "corrections": [
+    { "vocab_id": "...", "urdu": "...", "english": "...", "reason": "..." }
+  ]
+}
+
+If every item is fine, return "corrections": []. At most ${MAX_CHECK_BATCH} corrections. ${JSON_ONLY}
 `;
 }
 

@@ -9,10 +9,10 @@
 *Work items actively in flight. One line each → its doc/journal. Closed fronts drop off (rosters keep the full list).*
 
 - f07 `coach-client` — 🟡 IN PROGRESS, s01–s04 built (migration 0003 applied remotely and deployed 2026-09-23); s05 prompt tuning next → `features/f07-coach-client.md`
-- f11 `vocab-check` — 🟡 IN PROGRESS, s01 rotation and s02 corrections built 2026-09-24 (migration 0004 local only), s03 client next → `features/f11-vocab-check.md`
+- f11 `vocab-check` — 🟡 IN PROGRESS, s01–s03 built 2026-09-24 (migration 0004 local only); s04 phone next: sponsor applies 0004 remotely, deploys, runs smoke-test-11 → `features/f11-vocab-check.md`
 
 ## Next Session Pointers
 *The 1–3 concrete next actions for a cold start.*
 
-1. **f11 `vocab-check`**: s03 client (`checkPrompt`, Copy check prompt / Paste corrections in the CHATGPT section, preview with per-field and reset ticks, Apply / Mark checked, result screen, client tests, smoke-test-11), then s04 phone. The sponsor must apply 0004 remotely before the deploy that carries it.
+1. **f11 `vocab-check`**: s04 phone. The sponsor runs `smoke-tests/smoke-test-11.md`: `pnpm wrangler d1 migrations apply urdu --remote` **before** `pnpm run deploy` (the list fails without the column), then the ChatGPT round trip. After it is green: ripple PRD FR-F9 / Appendix A, AGENTS Project state and PLAN, then `/pm-close f11`.
 2. **f07 `coach-client`**: s04 spend is deployed; the sponsor compares Settings spend with the OpenAI dashboard later on 2026-09-23 (TODO). Then s05 prompt tuning. The rest of the s03 checks ride smoke-test-07. The OpenAI key is a Cloudflare secret only, so live voice checks run against the deployment, never `pnpm dev` (260921a). Once f07 closes, open f10 `coach-followups` (planned 2026-09-22 from the grill of the two Coach scope calls, DECISIONS 260922a): a vocab-edit voice tool, tappable Urdu in bubbles, the last transcript kept on the device. Toolchain: AVG Hardened Mode + CyberCapture off; never add exceptions.

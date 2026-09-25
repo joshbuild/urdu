@@ -694,6 +694,42 @@ button.grade--hesitant {
   margin: 0;
 }
 
+/* f11: a correction's change as a tickable old → new pair, stacked to fit a phone. */
+label.check.change {
+  align-items: flex-start;
+  margin: 8px 0 0;
+}
+
+label.check.change input {
+  margin-top: 2px;
+}
+
+.change-body {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.change-field {
+  color: #5a7472;
+  font-size: 0.875rem;
+}
+
+.change-body del {
+  color: #7a5a4c;
+}
+
+.change-body ins {
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.change-empty {
+  color: #5a7472;
+  font-style: italic;
+}
+
 button.link {
   --btn-bg: transparent;
   --btn-bg-hover: transparent;

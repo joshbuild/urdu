@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type { VocabItem } from "../../shared/api";
 import {
+  checkPrompt,
   describeInvalid,
   fillInPrompt,
   missingFields,
@@ -60,6 +61,26 @@ describe("fillInPrompt", () => {
     expect(text).toContain('"english": "water"');
     expect(text).not.toContain('"roman": null');
     expect(text).toContain('"revisions"');
+  });
+});
+
+describe("checkPrompt", () => {
+  it("carries the server's handoff id, every present field and the corrections schema", () => {
+    const text = checkPrompt(
+      [item({ roman: "paani", english: "water" }), item({ id: "01J0000000000000000000000B" })],
+      "C1",
+    );
+    expect(text).toContain('"handoff_id": "C1"');
+    expect(text).toContain('"vocab_id": "01J0000000000000000000000A"');
+    expect(text).toContain('"vocab_id": "01J0000000000000000000000B"');
+    expect(text).toContain('"roman": "paani"');
+    expect(text).toContain('"english": "water"');
+    expect(text).not.toContain('"notes": null');
+    for (const word of ['"corrections"', '"reason"', '"urdu_suggestion"', '"corrections": []']) {
+      expect(text).toContain(word);
+    }
+    expect(text).toContain("Never change");
+    expect(text).toContain("JSON document alone");
   });
 });
 

@@ -1,6 +1,6 @@
 # Feature Plan — Vocab Check
 
-**Status**: 🟡 IN PROGRESS — *opened 2026-09-23; s00 planning done 2026-09-24 (questions settled, stress-tested); s01 rotation and s02 corrections built 2026-09-24; s03 client next.*
+**Status**: 🟡 IN PROGRESS — *opened 2026-09-23; s00 planning done 2026-09-24 (questions settled, stress-tested); s01 rotation, s02 corrections and s03 client built 2026-09-24; s04 phone next (sponsor applies 0004 remotely, deploys, runs smoke-test-11).*
 **Handle**: `f11`
 **Created**: *2026-09-23* · **Updated**: *2026-09-24*
 
@@ -180,7 +180,7 @@ subscription, and the AI only proposes (VISION invariant): Urdu Core validates a
 2. **s02 corrections:** ✅ 2026-09-24. `parseCorrections` (preview and apply shapes);
    `POST /api/handoffs/corrections` with `?preview=1`; plan, field-guarded apply, guarded reset,
    stamping, handoff row transition; tests (`test/corrections.test.ts`).
-3. **s03 client:** `checkPrompt`; Copy check prompt and Paste corrections in the CHATGPT section;
+3. **s03 client:** ✅ 2026-09-24. `checkPrompt`; Copy check prompt and Paste corrections in the CHATGPT section;
    preview with per-field ticks and reset ticks; Apply / Mark checked; result screen with flags
    and Open links; client tests; write `smoke-tests/smoke-test-11.md`.
 4. **s04 phone:** sponsor applies migration 0004 remotely **before** deploying, then deploys and
@@ -202,11 +202,14 @@ key involved.
   `pnpm check` green at 472.
 - 2026-09-24: s02 corrections built: `parseCorrections`, `POST /api/handoffs/corrections`
   (preview and apply) in `worker/domain/check.ts`, 21 tests. `pnpm check` green at 493.
+- 2026-09-24: s03 client built: `checkPrompt`, the tick model (`src/handoff/check.ts`), Copy
+  check prompt / Paste corrections with the preview and result sheets, 9 client tests,
+  `smoke-tests/smoke-test-11.md`. `pnpm check` green at 502.
 
 ### Next Steps
 
-- s03 client: `checkPrompt`, the CHATGPT section buttons, the preview with ticks, the result
-  screen, client tests, `smoke-tests/smoke-test-11.md`.
+- s04 phone: the sponsor applies migration 0004 remotely, deploys, and runs smoke-test-11;
+  then ripple (PRD FR-F9 and Appendix A lose *planned*, AGENTS Project state, PLAN) and close.
 
 ### Open Questions
 
@@ -266,3 +269,16 @@ key involved.
     outcome. Every write in the batch is also conditioned on the batch row still being
     `check_issued`, so two concurrent applies can't both write; the loser returns the winner's
     outcome as a repeat.
+- 2026-09-24 (agent, s03):
+  - The tick model is pure (`src/handoff/check.ts`) and the sheet only renders it. A
+    `nothing` row without a flag is hidden and counted in the batch line. A flagged
+    `nothing` row can still be reset, so it gets a reset tick and no field ticks.
+  - Apply re-sends the pasted document with `accept` added, so the Worker recomputes the plan
+    from the same corrections the preview used.
+  - A preview answered as a repeat goes straight to the result screen: there is nothing to
+    tick.
+  - The result screen lists only lines where something happened (saved, kept, unticked, reset,
+    flag, rejected). Every non-rejected line has an Open link, not only flagged ones, so a
+    saved change can be checked at once.
+  - Each change is stacked (field, old struck through, "→ new") to fit a phone; `example_urdu`
+    values render RTL in Nastaliq.
