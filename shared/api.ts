@@ -300,6 +300,82 @@ export type CheckBatchResponse = {
   never_checked: number;
 };
 
+// A proposed field is present: a string replaces or fills it, null removes it. `urdu` is the
+// echo that matches the item; a suspect spelling goes in `urdu_suggestion`, never applied.
+export type Correction = {
+  vocab_id: string;
+  urdu: string;
+  reason: string;
+  urdu_suggestion?: string;
+} & Partial<Record<FillableField, string | null>>;
+
+// One ticked item: each accepted field with the old value the preview showed, which the write is
+// conditioned on, and whether to put the item back on the first rung.
+export type CorrectionAccept = {
+  vocab_id: string;
+  fields: Partial<Record<FillableField, string | null>>;
+  reset: boolean;
+};
+
+export type CorrectionsRequest = {
+  handoff_id: string;
+  corrections: Correction[];
+  // Absent on a preview, required on apply; empty applies nothing and only marks the batch checked.
+  accept?: CorrectionAccept[];
+};
+
+export type FieldChange = { field: FillableField; old: string | null; new: string | null };
+
+export type CorrectionPlan =
+  | { vocab_id: string; urdu: string; outcome: "rejected"; reason: string }
+  | {
+      vocab_id: string;
+      urdu: string;
+      // "nothing": no proposed value differs from the stored one.
+      outcome: "correct" | "nothing";
+      changes: FieldChange[];
+      reason: string;
+      urdu_suggestion?: string;
+    };
+
+export const RESET_OUTCOMES = ["applied", "skipped", "not_asked"] as const;
+export type ResetOutcome = (typeof RESET_OUTCOMES)[number];
+
+export type CorrectionResult =
+  | { vocab_id: string; urdu: string; outcome: "rejected"; reason: string }
+  | {
+      vocab_id: string;
+      urdu: string;
+      outcome: "checked";
+      written: FieldChange[];
+      // Accepted, but the stored value had changed since the preview, so it was left alone.
+      kept: FillableField[];
+      // Proposed changes left unticked.
+      declined: FillableField[];
+      // "skipped": the schedule changed (e.g. a review) between the read and the write.
+      reset: ResetOutcome;
+      reason: string;
+      urdu_suggestion?: string;
+    };
+
+// A repeat (the batch was already applied) always returns the applied shape with preview false.
+export type CorrectionsResponse =
+  | {
+      handoff_id: string;
+      preview: true;
+      repeat: false;
+      batch_size: number;
+      results: CorrectionPlan[];
+    }
+  | {
+      handoff_id: string;
+      preview: false;
+      repeat: boolean;
+      // Every item in the batch is stamped checked, including those the chat left out.
+      batch_size: number;
+      results: CorrectionResult[];
+    };
+
 // f07 voice Coach (FR-B5, FR-F1..F3 through cookie routes, DECISIONS 260918h).
 // The spend figures ride the create response so the screen can warn at the soft cap from its first
 // frame, without a second round trip (f07 s04).

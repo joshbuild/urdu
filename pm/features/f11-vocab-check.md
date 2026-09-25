@@ -1,6 +1,6 @@
 # Feature Plan — Vocab Check
 
-**Status**: 🟡 IN PROGRESS — *opened 2026-09-23; s00 planning done 2026-09-24 (questions settled, stress-tested); s01 rotation built 2026-09-24; s02 corrections next.*
+**Status**: 🟡 IN PROGRESS — *opened 2026-09-23; s00 planning done 2026-09-24 (questions settled, stress-tested); s01 rotation and s02 corrections built 2026-09-24; s03 client next.*
 **Handle**: `f11`
 **Created**: *2026-09-23* · **Updated**: *2026-09-24*
 
@@ -145,8 +145,9 @@ subscription, and the AI only proposes (VISION invariant): Urdu Core validates a
   and writes nothing; another status → 409; not-in-batch, deleted and `urdu`-mismatch rows
   rejected with reasons; unchanged values dropped; a same-key `urdu_suggestion` dropped; apply
   writes only accepted fields, including a remove (null) and an add to an empty field; a field
-  edited between preview and apply is kept and reported; an accept entry for a rejected row
-  rejects the apply; schedule fields and `review_events` unchanged without reset; the reset
+  edited between preview and apply is kept and reported; an accept entry naming no pasted
+  correction, or a field it doesn't propose, rejects the apply; an accepted row rejected at apply
+  (deleted since) is reported rejected; schedule fields and `review_events` unchanged without reset; the reset
   matches `correctStep(0)` from the existing `last_reviewed_at` with no event; a reset whose rung
   moved since the read is skipped and reported; every batch id is stamped, `updated_at` untouched
   by the stamp; `accept: []` still stamps and moves the row to `checked`.
@@ -176,9 +177,9 @@ subscription, and the AI only proposes (VISION invariant): Urdu Core validates a
 1. **s01 rotation:** ✅ 2026-09-24. Migration 0004 (`checked_at`, `vocab_check` index) and its test;
    `VocabItem.checked_at`; `HANDOFF_STATUSES` += `check_issued`, `checked`;
    `POST /api/handoffs/check-batch` (`worker/domain/check.ts`); batch tests (`test/check.test.ts`).
-2. **s02 corrections:** `parseCorrections` (preview and apply shapes);
+2. **s02 corrections:** ✅ 2026-09-24. `parseCorrections` (preview and apply shapes);
    `POST /api/handoffs/corrections` with `?preview=1`; plan, field-guarded apply, guarded reset,
-   stamping, handoff row transition; tests.
+   stamping, handoff row transition; tests (`test/corrections.test.ts`).
 3. **s03 client:** `checkPrompt`; Copy check prompt and Paste corrections in the CHATGPT section;
    preview with per-field ticks and reset ticks; Apply / Mark checked; result screen with flags
    and Open links; client tests; write `smoke-tests/smoke-test-11.md`.
@@ -199,10 +200,13 @@ key involved.
 - 2026-09-24: s01 rotation built: migration 0004 (applied to local D1: 36 rows, all `checked_at`
   null), `POST /api/handoffs/check-batch`, `VocabItem.checked_at`, the two new handoff statuses.
   `pnpm check` green at 472.
+- 2026-09-24: s02 corrections built: `parseCorrections`, `POST /api/handoffs/corrections`
+  (preview and apply) in `worker/domain/check.ts`, 21 tests. `pnpm check` green at 493.
 
 ### Next Steps
 
-- s02 corrections.
+- s03 client: `checkPrompt`, the CHATGPT section buttons, the preview with ticks, the result
+  screen, client tests, `smoke-tests/smoke-test-11.md`.
 
 ### Open Questions
 
@@ -244,3 +248,21 @@ key involved.
     preview can't survive navigation.
   - s01 was split in two (rotation / corrections): the draft s01 held a migration, a route, a
     parser, a second route and four write rules.
+- 2026-09-24 (agent, s02):
+  - Response shapes (`shared/api.ts`): a preview returns `CorrectionPlan`s (`rejected` /
+    `correct` / `nothing`, each non-rejected row with `changes` and `reason`); an apply returns
+    `CorrectionResult`s (`rejected` / `checked` with `written`, `kept`, `declined`, `reset`).
+    Both carry `batch_size`. A repeat returns the stored apply outcome, with `preview: false`,
+    even to a preview request.
+  - An accept is refused whole (400) only for a client bug: it names no pasted correction or a
+    field that correction doesn't propose, repeats a vocab_id, or ticks nothing without a reset.
+    A pasted row that is rejected when the apply recomputes the plan (deleted since, or its
+    `urdu` edited since) is reported rejected and the rest applies. The draft Testing line said
+    the opposite; Scope wins, and the line was reworded.
+  - A field accepted but no longer proposed (the stored value now equals the proposal) is
+    reported kept, like any field changed since the preview.
+  - The outcome is planned from the read just before the batch, then corrected from each
+    statement's `meta.changes`; when a guard tripped, a follow-up update rewrites the stored
+    outcome. Every write in the batch is also conditioned on the batch row still being
+    `check_issued`, so two concurrent applies can't both write; the loser returns the winner's
+    outcome as a repeat.

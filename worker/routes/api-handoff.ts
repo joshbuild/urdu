@@ -4,9 +4,9 @@
 
 import { Hono } from "hono";
 import type { CheckBatchResponse, ConflictResponse, IncompleteResponse } from "../../shared/api";
-import { issueCheckBatch } from "../domain/check";
+import { correctVocab, issueCheckBatch, NOT_ISSUED } from "../domain/check";
 import { ID_CONFLICT, importHandoff, incompleteVocab, reviseVocab } from "../domain/handoff";
-import { parseHandoff, parseRevisions } from "../domain/handoff-input";
+import { parseCorrections, parseHandoff, parseRevisions } from "../domain/handoff-input";
 import { activeLadderId } from "../domain/settings";
 import type { AppEnv } from "../env";
 import { invalid, readJson } from "./api-vocab";
@@ -49,6 +49,29 @@ handoffRoutes.post("/api/handoffs/revisions", async (c) => {
 handoffRoutes.post("/api/handoffs/check-batch", async (c) => {
   const body: CheckBatchResponse = await issueCheckBatch(c.env.DB, new Date());
   return c.json(body);
+});
+
+// f11: ?preview=1 plans the corrections and writes nothing; without it the body carries `accept`
+// and the ticked fields and resets are written and the batch is stamped checked.
+handoffRoutes.post("/api/handoffs/corrections", async (c) => {
+  const body = await readJson(c);
+  if (body === undefined) return invalid(c, { message: "body must be valid JSON" });
+  const preview = c.req.query("preview") === "1";
+  const parsed = parseCorrections(body, preview);
+  if (!parsed.ok) return invalid(c, parsed.error);
+  const result = await correctVocab(
+    c.env.DB,
+    parsed.value,
+    new Date(),
+    await activeLadderId(c.env.DB),
+  );
+  if (result === NOT_ISSUED) {
+    return invalid(c, {
+      field: "handoff_id",
+      message: "is not a check batch this app issued; copy a fresh check prompt",
+    });
+  }
+  return result === ID_CONFLICT ? c.json(conflict, 409) : c.json(result);
 });
 
 handoffRoutes.get("/api/vocab/incomplete", async (c) => {
