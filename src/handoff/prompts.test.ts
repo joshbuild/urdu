@@ -84,6 +84,19 @@ describe("checkPrompt", () => {
   });
 });
 
+describe("every prompt", () => {
+  it("asks for strict JSON with no double quotes inside text values", () => {
+    for (const text of [
+      newVocabPrompt("H1"),
+      fillInPrompt([item({})], "R1"),
+      checkPrompt([item({})], "C1"),
+    ]) {
+      expect(text).toContain("strict JSON");
+      expect(text).toContain("never use a double quotation mark");
+    }
+  });
+});
+
 describe("missingFields", () => {
   it("names the empty fillable fields", () => {
     expect(missingFields(item({ roman: "paani", notes: "n" }))).toEqual([

@@ -39,6 +39,7 @@ Rules:
 - session_at: the current date and time in UTC; if you don't know the time, use today's date with T12:00:00Z.
 - Use only the fields shown above; no other keys. Leave a field out rather than guess. At most 50 proposals.
 - The code block alone: no prose before or after it, no comments inside it.
+- Strict JSON that parses as it stands. Inside a text value, never use a double quotation mark or a backslash: to quote a word, use single quotes ('like this') or none. Check that the whole document parses before replying.
 
 ---
 

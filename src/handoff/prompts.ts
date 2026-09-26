@@ -19,7 +19,10 @@ const CONVENTIONS = `Language conventions:
 - "notes": optional, one short line on usage, register or a common confusion.
 - "example_urdu": optional, one short everyday sentence in Urdu script; "example_english": its translation.`;
 
-const JSON_ONLY = `Reply with the JSON document alone: no prose before or after it, no comments. Leave a field out rather than guess.`;
+// Chats break JSON by quoting a word inside a string value ("the hyphen and "haqiqat" look...").
+// Asking them to escape is unreliable, so the prompt forbids the character instead; the code block
+// gives ChatGPT's copy button, which copies the raw text rather than the rendered page.
+const JSON_ONLY = `Reply with the JSON document alone, in one json code block: no prose before or after it, no comments inside it. It must be strict JSON that parses as it stands. Inside a text value, never use a double quotation mark or a backslash: to quote a word or spelling, use single quotes ('like this') or none. Before replying, check that the whole document parses. Leave a field out rather than guess.`;
 
 export function newVocabPrompt(handoffId: string = ulid(), sessionAt = new Date()): string {
   return `You are helping me add Urdu vocabulary to my learning app. For each word or phrase I give you below, draft one vocabulary entry. A phrase that is learned as a unit is one entry, not split into words.
@@ -94,7 +97,7 @@ In particular: is "english" the right meaning in everyday Pakistani use; is "rom
 Items:
 ${listItems(items)}
 
-Return only the items with something wrong. For each, copy vocab_id and urdu exactly as given; include only the fields you would change, with their corrected values; set a field to null to remove it; add a missing field only if the entry needs it; and give one short "reason". Never change "urdu". If you think its spelling is wrong, put the spelling you suggest in "urdu_suggestion".
+Return only the items with something wrong. For each, copy vocab_id and urdu exactly as given; include only the fields you would change, with their corrected values; set a field to null to remove it; add a missing field only if the entry needs it; and give one short "reason" (plain words; single quotes, never double, around any spelling you cite). Never change "urdu". If you think its spelling is wrong, put the spelling you suggest in "urdu_suggestion".
 
 Return exactly this JSON shape, copying handoff_id as given:
 
@@ -122,7 +125,10 @@ export function parsePasted(text: string): Pasted {
     return { ok: true, value: JSON.parse(body) };
   } catch (err) {
     const reason = err instanceof Error ? err.message : "unreadable";
-    return { ok: false, message: `That is not valid JSON (${reason}). Ask the chat to resend it.` };
+    return {
+      ok: false,
+      message: `That is not valid JSON (${reason}). Ask the chat to resend it as strict JSON, with no double quotes inside the text.`,
+    };
   }
 }
 
