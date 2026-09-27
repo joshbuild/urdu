@@ -3,16 +3,16 @@
 
 **File Purpose**: The **thin hub** — a cross-front map of where things stand *right now*. Not a journal, not a sessions log. Verbose per-front narration lives in each front's `*-journal.md`; what-happened one-liners live in `SESSIONS.md`. Keep this file scannable.
 
-*As of: 2026-09-24*
+*As of: 2026-09-27*
 
 ## Open Workfronts
 *Work items actively in flight. One line each → its doc/journal. Closed fronts drop off (rosters keep the full list).*
 
 - f07 `coach-client` — 🟡 IN PROGRESS, s01–s04 built (migration 0003 applied remotely and deployed 2026-09-23); s05 prompt tuning next → `features/f07-coach-client.md`
-- f11 `vocab-check` — 🟡 IN PROGRESS, s01–s03 built 2026-09-24 (migration 0004 local only); s04 phone next: sponsor applies 0004 remotely, deploys, runs smoke-test-11 → `features/f11-vocab-check.md`
+- f11 `vocab-check` — 🟡 IN PROGRESS, s01–s03 built 2026-09-24; s04 phone under way (0004 remote + deployed; smoke-test-11 at B1) → `features/f11-vocab-check.md`
 
 ## Next Session Pointers
 *The 1–3 concrete next actions for a cold start.*
 
-1. **f11 `vocab-check`**: s04 phone. The sponsor runs `smoke-tests/smoke-test-11.md`: `pnpm wrangler d1 migrations apply urdu --remote` **before** `pnpm run deploy` (the list fails without the column), then the ChatGPT round trip. After it is green: ripple PRD FR-F9 / Appendix A, AGENTS Project state and PLAN, then `/pm-close f11`.
+1. **f11 `vocab-check`**: s04 phone. The sponsor deploys the strict-JSON prompt fix (`52259a6`), re-pastes `src/handoff/chatgpt-project-instructions.md` into the ChatGPT Project, and continues `smoke-tests/smoke-test-11.md` from B1 (A1–A2 green). After it is green: ripple PRD FR-F9 / Appendix A, AGENTS Project state and PLAN, then `/pm-close f11`.
 2. **f07 `coach-client`**: s04 spend is deployed; the sponsor compares Settings spend with the OpenAI dashboard later on 2026-09-23 (TODO). Then s05 prompt tuning. The rest of the s03 checks ride smoke-test-07. The OpenAI key is a Cloudflare secret only, so live voice checks run against the deployment, never `pnpm dev` (260921a). Once f07 closes, open f10 `coach-followups` (planned 2026-09-22 from the grill of the two Coach scope calls, DECISIONS 260922a): a vocab-edit voice tool, tappable Urdu in bubbles, the last transcript kept on the device. Toolchain: AVG Hardened Mode + CyberCapture off; never add exceptions.

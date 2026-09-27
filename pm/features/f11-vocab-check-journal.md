@@ -2,7 +2,14 @@
 
 *Verbose per-front record. Hub: `pm/STATUS.md`; doc: `f11-vocab-check.md`.*
 
-**Current state:** 🟡 in progress; s01–s03 built 2026-09-24. s04 phone is next: the sponsor applies migration 0004 remotely **before** deploying, then runs `smoke-tests/smoke-test-11.md`. Migration 0004 is applied locally only.
+**Current state:** 🟡 in progress; s01–s03 built 2026-09-24. s04 phone under way: 0004 applied remotely and deployed (smoke-test-11 A1–A2 ticked); the first round trip worked once the chat resent valid JSON. Next: deploy the strict-JSON prompt fix (`52259a6`), re-paste the ChatGPT Project instructions, and finish smoke-test-11 from B1.
+
+## 2026-09-27 — s04 in progress; strict-JSON prompt fix
+
+- Sponsor ran smoke-test-11 A1–A2 green (0004 remote, deployed) and a first check round trip. ChatGPT's first reply quoted a spelling inside `reason` (`the hyphen and "haqiqat" look...`), so `JSON.parse` failed; the resend worked. The sponsor had seen the same failure on another round trip.
+- Fix `52259a6`: the shared `JSON_ONLY` rule in `src/handoff/prompts.ts` (all three prompts) now asks for one json code block of strict JSON, forbids double quotes and backslashes inside text values (single quotes instead) rather than asking for escapes, and asks the chat to check it parses. The check prompt's `reason` line repeats it for cited spellings. `chatgpt-project-instructions.md` gained the same rule; the paste error now names what to ask the chat for. One new test across all three prompts.
+- `pnpm check` green: 35 files, 503 tests.
+- Sponsor to do: `pnpm run deploy`, re-paste the Project instructions, then smoke-test-11 from B1.
 
 ## 2026-09-24 — s03 client built
 
