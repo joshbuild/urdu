@@ -4,6 +4,7 @@
 
 ### Changed
 
+- The ChatGPT buttons on the Vocab tab read as matching pairs: **Copy new-vocab prompt** (was Copy prompt) and **Paste check reply** (was Paste corrections).
 - The ChatGPT prompts ask for strict JSON with no double quotes inside the text, so replies paste first time; a bad paste now says what to ask the chat for.
 - The ChatGPT buttons sit at the top of the Vocab tab instead of below the list, and saving fill-ins updates the count of items still missing fields.
 

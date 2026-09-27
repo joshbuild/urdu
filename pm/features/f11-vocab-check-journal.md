@@ -4,6 +4,11 @@
 
 **Current state:** 🟡 in progress; s01–s03 built 2026-09-24. s04 phone under way: 0004 applied remotely and deployed (smoke-test-11 A1–A2 ticked); the first round trip worked once the chat resent valid JSON. Next: deploy the strict-JSON prompt fix (`52259a6`), re-paste the ChatGPT Project instructions, and finish smoke-test-11 from B1.
 
+## 2026-09-27 — CHATGPT button names
+
+- Sponsor asked for clearer Vocab-tab button names. The CHATGPT grid now reads as three copy/paste pairs: **Copy prompt** became **Copy new-vocab prompt** (`b81aae5`), and **Paste corrections** became **Paste check reply** (button, sheet label and eyebrow). PRD FR-F6 / FR-F9 and smoke-test-11 (A2 note, C3, D1) follow the new names. The note in `chatgpt-project-instructions.md` changed above the paste line only, so no re-paste is needed for it.
+- `pnpm check` green.
+
 ## 2026-09-27 — s04 in progress; strict-JSON prompt fix
 
 - Sponsor ran smoke-test-11 A1–A2 green (0004 remote, deployed) and a first check round trip. ChatGPT's first reply quoted a spelling inside `reason` (`the hyphen and "haqiqat" look...`), so `JSON.parse` failed; the resend worked. The sponsor had seen the same failure on another round trip.

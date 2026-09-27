@@ -183,7 +183,7 @@ export function HandoffPanel({
           Copy check prompt
         </button>
         <button type="button" className="secondary" onClick={() => setPasting("check")}>
-          Paste corrections
+          Paste check reply
         </button>
       </div>
       {copied.kind === "copied" && (
@@ -701,8 +701,8 @@ function PasteCheckSheet({
   }
 
   return (
-    <Sheet label="Paste corrections" onClose={onClose}>
-      <p className="eyebrow">PASTE CORRECTIONS</p>
+    <Sheet label="Paste check reply" onClose={onClose}>
+      <p className="eyebrow">PASTE CHECK REPLY</p>
       <PasteBox value={text} onChange={setText} />
       {errorLine}
       <button type="button" onClick={preview} disabled={busy}>
