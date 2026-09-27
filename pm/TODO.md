@@ -8,7 +8,7 @@
 ## Inbox
 *Untriaged captures. Drain via `/pm-triage`.*
 
-- Review the clarity of the Vocab tab's button names (sponsor, 2026-09-27): read each label as a first-time user would, especially the CHATGPT section's copy/paste buttons (new vocab, fill-in, check), and propose clearer names. Next session. #agent-triage
+- (nil)
 
 
 ## Tasks

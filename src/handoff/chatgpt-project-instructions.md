@@ -5,7 +5,7 @@ the chat gives you a vocab list, type `vocab-json`; copy the reply and use **Pas
 at the top of the app's Vocab tab.
 
 This is a standing version of `newVocabPrompt` in `prompts.ts`: same conventions and JSON
-shape, but the chat mints its own `handoff_id` because there is no Copy prompt step. Keep
+shape, but the chat mints its own `handoff_id` because there is no Copy new-vocab prompt step. Keep
 the two in step when either changes. The Worker's rules are in `worker/domain/handoff-input.ts`.
 
 ---

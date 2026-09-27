@@ -163,12 +163,12 @@ export function HandoffPanel({
             setCopied(
               await copy(
                 newVocabPrompt(),
-                "Prompt copied. Paste it into ChatGPT and add your words after it.",
+                "New-vocab prompt copied. Paste it into ChatGPT and add your words after it.",
               ),
             )
           }
         >
-          Copy prompt
+          Copy new-vocab prompt
         </button>
         <button type="button" className="secondary" onClick={() => setPasting("new")}>
           Paste new vocab
