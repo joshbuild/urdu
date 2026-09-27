@@ -2,7 +2,7 @@ import { env, exports } from "cloudflare:workers";
 import { beforeEach, describe, expect, it } from "vitest";
 import type { ExportResponse, ReviewResponse, VocabItem } from "../shared/api";
 import { todayIn } from "../shared/dates";
-import { addSeconds, LADDERS, ladder, maxStep, scheduleReview } from "../shared/ladders";
+import { addSeconds, entryStep, LADDERS, ladder, maxStep, scheduleReview } from "../shared/ladders";
 import { GRADES } from "../shared/mastery";
 import { applyReview, recordReview } from "../worker/domain/review";
 import { getVocab } from "../worker/domain/vocab";
@@ -11,7 +11,7 @@ import { type Api, clearTables, unlockedApi } from "./client";
 const KITAB = "\u{06A9}\u{062A}\u{0627}\u{0628}"; // کتاب
 const PANI = "\u{067E}\u{0627}\u{0646}\u{06CC}"; // پانی
 const UNKNOWN_ID = "01JZZZZZZZZZZZZZZZZZZZZZZZ";
-const MODERATE = ladder(3);
+const DENSE = ladder(8);
 
 let api: Api;
 let today: string;
@@ -33,11 +33,11 @@ async function json<T>(res: Response, status = 200): Promise<T> {
   return res.json();
 }
 
-// Put an item on the Moderate ladder at `step`, reviewed at `last` (null = never reviewed).
+// Put an item on the Dense ladder at `step`, reviewed at `last` (null = never reviewed).
 async function setStep(id: string, step: number, last: string | null = null) {
-  const interval = MODERATE.intervals_seconds[step] as number;
+  const interval = DENSE.intervals_seconds[step] as number;
   await env.DB.prepare(
-    `UPDATE vocab SET ladder_id = 3, ladder_step = ?, interval_seconds = ?, last_reviewed_at = ?,
+    `UPDATE vocab SET ladder_id = 8, ladder_step = ?, interval_seconds = ?, last_reviewed_at = ?,
        due_at = ? WHERE id = ?`,
   )
     .bind(step, interval, last, last === null ? null : addSeconds(last, interval), id)
@@ -64,11 +64,11 @@ describe("POST /api/vocab/:id/reviews", () => {
     );
 
     const at = body.item.updated_at;
-    const interval = MODERATE.intervals_seconds[3] as number;
+    const interval = DENSE.intervals_seconds[3] as number;
     expect(Math.abs(Date.parse(at) - Date.now())).toBeLessThan(5000);
     expect(body.item).toMatchObject({
       id: item.id,
-      ladder_id: 3,
+      ladder_id: 8,
       ladder_step: 3,
       interval_seconds: interval,
       last_reviewed_at: at,
@@ -83,11 +83,11 @@ describe("POST /api/vocab/:id/reviews", () => {
       handoff_id: null,
       prompt_support: "none",
       applied_delta: 1,
-      ladder_before_id: 3,
+      ladder_before_id: 8,
       step_before: 2,
-      interval_before: MODERATE.intervals_seconds[2],
+      interval_before: DENSE.intervals_seconds[2],
       due_before: before?.due_at,
-      ladder_id: 3,
+      ladder_id: 8,
       step_after: 3,
       interval_after: interval,
       due_after: body.item.due_at,
@@ -113,7 +113,7 @@ describe("POST /api/vocab/:id/reviews", () => {
     "applies every %s grade as scheduleReview does, clamping at both ends",
     async (direction) => {
       const item = await create({ urdu: KITAB });
-      const top = maxStep(MODERATE);
+      const top = maxStep(DENSE);
       const starts = [0, 1, top - 1, top];
       for (const start of starts) {
         for (const grade of GRADES) {
@@ -124,7 +124,7 @@ describe("POST /api/vocab/:id/reviews", () => {
             await api("POST", `/api/vocab/${item.id}/reviews`, { grade, direction }),
             201,
           );
-          const expected = scheduleReview(current, grade, direction, 3, body.event.reviewed_at);
+          const expected = scheduleReview(current, grade, direction, 8, body.event.reviewed_at);
           expect(body.item.ladder_step, `${start} ${grade}`).toBe(expected.ladder_step);
           expect(body.item.due_at).toBe(expected.due_at);
           expect(body.event).toMatchObject({
@@ -138,15 +138,28 @@ describe("POST /api/vocab/:id/reviews", () => {
     },
   );
 
-  it("brings a never-reviewed item back in three hours after a miss", async () => {
+  // f12: a new item starts on the rung below a day, so Correct brings it back in a day and an
+  // oral miss (production, −1) in about four hours.
+  it("brings a never-reviewed item back in a day after Correct", async () => {
+    const item = await create({ urdu: KITAB });
+    expect(item.ladder_step).toBe(entryStep(DENSE));
+    const body = await json<ReviewResponse>(
+      await api("POST", `/api/vocab/${item.id}/reviews`, { grade: "correct", direction: "ur_en" }),
+      201,
+    );
+    expect(body.item).toMatchObject({ ladder_step: 3, interval_seconds: 86_400 });
+    expect(body.item.due_at).toBe(addSeconds(body.event.reviewed_at, 86_400));
+  });
+
+  it("brings a never-reviewed item back in about four hours after an oral miss", async () => {
     const item = await create({ urdu: KITAB });
     const body = await json<ReviewResponse>(
       await api("POST", `/api/vocab/${item.id}/reviews`, { grade: "wrong", direction: "oral" }),
       201,
     );
-    expect(body.item).toMatchObject({ ladder_step: 0, interval_seconds: 10800 });
+    expect(body.item).toMatchObject({ ladder_step: 1, interval_seconds: 15274 });
     expect(body.event).toMatchObject({ due_before: null, applied_delta: -1 });
-    expect(body.item.due_at).toBe(addSeconds(body.event.reviewed_at, 10800));
+    expect(body.item.due_at).toBe(addSeconds(body.event.reviewed_at, 15274));
     const due = await json<{ items: VocabItem[] }>(await api("GET", "/api/vocab/due"));
     expect(due.items).toEqual([]);
   });
@@ -199,7 +212,7 @@ describe("review service", () => {
       item.id,
       { grade: "correct", direction: "ur_en", source: "pwa" },
       new Date(Date.now() + 5),
-      3,
+      8,
     );
     expect(first.ok).toBe(true);
     const afterFirst = await getVocab(env.DB, item.id);
@@ -209,7 +222,7 @@ describe("review service", () => {
       stale,
       { grade: "confident", direction: "ur_en", source: "pwa" },
       new Date(Date.now() + 10),
-      3,
+      8,
     );
     expect(second).toEqual({ ok: false, error: "stale" });
     expect(await getVocab(env.DB, item.id)).toEqual(afterFirst);
@@ -229,7 +242,7 @@ describe("review service", () => {
       stale,
       { grade: "hesitant", direction: "ur_en", source: "pwa" },
       new Date(),
-      3,
+      8,
     );
     expect(result).toEqual({ ok: false, error: "stale" });
     expect(await events()).toHaveLength(0);
@@ -246,7 +259,7 @@ describe("review service", () => {
       stale,
       { grade: "correct", direction: "ur_en", source: "pwa" },
       new Date(),
-      3,
+      8,
     );
     expect(result).toEqual({ ok: false, error: "not_found" });
     expect(await events()).toHaveLength(0);
@@ -265,7 +278,7 @@ describe("review service", () => {
         promptSupport: "hint",
       },
       new Date(),
-      3,
+      8,
     );
     const expected = { source: "coach", handoff_id: "handoff-1", prompt_support: "hint" };
     expect(result.ok && result.event).toMatchObject(expected);
@@ -304,7 +317,7 @@ describe("GET /api/export", () => {
       ].sort(),
     );
     expect(body.ladders).toEqual(JSON.parse(JSON.stringify(LADDERS)));
-    expect(body.active_ladder_id).toBe(3);
+    expect(body.active_ladder_id).toBe(8);
     expect(body.vocab).toHaveLength(2);
     expect(body.vocab[0]).toEqual(review.item);
     expect(body.vocab[1]).toMatchObject({ urdu: PANI, favourite: true, tags: [] });

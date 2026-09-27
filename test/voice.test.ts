@@ -264,7 +264,7 @@ describe("record_review", () => {
       await tool("record_review", { vocab_id: item.id, grade: "correct", prompt_support: "none" }),
     );
     const after = await getItem(item.id);
-    const expected = scheduleReview(before, "correct", "oral", 3, after.last_reviewed_at as string);
+    const expected = scheduleReview(before, "correct", "oral", 8, after.last_reviewed_at as string);
     expect(after).toMatchObject({
       ladder_step: expected.ladder_step,
       interval_seconds: expected.interval_seconds,

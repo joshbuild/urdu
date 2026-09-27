@@ -8,7 +8,7 @@
 // it stays out of shell history and process listings.
 
 import type { ReviewResponse, StatusResponse, VocabItem } from "../shared/api";
-import { addSeconds, ladder } from "../shared/ladders";
+import { addSeconds, entryStep, ladder } from "../shared/ladders";
 
 const SESSION_COOKIE = "__Host-urdu_session";
 
@@ -121,9 +121,11 @@ async function main(): Promise<void> {
   });
   check("create vocab responds 201", created.status === 201, describe(created));
   const item = created.body as VocabItem;
+  // The rung below one day (f12); an older deploy would put it on step 0.
+  const entry = entryStep(ladder(counts.active_ladder_id));
   check(
-    "new item starts on the first rung of the active ladder",
-    item.ladder_id === counts.active_ladder_id && item.ladder_step === 0,
+    "new item starts on the entry rung of the active ladder",
+    item.ladder_id === counts.active_ladder_id && item.ladder_step === entry,
     describe(created),
   );
   check("new item is due immediately", item.due_at === null, describe(created));
@@ -152,19 +154,20 @@ async function main(): Promise<void> {
     });
     check("review responds 201", reviewed.status === 201, describe(reviewed));
     const review = reviewed.body as ReviewResponse;
-    check("correct moves up one rung", review.item.ladder_step === 1, describe(reviewed));
-    const rung1 = ladder(review.item.ladder_id).intervals_seconds[1] as number;
+    check("correct moves up one rung", review.item.ladder_step === entry + 1, describe(reviewed));
+    const next = ladder(review.item.ladder_id).intervals_seconds[entry + 1] as number;
     check(
-      "the due time is the review time plus the rung's interval",
+      "the due time is the review time plus one day",
       review.item.last_reviewed_at !== null &&
-        review.item.interval_seconds === rung1 &&
-        review.item.due_at === addSeconds(review.item.last_reviewed_at, rung1),
+        next === 86_400 &&
+        review.item.interval_seconds === next &&
+        review.item.due_at === addSeconds(review.item.last_reviewed_at, next),
       describe(reviewed),
     );
     check(
       "the review event records the transition",
-      review.event.step_before === 0 &&
-        review.event.step_after === 1 &&
+      review.event.step_before === entry &&
+        review.event.step_after === entry + 1 &&
         review.event.applied_delta === 1 &&
         review.event.due_after === review.item.due_at &&
         review.event.source === "pwa",

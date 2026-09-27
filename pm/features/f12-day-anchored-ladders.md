@@ -1,6 +1,6 @@
 # Feature Plan — Day-Anchored Ladders
 
-**Status**: 🟡 IN PROGRESS — *opened 2026-09-27; plan stress-tested; s01 next.*
+**Status**: 🟡 IN PROGRESS — *s01–s04 built 2026-09-27, `pnpm check` green at 522; s05 phone (smoke-test-12) next.*
 **Handle**: `f12`
 **Created**: *2026-09-27* · **Updated**: *2026-09-27*
 
@@ -152,10 +152,16 @@ about 2 h" if f12 deploys first.
 - 2026-09-27 — Investigated, sponsor approved the day-anchored spreads and naming; opened and
   stress-tested (5 findings resolved: "24 h" label, migration entry lookup for already-new ids,
   deploy order, f11 C9 dependency, reset on a never-reviewed item).
+- 2026-09-27 — Built s01–s04: ids 7–11 and `entryStep` in `shared/ladders.ts`, retired ids 2–6
+  renamed "… v1", "New" band = never reviewed, whole-unit `formatInterval`, creation on the entry
+  rung, never-reviewed-first mastery sort, migration 0005 (applied locally) with its test, picker
+  without the multiplier, `scripts/smoke.ts`, PRD/VISION/AGENTS/DECISIONS 260927a/research note,
+  `smoke-tests/smoke-test-12.md`. `pnpm check` green at 522 tests.
 
 ### Next Steps
 
-- Build s01–s04, then the sponsor runs smoke-test-12.
+- s05: the sponsor backs up, applies 0005 remotely, deploys, and runs
+  `smoke-tests/smoke-test-12.md`. Then AGENTS Project state and `/pm-close f12`.
 
 ### Open Questions
 

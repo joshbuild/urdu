@@ -59,10 +59,10 @@ describe("mastery bands", () => {
     expect(names).toEqual(["New", "Learning", "Basic", "Firm", "Strong", "Stable", "Permanent"]);
   });
 
-  it("band the Moderate ladder's rungs", () => {
-    const rungs = [10800, 25687, 61094, 145307, 345600, 821980, 1955009, 4649821, 11059200];
+  it("band the Dense ladder's rungs, the 2 h floor as Learning", () => {
+    const rungs = [6422, 15274, 36327, 86400, 205495, 488752, 1162455, 2764800, 6575840];
     expect(
       rungs.map((s) => masteryBand({ interval_seconds: s, last_reviewed_at: reviewed })),
-    ).toEqual([1, 1, 1, 2, 2, 3, 3, 4, 4]);
+    ).toEqual([1, 1, 1, 1, 2, 2, 3, 4, 4]);
   });
 });

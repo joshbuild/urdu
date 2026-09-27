@@ -24,15 +24,15 @@ async function create(urdu: string): Promise<VocabItem> {
 }
 
 describe("GET/PATCH /api/settings", () => {
-  it("defaults to Moderate (3)", async () => {
+  it("defaults to Dense (8)", async () => {
     expect(await json<SettingsResponse>(await api("GET", "/api/settings"))).toEqual({
-      active_ladder_id: 3,
+      active_ladder_id: 8,
       voice_soft_cap_usd: 0.5,
       voice_hard_cap_usd: 1,
     });
   });
 
-  it.each([2, 3, 4, 5, 6])("switches to preset %i", async (id) => {
+  it.each([7, 8, 9, 10, 11])("switches to preset %i", async (id) => {
     expect(await json(await api("PATCH", "/api/settings", { active_ladder_id: id }))).toMatchObject(
       { active_ladder_id: id },
     );
@@ -42,15 +42,16 @@ describe("GET/PATCH /api/settings", () => {
 
   it.each([
     ["the legacy ladder", { active_ladder_id: 1 }],
-    ["an unknown id", { active_ladder_id: 7 }],
-    ["a string id", { active_ladder_id: "3" }],
-    ["an extra key", { active_ladder_id: 4, theme: "dark" }],
-    ["an array", [4]],
+    ["a retired f09 ladder", { active_ladder_id: 3 }],
+    ["an unknown id", { active_ladder_id: 12 }],
+    ["a string id", { active_ladder_id: "8" }],
+    ["an extra key", { active_ladder_id: 9, theme: "dark" }],
+    ["an array", [9]],
   ])("rejects %s with 400", async (_label, body) => {
     expect(await json(await api("PATCH", "/api/settings", body), 400)).toMatchObject({
       error: "invalid_request",
     });
-    expect(await json(await api("GET", "/api/settings"))).toMatchObject({ active_ladder_id: 3 });
+    expect(await json(await api("GET", "/api/settings"))).toMatchObject({ active_ladder_id: 8 });
   });
 
   it("requires a session", async () => {
@@ -79,11 +80,11 @@ describe("switching ladders", () => {
       ).results;
     const before = await snapshot();
 
-    await json(await api("PATCH", "/api/settings", { active_ladder_id: 5 }));
+    await json(await api("PATCH", "/api/settings", { active_ladder_id: 10 }));
     expect(await snapshot()).toEqual(before);
 
     const current = await json<VocabItem>(await api("GET", `/api/vocab/${reviewed.id}`));
-    expect(current).toMatchObject({ ladder_id: 3, ladder_step: 2 });
+    expect(current).toMatchObject({ ladder_id: 8, ladder_step: 4 });
     const body = await json<ReviewResponse>(
       await api("POST", `/api/vocab/${reviewed.id}/reviews`, {
         grade: "hesitant",
@@ -91,21 +92,21 @@ describe("switching ladders", () => {
       }),
       201,
     );
-    const step = nearestStep(ladder(5), current.interval_seconds);
+    const step = nearestStep(ladder(10), current.interval_seconds);
     expect(body.item).toMatchObject({
-      ladder_id: 5,
+      ladder_id: 10,
       ladder_step: step,
-      interval_seconds: ladder(5).intervals_seconds[step],
+      interval_seconds: ladder(10).intervals_seconds[step],
     });
     expect(body.event).toMatchObject({
-      ladder_before_id: 3,
-      step_before: 2,
+      ladder_before_id: 8,
+      step_before: 4,
       interval_before: current.interval_seconds,
-      ladder_id: 5,
+      ladder_id: 10,
       step_after: step,
       applied_delta: 0,
     });
     const other = await json<VocabItem>(await api("GET", `/api/vocab/${untouched.id}`));
-    expect(other.ladder_id).toBe(3);
+    expect(other.ladder_id).toBe(8);
   });
 });

@@ -66,7 +66,7 @@ async function once<T>(
   return result;
 }
 
-// FR-F2: created on the active ladder's first rung with source coach, or reported as a duplicate
+// FR-F2: created on the active ladder's entry rung with source coach, or reported as a duplicate
 // with the existing item's meaning so the Coach can say what is already there.
 export function voiceAddToVault(
   db: D1Database,

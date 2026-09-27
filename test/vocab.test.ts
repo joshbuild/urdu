@@ -53,7 +53,7 @@ async function eventCount(): Promise<number> {
 }
 
 describe("POST /api/vocab", () => {
-  it("creates an item on the active ladder's first rung, never reviewed", async () => {
+  it("creates an item on the active ladder's entry rung, never reviewed", async () => {
     const before = Date.now();
     const item = await create({
       urdu: `  ${KITAB} `,
@@ -73,9 +73,9 @@ describe("POST /api/vocab", () => {
       notes: null,
       tags: ["nouns", "reading"],
       favourite: false,
-      ladder_id: 3,
-      ladder_step: 0,
-      interval_seconds: 10800,
+      ladder_id: 8,
+      ladder_step: 2,
+      interval_seconds: 36327,
       last_reviewed_at: null,
       due_at: null,
       source: "reading",
@@ -209,11 +209,12 @@ describe("GET /api/vocab", () => {
     await setAddedAt(c.id, "2026-03-01T00:00:00.000Z");
     await setReviewDates(a.id, "2026-01-01T08:00:00.000Z", "2026-06-01T08:00:00.000Z");
     await setReviewDates(c.id, "2026-01-01T08:00:00.000Z", "2026-02-01T08:00:00.000Z");
-    // sort=mastery orders by the scheduled interval.
+    // sort=mastery puts never-reviewed items first, then orders by the scheduled interval: c's
+    // 2 h is shorter than b's entry rung, but b has never been reviewed (f12).
     const setInterval = (id: string, s: number) =>
       env.DB.prepare("UPDATE vocab SET interval_seconds = ? WHERE id = ?").bind(s, id).run();
     await setInterval(a.id, 125 * 86_400);
-    await setInterval(c.id, 5 * 86_400);
+    await setInterval(c.id, 7200);
 
     const order = async (qs: string) =>
       (await json<{ items: VocabItem[] }>(await api("GET", `/api/vocab?${qs}`))).items.map(
@@ -306,9 +307,9 @@ describe("PATCH /api/vocab/:id", () => {
     const updated = await json<VocabItem>(
       await api("PATCH", `/api/vocab/${reviewed.id}`, { ladder_step: 6 }),
     );
-    const rung = ladder(3).intervals_seconds[6] as number;
+    const rung = ladder(8).intervals_seconds[6] as number;
     expect(updated).toMatchObject({
-      ladder_id: 3,
+      ladder_id: 8,
       ladder_step: 6,
       interval_seconds: rung,
       last_reviewed_at: last,
@@ -326,7 +327,7 @@ describe("PATCH /api/vocab/:id", () => {
 
   it.each([
     ["empty body", {}],
-    ["rung past the active ladder", { ladder_step: 13 }],
+    ["rung past the active ladder", { ladder_step: 14 }],
     ["negative rung", { ladder_step: -1 }],
     ["fractional rung", { ladder_step: 2.5 }],
     ["legacy mastery field", { mastery: 3 }],
@@ -443,7 +444,7 @@ describe("GET /api/status", () => {
       total: 3,
       due: 2,
       today,
-      active_ladder_id: 3,
+      active_ladder_id: 8,
     });
   });
 
@@ -452,7 +453,7 @@ describe("GET /api/status", () => {
       total: 0,
       due: 0,
       today,
-      active_ladder_id: 3,
+      active_ladder_id: 8,
     });
   });
 });

@@ -10,6 +10,13 @@ describe("masteryPillLabel", () => {
     expect(masteryPillLabel({ interval_seconds: 25 * 86_400, last_reviewed_at: reviewed })).toBe(
       "Firm • 4 wk",
     );
+    // f12: Dense's bottom rung and its day rung, where a new word's first miss and Correct land.
+    expect(masteryPillLabel({ interval_seconds: 6422, last_reviewed_at: reviewed })).toBe(
+      "Learning • 2 h",
+    );
+    expect(masteryPillLabel({ interval_seconds: 86_400, last_reviewed_at: reviewed })).toBe(
+      "Learning • 1 d",
+    );
   });
 
   it("says only New for a never-reviewed item", () => {

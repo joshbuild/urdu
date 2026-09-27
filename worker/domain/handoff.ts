@@ -49,7 +49,7 @@ export function recordHandoff(
     .bind(id, now.toISOString(), JSON.stringify(payload), status, JSON.stringify(outcome));
 }
 
-// FR-F2: each proposal is created on the active ladder's first rung with source coach, or
+// FR-F2: each proposal is created on the active ladder's entry rung with source coach, or
 // reported as a duplicate. A proposal duplicating an earlier one in the same payload meets the
 // item that one just created.
 export async function importHandoff(

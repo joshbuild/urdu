@@ -383,7 +383,7 @@ describe("POST /api/handoffs/corrections (apply)", () => {
       201,
     );
     const reviewed = await getItem(item.id);
-    expect(reviewed.ladder_step).toBe(2);
+    expect(reviewed.ladder_step).toBe(4);
     const handoff_id = await issue();
 
     const body = await json<CorrectionsResponse>(
@@ -396,7 +396,7 @@ describe("POST /api/handoffs/corrections (apply)", () => {
     expect(checked(body.results[0]).reset).toBe("applied");
     const after = await getItem(item.id);
     expect(after).toMatchObject({
-      ...correctStep(0, 3, reviewed.last_reviewed_at),
+      ...correctStep(0, 8, reviewed.last_reviewed_at),
       last_reviewed_at: reviewed.last_reviewed_at,
     });
     expect(await count("review_events")).toBe(2);
@@ -419,7 +419,7 @@ describe("POST /api/handoffs/corrections (apply)", () => {
       corrections: [{ vocab_id: item.id, urdu: PANI, english: "water (n.)", reason: "r" }],
       accept: [{ vocab_id: item.id, fields: { english: "water" }, reset: true }],
     };
-    const body = await applyCorrections(env.DB, request, [item.id], stale, new Date(), 3);
+    const body = await applyCorrections(env.DB, request, [item.id], stale, new Date(), 8);
     if (typeof body === "string") throw new Error(body);
     const result = checked(body.results[0]);
     expect(result).toMatchObject({ written: [], kept: ["english"], reset: "skipped" });

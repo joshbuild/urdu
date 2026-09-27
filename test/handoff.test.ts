@@ -75,8 +75,8 @@ describe("POST /api/handoffs", () => {
       english: "book",
       tags: ["chat"],
       source: "coach",
-      ladder_id: 3,
-      ladder_step: 0,
+      ladder_id: 8,
+      ladder_step: 2,
       due_at: null,
     });
     expect(await handoffStatus("h-1")).toBe("applied");

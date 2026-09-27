@@ -16,7 +16,7 @@ import {
   readSessionLimit,
   storeSessionLimit,
 } from "../settings/sessionLimit";
-import { spacingMultiplier, spacingRows } from "../settings/spacing";
+import { spacingRows } from "../settings/spacing";
 
 const SAMPLE = "السلام علیکم، آپ کیسے ہیں؟";
 
@@ -196,9 +196,7 @@ export function SettingsScreen({
               onChange={() => void chooseLadder(l.id)}
             />
             <span className="spacing">
-              <span>
-                <strong>{l.name}</strong> {spacingMultiplier(l)}
-              </span>
+              <strong>{l.name}</strong>
               <span className="spacing-rows">
                 {spacingRows(l).map((row) => (
                   <span key={row.unit} className="spacing-row">

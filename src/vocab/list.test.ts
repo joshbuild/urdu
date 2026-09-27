@@ -46,6 +46,9 @@ describe("isDue / reviewLabel", () => {
     expect(isDue({ due_at: "2026-09-19T03:00:00.000Z" }, now)).toBe(false);
     expect(reviewLabel({ due_at: "2026-09-19T03:00:00.000Z" }, now)).toBe("Due in 7 h");
     expect(reviewLabel({ due_at: "2026-10-12T20:00:00.000Z" }, now)).toBe("Due in 3 wk");
+    // Reviewed a minute ago onto the one-day rung: "1 d", not "24 h" (f12).
+    const almostDay = new Date(Date.parse(now) + 86_340_000).toISOString();
+    expect(reviewLabel({ due_at: almostDay }, now)).toBe("Due in 1 d");
   });
 });
 

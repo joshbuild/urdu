@@ -195,15 +195,15 @@ describe("cap settings", () => {
     expect(await json<SettingsResponse>(await api("GET", "/api/settings"))).toMatchObject({
       voice_soft_cap_usd: 0.25,
       voice_hard_cap_usd: 2,
-      active_ladder_id: 3,
+      active_ladder_id: 8,
     });
   });
 
   it("leaves the ladder alone when only a cap is sent", async () => {
-    await api("PATCH", "/api/settings", { active_ladder_id: 5 });
+    await api("PATCH", "/api/settings", { active_ladder_id: 10 });
     await api("PATCH", "/api/settings", { voice_hard_cap_usd: 2 });
     expect((await json<SettingsResponse>(await api("GET", "/api/settings"))).active_ladder_id).toBe(
-      5,
+      10,
     );
   });
 

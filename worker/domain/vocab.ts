@@ -2,7 +2,7 @@
 // write (FR-A8): only create, update and delete touch rows.
 
 import type { Tag, UpdateVocabRequest, VocabItem, VocabSort } from "../../shared/api";
-import { correctStep, ladder } from "../../shared/ladders";
+import { correctStep, entryStep, ladder } from "../../shared/ladders";
 import { inferKind, urduKey } from "../../shared/normalize";
 import { ulid } from "../../shared/ulid";
 import type { CreateInput } from "./vocab-input";
@@ -37,7 +37,8 @@ const DUE_ORDER = "due_at ASC NULLS FIRST, added_at ASC, id ASC";
 const SORT_ORDER: Readonly<Record<VocabSort, string>> = {
   added: "added_at DESC, id DESC",
   next_review: DUE_ORDER,
-  mastery: "interval_seconds ASC, added_at ASC, id ASC",
+  // Never-reviewed items first: their entry rung is not an interval they have earned (f12).
+  mastery: "last_reviewed_at IS NOT NULL, interval_seconds ASC, added_at ASC, id ASC",
 };
 
 export async function findIdByKey(db: D1Database, key: string): Promise<string | null> {
@@ -71,7 +72,8 @@ export async function getVocab(db: D1Database, id: string): Promise<VocabItem | 
   return row ? toItem(row) : null;
 }
 
-// New items start on the first rung of the active ladder, never reviewed, so due now.
+// New items start on the active ladder's entry rung (the rung below one day, f12), never
+// reviewed, so due now.
 export async function createVocab(
   db: D1Database,
   input: CreateInput,
@@ -85,6 +87,8 @@ export async function createVocab(
   if (existingId) return { ok: false, error: "duplicate", existingId };
 
   const at = now.toISOString();
+  const active = ladder(activeLadderId);
+  const entry = entryStep(active);
   const tags = input.tags ?? [];
   const item: VocabItem = {
     id: ulid(now.getTime()),
@@ -99,8 +103,8 @@ export async function createVocab(
     tags,
     favourite: input.favourite ?? false,
     ladder_id: activeLadderId,
-    ladder_step: 0,
-    interval_seconds: ladder(activeLadderId).intervals_seconds[0] as number,
+    ladder_step: entry,
+    interval_seconds: active.intervals_seconds[entry] as number,
     added_at: at,
     last_reviewed_at: null,
     due_at: null,

@@ -216,7 +216,7 @@ The app began with the Urdu Coach project's seven-level ladder (0/1/5/25/125/625
 
 ### 6.1 Review ladders
 
-A ladder is a list of review intervals. Five presets start at 3 hours and end at 10 years, each rung a fixed multiple of the last: Dense ×2, **Moderate ×2.38 (default)**, Balanced ×2.83, Wide ×3.36, Very wide ×4. The learner picks one in Settings. Every ladder version is immutable and has an id; a changed ladder is a new version. The old seven-level ladder survives as the legacy version that migrated items sit on.
+A ladder is a list of review intervals. Five presets are built around a rung of exactly one day, run down to about an hour or two and up to 10 years, each rung a fixed multiple of the last: Very dense ×2, **Dense ×2.38 (default)**, Balanced ×2.83, Wide ×3.36, Very wide ×4. A new word starts one rung below a day, so a correct first answer brings it back tomorrow and a miss brings it back within hours; learning many words at once does not pile up same-day repeats. The learner picks a preset in Settings. Every ladder version is immutable and has an id; a changed ladder is a new version. The old seven-level ladder survives as the legacy version that migrated items sit on.
 
 The ladders have a **single source of truth** in the application (`shared/ladders.ts`) rather than being duplicated across UI and business logic.
 

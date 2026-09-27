@@ -1,6 +1,6 @@
 # Urdu Vocabulary SRS: Research Findings and Final Design Recommendation
 
-**Status:** Accepted design recommendation, **except the grade deltas**: the app keeps recognition −2/−1/0/+1/+2 and production −1/0/0/+1/+2 (DECISIONS 260918d). The tables in §1 and §4.3 below are superseded.  
+**Status:** Accepted design recommendation, **except the grade deltas**: the app keeps recognition −2/−1/0/+1/+2 and production −1/0/0/+1/+2 (DECISIONS 260918d). The tables in §1 and §4.3 below are superseded. The three-hour base (§4.4–4.5, AC2) is also superseded: the presets are anchored on a one-day rung with a floor of about 1–2 h, new items start one rung below a day, and the presets are renamed Very dense / Dense / Balanced / Wide / Very wide (DECISIONS 260927a, f12).  
 **Audience:** implementation planning and technical design  
 **Application context:** personal, single-user Urdu vocabulary app; primarily mobile; hundreds of vocabulary items; self-graded reviews
 

@@ -123,7 +123,7 @@ export type CreateInput = Partial<Omit<VocabFields, "urdu" | "ladder_step">> & {
 export function parseCreate(body: unknown): Parsed<CreateInput> {
   if (!isRecord(body)) return fail(undefined, "body must be a JSON object");
   for (const key of Object.keys(body)) {
-    if (key === "ladder_step") return fail("ladder_step", "new items start on the first rung");
+    if (key === "ladder_step") return fail("ladder_step", "new items start on the entry rung");
     if (key !== "source" && !EDITABLE.has(key)) return fail(key, "is not a recognised field");
   }
   if (!("urdu" in body)) return fail("urdu", "is required and must be a string");

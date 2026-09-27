@@ -56,9 +56,10 @@ export function isLegacyLevel(value: unknown): value is LegacyLevel {
 const DAY = 86_400;
 
 // Bands keep the old level names, and their upper bounds sit on the legacy intervals, so a
-// migrated item reads exactly as it did before f09. Band 0 is also a legacy level-0 item.
+// migrated item reads exactly as it did before f09. Band 0 is also a legacy level-0 item; any
+// reviewed item on a real interval is at least Learning, however short the rung (f12).
 export const MASTERY_BANDS = [
-  { band: 0, name: "New", maxSeconds: 3 * 3600 - 1 },
+  { band: 0, name: "New", maxSeconds: 0 },
   { band: 1, name: "Learning", maxSeconds: 1 * DAY },
   { band: 2, name: "Basic", maxSeconds: 7 * DAY },
   { band: 3, name: "Firm", maxSeconds: 30 * DAY },

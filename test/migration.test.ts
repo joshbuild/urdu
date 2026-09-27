@@ -1,6 +1,8 @@
 // Migrations on a scratch D1 holding rows. 0001 → 0002 (f09): the ladder migration must keep
 // every row and event, put them on the legacy ladder, and leave due times where they were.
 // 0003 → 0004 (f11): checked_at arrives null on every row, the rows otherwise untouched.
+// 0004 → 0005 (f12): the setting moves to its day-anchored successor and untouched new items to
+// its entry rung; nothing else changes.
 import { env } from "cloudflare:workers";
 import { beforeEach, describe, expect, it } from "vitest";
 
@@ -197,5 +199,80 @@ describe("migration 0004_vocab_check", () => {
       .prepare("SELECT sql FROM sqlite_master WHERE type = 'index' AND name = 'vocab_check'")
       .first<{ sql: string }>();
     expect(index?.sql).toContain("(checked_at, added_at)");
+  });
+});
+
+describe("migration 0005_day_anchored_ladders", () => {
+  const T = "2026-09-20T10:00:00.000Z";
+  // [id, ladder_id, ladder_step, interval_seconds, last_reviewed_at, due_at]
+  type Row = [string, number, number, number, string | null, string | null];
+  const ROWS5: Row[] = [
+    ["01J00000000000000000000001", 3, 0, 10800, null, null], // new on Moderate v1: moves
+    ["01J00000000000000000000002", 1, 0, 0, null, null], // legacy level-0 import: moves
+    ["01J00000000000000000000003", 3, 0, 10800, T, T], // reviewed, missed: stays
+    ["01J00000000000000000000004", 3, 4, 345600, null, null], // new, rung set by hand: stays
+    ["01J00000000000000000000005", 1, 3, 25 * DAY, T, T], // reviewed legacy: stays
+  ];
+
+  async function seed5(active: string) {
+    await apply("0002");
+    await apply("0003");
+    await apply("0004");
+    await db.batch([
+      db.prepare("UPDATE settings SET value = ? WHERE key = 'active_ladder_id'").bind(active),
+      ...ROWS5.map(([id, ladderId, step, interval, last, due], i) =>
+        db
+          .prepare(
+            `INSERT INTO vocab (id, urdu, urdu_key, kind, ladder_id, ladder_step, interval_seconds,
+               added_at, last_reviewed_at, due_at, source, created_at, updated_at)
+             VALUES (?, ?, ?, 'word', ?, ?, ?, ?, ?, ?, 'manual', ?, ?)`,
+          )
+          .bind(id, `w${i}`, `w${i}`, ladderId, step, interval, NOW, last, due, NOW, NOW),
+      ),
+    ]);
+    return (await db.prepare("SELECT * FROM vocab ORDER BY id").all()).results;
+  }
+
+  async function active() {
+    return (
+      await db.prepare("SELECT value FROM settings WHERE key = 'active_ladder_id'").first<{
+        value: string;
+      }>()
+    )?.value;
+  }
+
+  it.each([
+    ["2", "7"],
+    ["3", "8"],
+    ["4", "9"],
+    ["5", "10"],
+    ["6", "11"],
+  ])("maps retired setting %s to its successor %s", async (from, to) => {
+    await seed5(from);
+    await apply("0005");
+    expect(await active()).toBe(to);
+  });
+
+  it("moves only untouched new items, to the active ladder's entry rung", async () => {
+    const before = await seed5("5");
+    await apply("0005");
+    const after = (await db.prepare("SELECT * FROM vocab ORDER BY id").all()).results;
+
+    const wide = { ladder_id: 10, ladder_step: 1, interval_seconds: 25687 };
+    expect(after).toEqual([
+      { ...before[0], ...wide },
+      { ...before[1], ...wide },
+      before[2],
+      before[3],
+      before[4],
+    ]);
+  });
+
+  it("uses Dense's entry rung for an unknown setting, and leaves the setting alone", async () => {
+    const before = await seed5("99");
+    await apply("0005");
+    expect(await active()).toBe("99");
+    const first = await db.prepare("SELECT * FROM vocab ORDER BY id").first();
+    expect(first).toEqual({ ...before[0], ladder_id: 8, ladder_step: 2, interval_seconds: 36327 });
   });
 });

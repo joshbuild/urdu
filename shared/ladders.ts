@@ -1,4 +1,4 @@
-// Review ladders (f09, DECISIONS 260918c/e). The only implementation of scheduling: the Worker
+// Review ladders (f09, DECISIONS 260918c/e; day-anchored by f12, 260927a). The only implementation of scheduling: the Worker
 // computes with these, the UI imports them for labels and the Settings picker.
 //
 // Every version is an immutable literal. Never edit an interval array: a changed ladder is a new
@@ -11,7 +11,9 @@ import { type Grade, gradeDeltas } from "./mastery";
 const HOUR = 3600;
 const DAY = 86_400;
 
-export const BASE_INTERVAL_SECONDS = 3 * HOUR;
+// f12: every current ladder has a rung of exactly one day and extends down to at least an hour.
+export const ANCHOR_INTERVAL_SECONDS = DAY;
+export const MIN_INTERVAL_SECONDS = HOUR;
 // Fixed day count, not calendar-aware (research §11, deferred).
 export const MAX_INTERVAL_SECONDS = 3650 * DAY;
 
@@ -26,7 +28,7 @@ export type Ladder = {
 };
 
 export const LEGACY_LADDER_ID = 1;
-export const DEFAULT_LADDER_ID = 3;
+export const DEFAULT_LADDER_ID = 8;
 
 export const LADDERS: readonly Ladder[] = [
   {
@@ -38,9 +40,9 @@ export const LADDERS: readonly Ladder[] = [
   },
   {
     id: 2,
-    name: "Dense",
+    name: "Dense v1",
     exponent_quarters: 4,
-    selectable: true,
+    selectable: false,
     intervals_seconds: [
       10800, 21600, 43200, 86400, 172800, 345600, 691200, 1382400, 2764800, 5529600, 11059200,
       22118400, 44236800, 88473600, 176947200, 315360000,
@@ -48,9 +50,9 @@ export const LADDERS: readonly Ladder[] = [
   },
   {
     id: 3,
-    name: "Moderate",
+    name: "Moderate v1",
     exponent_quarters: 5,
-    selectable: true,
+    selectable: false,
     intervals_seconds: [
       10800, 25687, 61094, 145307, 345600, 821980, 1955009, 4649821, 11059200, 26303359, 62560283,
       148794266, 315360000,
@@ -58,9 +60,9 @@ export const LADDERS: readonly Ladder[] = [
   },
   {
     id: 4,
-    name: "Balanced",
+    name: "Balanced v1",
     exponent_quarters: 6,
-    selectable: true,
+    selectable: false,
     intervals_seconds: [
       10800, 30547, 86400, 244376, 691200, 1955009, 5529600, 15640071, 44236800, 125120565,
       315360000,
@@ -68,20 +70,70 @@ export const LADDERS: readonly Ladder[] = [
   },
   {
     id: 5,
-    name: "Wide",
+    name: "Wide v1",
     exponent_quarters: 7,
-    selectable: true,
+    selectable: false,
     intervals_seconds: [
       10800, 36327, 122188, 410990, 1382400, 4649821, 15640071, 52606717, 176947200, 315360000,
     ],
   },
   {
     id: 6,
+    name: "Very wide v1",
+    exponent_quarters: 8,
+    selectable: false,
+    intervals_seconds: [
+      10800, 43200, 172800, 691200, 2764800, 11059200, 44236800, 176947200, 315360000,
+    ],
+  },
+  // f09's ladders (ids 2-6) started at 3 h and are retired: items on them move to the active
+  // ladder at their next review. Ids 7-11 are the same multipliers anchored on one day (f12).
+  {
+    id: 7,
+    name: "Very dense",
+    exponent_quarters: 4,
+    selectable: true,
+    intervals_seconds: [
+      5400, 10800, 21600, 43200, 86400, 172800, 345600, 691200, 1382400, 2764800, 5529600, 11059200,
+      22118400, 44236800, 88473600, 176947200, 315360000,
+    ],
+  },
+  {
+    id: 8,
+    name: "Dense",
+    exponent_quarters: 5,
+    selectable: true,
+    intervals_seconds: [
+      6422, 15274, 36327, 86400, 205495, 488752, 1162455, 2764800, 6575840, 15640071, 37198567,
+      88473600, 210426869, 315360000,
+    ],
+  },
+  {
+    id: 9,
+    name: "Balanced",
+    exponent_quarters: 6,
+    selectable: true,
+    intervals_seconds: [
+      3818, 10800, 30547, 86400, 244376, 691200, 1955009, 5529600, 15640071, 44236800, 125120565,
+      315360000,
+    ],
+  },
+  {
+    id: 10,
+    name: "Wide",
+    exponent_quarters: 7,
+    selectable: true,
+    intervals_seconds: [
+      7637, 25687, 86400, 290614, 977504, 3287920, 11059200, 37198567, 125120565, 315360000,
+    ],
+  },
+  {
+    id: 11,
     name: "Very wide",
     exponent_quarters: 8,
     selectable: true,
     intervals_seconds: [
-      10800, 43200, 172800, 691200, 2764800, 11059200, 44236800, 176947200, 315360000,
+      5400, 21600, 86400, 345600, 1382400, 5529600, 22118400, 88473600, 315360000,
     ],
   },
 ];
@@ -108,16 +160,21 @@ export function multiplier(exponentQuarters: number): number {
   return 2 ** (exponentQuarters / 4);
 }
 
-// Rounding policy: nearest whole second of base × 2^(q·i/4); the first rung at or past the cap
-// becomes the cap, so the cap appears exactly once.
+// Rounding policy: nearest whole second of anchor × 2^(q·i/4) for whole i, from the lowest rung
+// at or above the floor; the first rung at or past the cap becomes the cap, so the cap appears
+// exactly once. (f09's ids 2-6 were 10800 × 2^(q·i/4) from i = 0; ladders.test.ts pins them.)
 export function generateIntervals(
   exponentQuarters: number,
-  base = BASE_INTERVAL_SECONDS,
+  anchor = ANCHOR_INTERVAL_SECONDS,
+  min = MIN_INTERVAL_SECONDS,
   max = MAX_INTERVAL_SECONDS,
 ): number[] {
+  const rung = (i: number) => Math.round(anchor * multiplier(exponentQuarters * i));
+  let lowest = 0;
+  while (rung(lowest - 1) >= min) lowest--;
   const out: number[] = [];
-  for (let i = 0; ; i++) {
-    const candidate = Math.round(base * multiplier(exponentQuarters * i));
+  for (let i = lowest; ; i++) {
+    const candidate = rung(i);
     if (candidate >= max) {
       out.push(max);
       return out;
@@ -142,6 +199,12 @@ export function nearestStep(l: Ladder, intervalSeconds: number): number {
     }
   });
   return best;
+}
+
+// Where a new item starts: the rung below the ladder's one-day rung, so a plain Correct on the
+// first review lands on a day and a miss drops below it (f12). Reset still means step 0.
+export function entryStep(l: Ladder): number {
+  return Math.max(0, nearestStep(l, ANCHOR_INTERVAL_SECONDS) - 1);
 }
 
 export type ScheduleState = {
@@ -208,15 +271,15 @@ export function correctStep(
   };
 }
 
-// Display only; labels never drive scheduling. Rounded to one unit so the Settings picker and the
-// vocab pill read at a glance ("3 h", "10 d", "3 wk", "4 mo", "4.7 y").
+// Display only; labels never drive scheduling. Rounded to one whole unit so the vocab pill and
+// due labels read at a glance ("3 h", "10 d", "3 wk", "14 mo", "3 y"), never with a decimal (f12).
 export function formatInterval(seconds: number): string {
   if (seconds <= 0) return "now";
-  if (seconds < DAY) return `${Math.max(1, Math.round(seconds / HOUR))} h`;
+  const hours = Math.max(1, Math.round(seconds / HOUR));
+  if (hours < 24) return `${hours} h`;
   const days = seconds / DAY;
-  if (days < 14) return `${Math.round(days)} d`;
+  if (days < 14) return `${Math.max(1, Math.round(days))} d`;
   if (days < 49) return `${Math.round(days / 7)} wk`;
-  if (days < 365) return `${Math.round(days / 30.4375)} mo`;
-  const years = Math.round((days / 365.25) * 10) / 10;
-  return `${Number.isInteger(years) ? years.toFixed(0) : years} y`;
+  if (days < 548) return `${Math.round(days / 30.4375)} mo`;
+  return `${Math.round(days / 365.25)} y`;
 }

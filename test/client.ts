@@ -16,12 +16,12 @@ export const TABLES = [
   "voice_sessions",
 ] as const;
 
-// Also puts the settings rows back to their defaults: the Moderate ladder (id 3) and the f07
+// Also puts the settings rows back to their defaults: the Dense ladder (id 8) and the f07
 // spend caps ($0.50 soft / $1.00 hard).
 export async function clearTables(): Promise<void> {
   await env.DB.batch([
     ...TABLES.map((t) => env.DB.prepare(`DELETE FROM ${t}`)),
-    env.DB.prepare("INSERT OR REPLACE INTO settings (key, value) VALUES ('active_ladder_id', '3')"),
+    env.DB.prepare("INSERT OR REPLACE INTO settings (key, value) VALUES ('active_ladder_id', '8')"),
     env.DB.prepare(
       "INSERT OR REPLACE INTO settings (key, value) VALUES ('voice_soft_cap_usd', '0.5')",
     ),
