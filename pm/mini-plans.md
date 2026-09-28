@@ -7,7 +7,7 @@
 
 | Handle | Slug / doc | Status | Stage | One-line |
 |---|---|---|---|---|
-| mp03 | `mini-plans/mp03-review-ahead-hours.md` | 🟡 IN PROGRESS | Stage 1 build | Review ahead by hours: stop slider (Now … 1 y) with a live count; Worker takes `ahead_seconds`. |
+| mp03 | `mini-plans/mp03-review-ahead-hours.md` | 🟡 IN PROGRESS | Stage 2 phone (s04; s01–s03 built) | Review ahead by hours: stop slider (Now … 1 y) with a live count; Worker takes `ahead_seconds`. |
 
 ## Archived
 
