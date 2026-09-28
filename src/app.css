@@ -677,12 +677,44 @@ button.grade--hesitant {
 
 .handoff-buttons {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 1fr 1fr auto;
   gap: 8px;
 }
 
 .handoff-buttons button {
   margin: 0;
+}
+
+/* f14: a one-button row spans both button columns. */
+.handoff-buttons button.wide {
+  grid-column: span 2;
+}
+
+/* f14: the ⓘ at the end of each row, and the steps it opens below the row. */
+.handoff-buttons button.info-toggle {
+  min-width: 40px;
+  min-height: 40px;
+  padding: 0 8px;
+  border: none;
+  background: none;
+  color: #4a6663;
+  font-size: 1.3rem;
+  line-height: 1;
+}
+
+.handoff-buttons button.info-toggle[aria-expanded="true"] {
+  color: #1f3d3a;
+}
+
+.handoff-info {
+  grid-column: 1 / -1;
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: #eef3f2;
+  color: #33504d;
+  font-size: 0.9rem;
+  line-height: 1.45;
 }
 
 .handoff-results {
@@ -810,4 +842,9 @@ button.link {
 
 .voice-tool--failed {
   color: #8a2920;
+}
+
+/* f14: the known words start a second list under the copy button. */
+.eyebrow.find-known {
+  margin-top: 20px;
 }

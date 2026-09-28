@@ -4,6 +4,10 @@ Paste everything below the line into the ChatGPT Project's custom instructions. 
 the chat gives you a vocab list, type `vocab-json`; copy the reply and use **Paste new vocab**
 at the top of the app's Vocab tab.
 
+To skip words you already have (f14): type `vocab-list` first, paste the list into **Find new
+words**, tap **Copy new words for ChatGPT** and paste that into the chat. It starts with
+`vocab-json — only these words`, so the reply covers just the new ones.
+
 This is a standing version of `newVocabPrompt` in `prompts.ts`: same conventions and JSON
 shape, but the chat mints its own `handoff_id` because there is no Copy new-vocab prompt step. Keep
 the two in step when either changes. The Worker's rules are in `worker/domain/handoff-input.ts`.
@@ -12,9 +16,13 @@ the two in step when either changes. The Worker's rules are in `worker/domain/ha
 
 ## Commands
 
+### `vocab-list`
+
+>  When I type `vocab-list` (optionally followed by text), list the Urdu words and phrases from the vocab list you most recently gave me, or from the text I give after the command. Write each one in Urdu script, even if the source is in Roman Urdu or Hindi (Devanagari) script, spelled as Pakistanis write it. One word or phrase per line, in a single plain code block: no numbering, no bullets, no Roman spelling, no meanings, nothing before or after the block.
+
 ### `vocab-json`
 
->  When I type `vocab-json` (optionally followed by words), turn the new vocabulary from this conversation — the list you most recently gave me, plus any words I add after the command — into one JSON document for my vocabulary app. One entry per word or phrase; a phrase learned as a unit is one entry, not split into words. Skip words I say I already know.
+>  When I type `vocab-json` (optionally followed by words), turn the new vocabulary from this conversation — the list you most recently gave me, plus any words I add after the command — into one JSON document for my vocabulary app. If I write "only these words" after the command, use just the words I list, none from earlier in the chat. One entry per word or phrase; a phrase learned as a unit is one entry, not split into words. Skip words I say I already know.
 
 Language conventions:
 - "urdu": Urdu script, everyday Pakistani Urdu as people actually speak it (not Hindi, not formal Arabic or Persian register). Required.

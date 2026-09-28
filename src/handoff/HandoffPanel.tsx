@@ -2,7 +2,8 @@
 // in any ChatGPT chat, paste the JSON reply back. New vocab (FR-F4/F6) saves on paste; f11
 // corrections (FR-F9) are previewed with a tick per change and apply only the ticked ones. f13:
 // Copy check prompt opens a dialog of check options (mode, fields, how many, only unchecked); its
-// completeness mode replaced the f06 fill-in pair (FR-F7).
+// completeness mode replaced the f06 fill-in pair (FR-F7). f14: Find new words matches a bare
+// word list from the chat against the vault (FR-F10), and each button row has an info toggle.
 
 import { useState } from "react";
 import {
@@ -18,6 +19,9 @@ import {
   type HandoffResponse,
   type InvalidRequestResponse,
   MAX_CHECK_BATCH,
+  MAX_HANDOFF_PROPOSALS,
+  MAX_MATCH_WORDS,
+  type MatchResponse,
   type ProposalResult,
 } from "../../shared/api";
 import { Sheet } from "../reader/Sheet";
@@ -39,6 +43,7 @@ import {
   toggleOptionField,
 } from "./checkOptions";
 import { checkPrompt, describeInvalid, FIELD_LABELS, newVocabPrompt, parsePasted } from "./prompts";
+import { chatText, extractWords, tooManyWords } from "./wordList";
 
 type Posted<T> = { ok: true; body: T } | { ok: false; message: string };
 
@@ -90,7 +95,13 @@ export function HandoffPanel({
 }) {
   const [copied, setCopied] = useState<Copied>({ kind: "none" });
   const [busy, setBusy] = useState(false);
-  const [pasting, setPasting] = useState<"new" | "options" | "check" | null>(null);
+  const [pasting, setPasting] = useState<"new" | "options" | "check" | "find" | null>(null);
+  const [info, setInfo] = useState<InfoRow | null>(null);
+  const infoProps = (row: InfoRow) => ({
+    row,
+    open: info === row,
+    onToggle: () => setInfo(info === row ? null : row),
+  });
 
   // The Worker picks and records the batch, so the prompt waits on it.
   async function copyCheck(options: CheckOptions) {
@@ -132,12 +143,21 @@ export function HandoffPanel({
         <button type="button" className="secondary" onClick={() => setPasting("new")}>
           Paste new vocab
         </button>
+        <InfoToggle {...infoProps("new")} />
+        {info === "new" && <InfoBox row="new" />}
         <button type="button" className="secondary" onClick={() => setPasting("options")}>
           Copy check prompt
         </button>
         <button type="button" className="secondary" onClick={() => setPasting("check")}>
           Paste check reply
         </button>
+        <InfoToggle {...infoProps("check")} />
+        {info === "check" && <InfoBox row="check" />}
+        <button type="button" className="secondary wide" onClick={() => setPasting("find")}>
+          Find new words
+        </button>
+        <InfoToggle {...infoProps("find")} />
+        {info === "find" && <InfoBox row="find" />}
       </div>
       {copied.kind === "copied" && (
         <p className="hint" role="status">
@@ -166,6 +186,15 @@ export function HandoffPanel({
       {pasting === "options" && (
         <CheckOptionsSheet busy={busy} onCopy={copyCheck} onClose={() => setPasting(null)} />
       )}
+      {pasting === "find" && (
+        <FindWordsSheet
+          onClose={() => setPasting(null)}
+          onOpen={(id) => {
+            setPasting(null);
+            onOpen(id);
+          }}
+        />
+      )}
       {pasting === "check" && (
         <PasteCheckSheet
           onClose={() => setPasting(null)}
@@ -177,6 +206,53 @@ export function HandoffPanel({
         />
       )}
     </div>
+  );
+}
+
+type InfoRow = "new" | "check" | "find";
+
+const INFO_NAME: Readonly<Record<InfoRow, string>> = {
+  new: "new vocab",
+  check: "the check",
+  find: "Find new words",
+};
+
+// f14: a reminder of each round trip, shown under its button row.
+const INFO_TEXT: Readonly<Record<InfoRow, string>> = {
+  new: "In a ChatGPT chat in your Urdu Coach Project, get a word list, then type vocab-json. In any other chat, tap Copy new-vocab prompt, paste it and add your words. Copy the JSON reply, tap Paste new vocab and save. Words already in your vault are reported, not added. Up to 50 words per paste.",
+  check:
+    "Tap Copy check prompt and choose correctness, completeness or both, the fields and how many items. Paste the prompt into ChatGPT and copy its JSON reply. Tap Paste check reply, untick anything you disagree with, and apply. Only ticked fields change; review times stay unless you tick Reset.",
+  find: "Before asking for full entries, type vocab-list in the chat (or ask for the words in Urdu script, one per line) and copy the list. Tap Find new words, paste it and tap Find. Copy the new words for ChatGPT and paste them into the chat: it replies with JSON for just those words, for Paste new vocab. Only exact matches count: plurals and other forms of a word you have still show as new.",
+};
+
+function InfoToggle({
+  row,
+  open,
+  onToggle,
+}: {
+  row: InfoRow;
+  open: boolean;
+  onToggle: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      className="info-toggle"
+      aria-label={`How ${INFO_NAME[row]} works`}
+      aria-expanded={open}
+      aria-controls={`handoff-info-${row}`}
+      onClick={onToggle}
+    >
+      {"\u{24D8}"}
+    </button>
+  );
+}
+
+function InfoBox({ row }: { row: InfoRow }) {
+  return (
+    <p className="handoff-info" id={`handoff-info-${row}`}>
+      {INFO_TEXT[row]}
+    </p>
   );
 }
 
@@ -379,6 +455,149 @@ function PasteNewSheet({
           </button>
         </>
       )}
+    </Sheet>
+  );
+}
+
+type Found = { fresh: string[]; known: { urdu: string; id: string }[]; skipped: number };
+
+function FindWordsSheet({
+  onClose,
+  onOpen,
+}: {
+  onClose: () => void;
+  onOpen: (id: string) => void;
+}) {
+  const [text, setText] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+  const [found, setFound] = useState<Found | null>(null);
+  const [copied, setCopied] = useState<Copied>({ kind: "none" });
+
+  async function find() {
+    const list = extractWords(text);
+    if (list.words.length === 0) return setError("No Urdu words found in that text.");
+    if (tooManyWords(list)) return setError(`Paste at most ${MAX_MATCH_WORDS} words at a time.`);
+    setBusy(true);
+    setError("");
+    const posted = await postJson<MatchResponse>("/api/vocab/match", { words: list.words });
+    setBusy(false);
+    if (!posted.ok) return setError(posted.message);
+    const fresh: string[] = [];
+    const known: Found["known"] = [];
+    for (const r of posted.body.results) {
+      if (r.existing) known.push(r.existing);
+      else fresh.push(r.urdu);
+    }
+    setFound({ fresh, known, skipped: list.skipped });
+  }
+
+  if (found) {
+    const { fresh, known, skipped } = found;
+    const tooMany =
+      fresh.length > MAX_HANDOFF_PROPOSALS
+        ? ` ChatGPT's reply can hold at most ${MAX_HANDOFF_PROPOSALS} words; split the list if it refuses.`
+        : "";
+    return (
+      <Sheet label="New words" onClose={onClose}>
+        <p className="eyebrow">NEW WORDS</p>
+        <p className="hint">
+          {fresh.length} new · {known.length} already in your vault
+          {skipped > 0 && `; ${skipped} ${skipped === 1 ? "line" : "lines"} with no Urdu skipped`}
+        </p>
+        {fresh.length === 0 ? (
+          <p className="hint">Every word is already in your vault.</p>
+        ) : (
+          <>
+            <ul className="handoff-results">
+              {fresh.map((urdu) => (
+                <li key={urdu}>
+                  <span className="urdu-inline" dir="rtl" lang="ur">
+                    {urdu}
+                  </span>
+                </li>
+              ))}
+            </ul>
+            <button
+              type="button"
+              onClick={async () =>
+                setCopied(
+                  await copy(
+                    chatText(fresh),
+                    `Copied. Paste it into the ChatGPT chat, then paste its reply into Paste new vocab.${tooMany}`,
+                  ),
+                )
+              }
+            >
+              Copy new words for ChatGPT
+            </button>
+            {copied.kind === "copied" && (
+              <p className="hint" role="status">
+                {copied.note}
+              </p>
+            )}
+            {copied.kind === "manual" && (
+              <>
+                <p className="hint" role="status">
+                  The clipboard is unavailable. Select the text below and copy it.
+                </p>
+                <textarea
+                  readOnly
+                  rows={6}
+                  value={copied.text}
+                  aria-label="New words for ChatGPT"
+                />
+              </>
+            )}
+          </>
+        )}
+        {known.length > 0 && (
+          <>
+            <p className="eyebrow find-known">ALREADY IN YOUR VAULT</p>
+            <ul className="handoff-results">
+              {known.map((k) => (
+                <li key={k.id}>
+                  <span className="urdu-inline" dir="rtl" lang="ur">
+                    {k.urdu}
+                  </span>{" "}
+                  <button type="button" className="link" onClick={() => onOpen(k.id)}>
+                    Open
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </>
+        )}
+        <button type="button" className="secondary" onClick={onClose}>
+          Done
+        </button>
+      </Sheet>
+    );
+  }
+
+  return (
+    <Sheet label="Find new words" onClose={onClose}>
+      <p className="eyebrow">FIND NEW WORDS</p>
+      <label htmlFor="find-words">Word list from ChatGPT</label>
+      <textarea
+        id="find-words"
+        rows={8}
+        value={text}
+        onChange={(event) => setText(event.target.value)}
+        spellCheck={false}
+        autoCapitalize="none"
+      />
+      {error && (
+        <p className="error" role="alert">
+          {error}
+        </p>
+      )}
+      <button type="button" onClick={find} disabled={busy}>
+        {busy ? "Checking\u{2026}" : "Find"}
+      </button>
+      <button type="button" className="secondary" onClick={onClose}>
+        Cancel
+      </button>
     </Sheet>
   );
 }
