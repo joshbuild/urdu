@@ -4,6 +4,7 @@
 
 ### Changed
 
+- Review ahead is a slider instead of a days box: it snaps from Now through 1, 2, 3, 5, 8, 12, 16 and 20 hours, days, weeks and months to 1 year, and says how many more items each step adds.
 - The ChatGPT buttons on the Vocab tab read as matching pairs: **Copy new-vocab prompt** (was Copy prompt) and **Paste check reply** (was Paste corrections).
 - The ChatGPT prompts ask for strict JSON with no double quotes inside the text, so replies paste first time; a bad paste now says what to ask the chat for.
 - The ChatGPT buttons sit at the top of the Vocab tab instead of below the list, and saving fill-ins updates the count of items still missing fields.

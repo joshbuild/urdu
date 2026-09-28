@@ -40,6 +40,7 @@ This replaces the ChatGPT Voice + Airtable loop. The sponsor opens the installed
 - Saved transcripts or session history beyond the spend row. It's a non-goal and a privacy cost, with no v0 user story. (f10 later keeps the most recent transcript on the device; history is v1, DECISIONS 260922a.)
 - Text chat with the Coach (the f06 ChatGPT paste path covers text).
 - Deleting `spikes/gpt-live/` is a close step here (TODO), not a build slice.
+- Also at close: move `pm/mini-plans/mp02-coach-instructions.md` (the Coach prompt source, no roster row) to `mini-plans/archive/mp02-coach-instructions-archive.md` and repoint this doc, PLAN and the `worker/coach/prompt.ts` comment (pm-clean 2026-09-27, sponsor-approved).
 
 ### User Stories
 
