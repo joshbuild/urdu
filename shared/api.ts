@@ -254,6 +254,17 @@ export type HandoffResponse = {
   results: ProposalResult[];
 };
 
+// --- New word finder (f14, FR-F10). A bare word list from the chat, matched against the vault by
+// --- urdu_key before the chat writes full entries. Read-only: nothing is recorded.
+
+export const MAX_MATCH_WORDS = 500;
+
+export type MatchRequest = { words: string[] };
+
+export type MatchResult = { urdu: string; existing: { id: string; urdu: string } | null };
+
+export type MatchResponse = { results: MatchResult[] };
+
 // The text fields a check may correct, remove or fill (FR-F9); FR-F7 fill-ins used them first.
 export const FILLABLE_FIELDS = [
   "roman",

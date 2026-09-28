@@ -5,6 +5,7 @@ import {
   type DueResponse,
   type DuplicateResponse,
   type InvalidRequestResponse,
+  type MatchResponse,
   type StatusResponse,
   type TagsResponse,
   type UpcomingResponse,
@@ -22,12 +23,13 @@ import {
   getVocab,
   listTags,
   listVocab,
+  matchVocab,
   upcomingDueTimes,
   updateVocab,
   vocabCounts,
   type WriteResult,
 } from "../domain/vocab";
-import { type InputError, parseCreate, parseUpdate } from "../domain/vocab-input";
+import { type InputError, parseCreate, parseMatch, parseUpdate } from "../domain/vocab-input";
 import type { AppEnv } from "../env";
 
 export const DEFAULT_LIST_LIMIT = 50;
@@ -130,6 +132,17 @@ vocabRoutes.post("/api/vocab", async (c) => {
     await activeLadderId(c.env.DB),
   );
   return result.ok ? c.json(result.item, 201) : writeFailure(c, result);
+});
+
+// f14 (FR-F10): which words of a pasted list are already in the vault. Writes nothing; POST
+// because a 500-word list does not fit a URL.
+vocabRoutes.post("/api/vocab/match", async (c) => {
+  const body = await readJson(c);
+  if (body === undefined) return invalid(c, { message: "body must be valid JSON" });
+  const parsed = parseMatch(body);
+  if (!parsed.ok) return invalid(c, parsed.error);
+  const response: MatchResponse = { results: await matchVocab(c.env.DB, parsed.value.words) };
+  return c.json(response);
 });
 
 vocabRoutes.get("/api/vocab", async (c) => {

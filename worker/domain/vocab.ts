@@ -1,7 +1,7 @@
 // Vocab service (FR-A5..A8). D1 access for vocab lives here; routes stay thin. Reads never
 // write (FR-A8): only create, update and delete touch rows.
 
-import type { Tag, UpdateVocabRequest, VocabItem, VocabSort } from "../../shared/api";
+import type { MatchResult, Tag, UpdateVocabRequest, VocabItem, VocabSort } from "../../shared/api";
 import { correctStep, entryStep, ladder } from "../../shared/ladders";
 import { inferKind, urduKey } from "../../shared/normalize";
 import { ulid } from "../../shared/ulid";
@@ -47,6 +47,27 @@ export async function findIdByKey(db: D1Database, key: string): Promise<string |
     .bind(key)
     .first<{ id: string }>();
   return row?.id ?? null;
+}
+
+// f14: D1 binds at most 100 parameters per query, so the keys go in chunks below that.
+const MATCH_CHUNK = 90;
+
+// f14 (FR-F10): each word matched to the item holding its urdu_key, the rule createVocab's
+// duplicate check applies. Read-only. The parser has already refused words with an empty key.
+export async function matchVocab(db: D1Database, words: readonly string[]): Promise<MatchResult[]> {
+  const keys = [...new Set(words.map(urduKey))];
+  const found = new Map<string, { id: string; urdu: string }>();
+  for (let i = 0; i < keys.length; i += MATCH_CHUNK) {
+    const chunk = keys.slice(i, i + MATCH_CHUNK);
+    const { results } = await db
+      .prepare(
+        `SELECT id, urdu, urdu_key FROM vocab WHERE urdu_key IN (${chunk.map(() => "?").join(", ")})`,
+      )
+      .bind(...chunk)
+      .all<{ id: string; urdu: string; urdu_key: string }>();
+    for (const row of results) found.set(row.urdu_key, { id: row.id, urdu: row.urdu });
+  }
+  return words.map((urdu) => ({ urdu, existing: found.get(urduKey(urdu)) ?? null }));
 }
 
 function isUniqueKeyViolation(err: unknown): boolean {

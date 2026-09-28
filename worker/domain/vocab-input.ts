@@ -2,12 +2,14 @@
 // later, so a bad field is rejected the same way whichever client sent it.
 
 import {
+  MAX_MATCH_WORDS,
+  type MatchRequest,
   PWA_VOCAB_SOURCES,
   type UpdateVocabRequest,
   type VocabFields,
   type VocabSource,
 } from "../../shared/api";
-import { VOCAB_KINDS, type VocabKind } from "../../shared/normalize";
+import { urduKey, VOCAB_KINDS, type VocabKind } from "../../shared/normalize";
 
 export const MAX_URDU_LENGTH = 500;
 export const MAX_TEXT_LENGTH = 2000;
@@ -140,6 +142,27 @@ export function parseCreate(body: unknown): Parsed<CreateInput> {
   }
   const { urdu, ...rest } = fields.value;
   return { ok: true, value: { ...rest, urdu: urdu as string, source } };
+}
+
+// f14: every entry must be a valid `urdu` value with Urdu letters; the client extracts them first.
+export function parseMatch(body: unknown): Parsed<MatchRequest> {
+  if (!isRecord(body)) return fail(undefined, "body must be a JSON object");
+  const extra = Object.keys(body).find((key) => key !== "words");
+  if (extra) return fail(extra, "is not a recognised field");
+  const words = body.words;
+  if (!Array.isArray(words)) return fail("words", "is required and must be an array");
+  if (words.length === 0) return fail("words", "must not be empty");
+  if (words.length > MAX_MATCH_WORDS) {
+    return fail("words", `must have at most ${MAX_MATCH_WORDS} entries`);
+  }
+  const out: string[] = [];
+  for (const [i, word] of words.entries()) {
+    const text = urduText(word);
+    if (!text.ok) return fail(`words[${i}]`, text.error.message);
+    if (urduKey(text.value) === "") return fail(`words[${i}]`, "must contain Urdu letters");
+    out.push(text.value);
+  }
+  return { ok: true, value: { words: out } };
 }
 
 export function parseUpdate(body: unknown): Parsed<UpdateVocabRequest> {
