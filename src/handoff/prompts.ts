@@ -4,6 +4,7 @@
 // Project version of newVocabPrompt is chatgpt-project-instructions.md; keep the two in step.
 
 import {
+  type CheckOptions,
   FILLABLE_FIELDS,
   type FillableField,
   MAX_CHECK_BATCH,
@@ -51,14 +52,17 @@ export function missingFields(item: VocabItem): FillableField[] {
   return FILLABLE_FIELDS.filter((field) => item[field] === null);
 }
 
-// Each item as the chat sees it: its id, its urdu and every field it has.
-function listItems(items: readonly VocabItem[]): string {
+// Each item as the chat sees it: its id, its urdu and every field it has. With `missing`, also the
+// chosen fields it lacks, which a completeness check asks the chat to supply.
+function listItems(items: readonly VocabItem[], missing?: readonly FillableField[]): string {
   const listed = items.map((item) => {
-    const entry: Record<string, string> = { vocab_id: item.id, urdu: item.urdu };
+    const entry: Record<string, string | string[]> = { vocab_id: item.id, urdu: item.urdu };
     for (const field of FILLABLE_FIELDS) {
       const value = item[field];
       if (value !== null) entry[field] = value;
     }
+    const lacks = missing?.filter((field) => item[field] === null) ?? [];
+    if (lacks.length > 0) entry.missing = lacks;
     return entry;
   });
   return JSON.stringify(listed, null, 2);
@@ -85,19 +89,51 @@ ${JSON_ONLY}
 `;
 }
 
-// f11 (FR-F9): the accuracy check. The handoff_id comes from the Worker, which recorded the batch
-// under it, so unlike the other prompts it is never minted here.
-export function checkPrompt(items: readonly VocabItem[], handoffId: string): string {
-  return `You are checking entries in my Urdu vocabulary app for accuracy. Check every field of each item below against these conventions:
+const quoted = (fields: readonly FillableField[]) => fields.map((f) => `"${f}"`).join(", ");
+
+// What a correctness check asks about each field, for the fields chosen.
+const CHECKS: Readonly<Record<FillableField, string>> = {
+  roman: 'is "roman" the spelling Pakistanis actually type',
+  english: 'is "english" the right meaning in everyday Pakistani use',
+  notes: 'are the "notes" accurate',
+  example_urdu: 'is "example_urdu" natural everyday Urdu',
+  example_english: 'does "example_english" translate the Urdu example',
+};
+
+// f11 (FR-F9), f13 modes. The handoff_id comes from the Worker, which recorded the batch under it
+// with its mode and fields, so unlike the other prompts it is never minted here. The Worker also
+// ignores any change the mode or fields don't allow, so the prompt only has to ask well.
+export function checkPrompt(
+  items: readonly VocabItem[],
+  handoffId: string,
+  { mode, fields }: Pick<CheckOptions, "mode" | "fields">,
+): string {
+  const correct = mode !== "completeness";
+  const fill = mode !== "correctness";
+  const task = [
+    correct &&
+      `Correctness: check only these fields of each item: ${quoted(fields)}. In particular: ${fields.map((f) => CHECKS[f]).join("; ")}? Correct a wrong value, or set it to null to remove it.${fill ? "" : " Never add a field an item doesn't have."}`,
+    fill &&
+      `Completeness: each item's "missing" lists the fields it lacks among ${quoted(fields)}. Supply every one of them, following the conventions.${correct ? "" : " Never change or remove a field an item already has."}`,
+  ]
+    .filter(Boolean)
+    .join("\n\n");
+  const opening =
+    mode === "completeness"
+      ? "You are completing entries in my Urdu vocabulary app."
+      : mode === "both"
+        ? "You are checking entries in my Urdu vocabulary app for accuracy and completing them."
+        : "You are checking entries in my Urdu vocabulary app for accuracy.";
+  return `${opening} Follow these conventions:
 
 ${CONVENTIONS}
 
-In particular: is "english" the right meaning in everyday Pakistani use; is "roman" the spelling Pakistanis actually type; is "example_urdu" natural everyday Urdu, and does "example_english" translate it; are the "notes" accurate?
+${task}
 
 Items:
-${listItems(items)}
+${listItems(items, fill ? fields : undefined)}
 
-Return only the items with something wrong. For each, copy vocab_id and urdu exactly as given; include only the fields you would change, with their corrected values; set a field to null to remove it; add a missing field only if the entry needs it; and give one short "reason" (plain words; single quotes, never double, around any spelling you cite). Never change "urdu". If you think its spelling is wrong, put the spelling you suggest in "urdu_suggestion".
+Return only the items you change. For each, copy vocab_id and urdu exactly as given; include only the fields you change or supply, with their values; and give one short "reason" (plain words, e.g. 'added example'; single quotes, never double, around any spelling you cite). Never change "urdu". If you think its spelling is wrong, put the spelling you suggest in "urdu_suggestion". Other fields are shown for context only.
 
 Return exactly this JSON shape, copying handoff_id as given:
 
@@ -108,7 +144,7 @@ Return exactly this JSON shape, copying handoff_id as given:
   ]
 }
 
-If every item is fine, return "corrections": []. At most ${MAX_CHECK_BATCH} corrections. ${JSON_ONLY}
+If there is nothing to change, return "corrections": []. At most ${MAX_CHECK_BATCH} corrections. ${JSON_ONLY}
 `;
 }
 

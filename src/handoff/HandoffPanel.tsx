@@ -1,23 +1,27 @@
 // f06 Stages 1-2: the ChatGPT round trip at the top of the Vocab list. Copy a prompt, run it
 // in any ChatGPT chat, paste the JSON reply back. New vocab (FR-F4/F6) saves on paste; fill-ins
 // (FR-F7) are previewed and saved only on confirmation; f11 corrections (FR-F9) are previewed
-// with a tick per change and apply only the ticked ones.
+// with a tick per change and apply only the ticked ones. f13: Copy check prompt opens a dialog of
+// check options (mode, fields, how many, only unchecked).
 
 import { useState } from "react";
-import type {
-  CheckBatchResponse,
-  ConflictResponse,
-  CorrectionPlan,
-  CorrectionResult,
-  CorrectionsResponse,
-  FieldChange,
-  FillableField,
-  HandoffResponse,
-  IncompleteResponse,
-  InvalidRequestResponse,
-  ProposalResult,
-  RevisionResult,
-  RevisionsResponse,
+import {
+  type CheckBatchResponse,
+  type CheckMode,
+  type CheckOptions,
+  type ConflictResponse,
+  type CorrectionPlan,
+  type CorrectionResult,
+  type CorrectionsResponse,
+  type FieldChange,
+  type FillableField,
+  type HandoffResponse,
+  type IncompleteResponse,
+  type InvalidRequestResponse,
+  MAX_CHECK_BATCH,
+  type ProposalResult,
+  type RevisionResult,
+  type RevisionsResponse,
 } from "../../shared/api";
 import { Sheet } from "../reader/Sheet";
 import {
@@ -29,6 +33,14 @@ import {
   toggleField,
   toggleReset,
 } from "./check";
+import {
+  MODE_LABELS,
+  optionsProblem,
+  parseCount,
+  readCheckOptions,
+  storeCheckOptions,
+  toggleOptionField,
+} from "./checkOptions";
 import {
   checkPrompt,
   describeInvalid,
@@ -88,7 +100,7 @@ export function HandoffPanel({
 }) {
   const [copied, setCopied] = useState<Copied>({ kind: "none" });
   const [busy, setBusy] = useState(false);
-  const [pasting, setPasting] = useState<"new" | "fill" | "check" | null>(null);
+  const [pasting, setPasting] = useState<"new" | "fill" | "options" | "check" | null>(null);
 
   // After fill-ins save, the note from Copy fill-in prompt counts items that may now be complete,
   // so it is replaced with a fresh count.
@@ -134,20 +146,20 @@ export function HandoffPanel({
   }
 
   // The Worker picks and records the batch, so the prompt waits on it.
-  async function copyCheck() {
+  async function copyCheck(options: CheckOptions) {
     setBusy(true);
-    const posted = await postJson<CheckBatchResponse>("/api/handoffs/check-batch", {});
+    const posted = await postJson<CheckBatchResponse>("/api/handoffs/check-batch", options);
     setBusy(false);
+    setPasting(null);
     if (!posted.ok) return setCopied({ kind: "copied", note: posted.message });
-    const { handoff_id, items, unchecked } = posted.body;
-    if (handoff_id === null) {
-      return setCopied({ kind: "copied", note: "Your vault is empty; nothing to check." });
-    }
-    const fresh = unchecked > 0 ? `; ${unchecked} never checked in the vault` : "";
+    const { handoff_id, items, candidates, unchecked } = posted.body;
+    if (handoff_id === null)
+      return setCopied({ kind: "copied", note: emptyNote(options, candidates) });
+    const fresh = unchecked > 0 ? `; ${unchecked} not yet ${CHECKED_WAY[options.mode]}` : "";
     setCopied(
       await copy(
-        checkPrompt(items, handoff_id),
-        `Check prompt copied (${items.length} items${fresh}). Paste it into ChatGPT.`,
+        checkPrompt(items, handoff_id, options),
+        `Check prompt copied (${items.length} of ${candidates} items${fresh}). Paste it into ChatGPT.`,
       ),
     );
   }
@@ -179,7 +191,7 @@ export function HandoffPanel({
         <button type="button" className="secondary" onClick={() => setPasting("fill")}>
           Paste fill-ins
         </button>
-        <button type="button" className="secondary" onClick={copyCheck} disabled={busy}>
+        <button type="button" className="secondary" onClick={() => setPasting("options")}>
           Copy check prompt
         </button>
         <button type="button" className="secondary" onClick={() => setPasting("check")}>
@@ -219,6 +231,9 @@ export function HandoffPanel({
           }}
         />
       )}
+      {pasting === "options" && (
+        <CheckOptionsSheet busy={busy} onCopy={copyCheck} onClose={() => setPasting(null)} />
+      )}
       {pasting === "check" && (
         <PasteCheckSheet
           onClose={() => setPasting(null)}
@@ -230,6 +245,109 @@ export function HandoffPanel({
         />
       )}
     </div>
+  );
+}
+
+const CHECKED_WAY: Readonly<Record<CheckMode, string>> = {
+  correctness: "checked for correctness",
+  completeness: "checked for completeness",
+  both: "checked both ways",
+};
+
+const MARKED: Readonly<Record<CheckMode, string>> = {
+  correctness: "marked checked",
+  completeness: "marked filled",
+  both: "marked checked and filled",
+};
+
+// Why a batch came back empty: nothing qualifies, or only_unchecked filtered every item out.
+function emptyNote(options: CheckOptions, candidates: number): string {
+  if (candidates > 0) {
+    return "Every item has been checked this way; untick Only unchecked to go round again.";
+  }
+  if (options.mode === "correctness") return "No item has these fields to check.";
+  if (options.mode === "completeness") return "Every item has these fields.";
+  return "Your vault is empty; nothing to check.";
+}
+
+function CheckOptionsSheet({
+  busy,
+  onCopy,
+  onClose,
+}: {
+  busy: boolean;
+  onCopy: (options: CheckOptions) => void;
+  onClose: () => void;
+}) {
+  const [options, setOptions] = useState<CheckOptions>(readCheckOptions);
+  const [countText, setCountText] = useState(() => String(options.count));
+  const current = { ...options, count: parseCount(countText) };
+  const problem = optionsProblem(current);
+
+  return (
+    <Sheet label="Check options" onClose={onClose}>
+      <p className="eyebrow">CHECK OPTIONS</p>
+      <fieldset className="direction">
+        <legend>Check for</legend>
+        {(Object.keys(MODE_LABELS) as CheckMode[]).map((mode) => (
+          <label key={mode}>
+            <input
+              type="radio"
+              name="check-mode"
+              value={mode}
+              checked={options.mode === mode}
+              onChange={() => setOptions({ ...options, mode })}
+            />
+            {MODE_LABELS[mode]}
+          </label>
+        ))}
+      </fieldset>
+      <fieldset className="direction">
+        <legend>Fields</legend>
+        {(Object.keys(FIELD_LABELS) as FillableField[]).map((field) => (
+          <label key={field}>
+            <input
+              type="checkbox"
+              checked={options.fields.includes(field)}
+              onChange={() => setOptions(toggleOptionField(options, field))}
+            />
+            {FIELD_LABELS[field]}
+          </label>
+        ))}
+      </fieldset>
+      <label htmlFor="check-count">How many items</label>
+      <input
+        id="check-count"
+        type="number"
+        inputMode="numeric"
+        min={1}
+        max={MAX_CHECK_BATCH}
+        value={countText}
+        onChange={(event) => setCountText(event.target.value)}
+      />
+      <label className="check">
+        <input
+          type="checkbox"
+          checked={options.only_unchecked}
+          onChange={() => setOptions({ ...options, only_unchecked: !options.only_unchecked })}
+        />
+        Only items not yet checked this way
+      </label>
+      {problem && <p className="hint">{problem}</p>}
+      <button
+        type="button"
+        disabled={busy || problem !== null}
+        onClick={() => {
+          storeCheckOptions(current);
+          onCopy(current);
+        }}
+      >
+        {busy ? "Copying…" : "Copy prompt"}
+      </button>
+      <button type="button" className="secondary" onClick={onClose}>
+        Cancel
+      </button>
+    </Sheet>
   );
 }
 
@@ -521,6 +639,9 @@ function PlanLine({
               </span>
             </label>
           ))}
+          {plan.ignored.length > 0 && (
+            <p className="hint">Ignored, not asked for in this check: {fieldList(plan.ignored)}</p>
+          )}
           {plan.urdu_suggestion !== undefined && <Flag suggestion={plan.urdu_suggestion} />}
           <label className="check">
             <input
@@ -650,7 +771,7 @@ function PasteCheckSheet({
         <p className="hint">
           {applied.repeat
             ? "This reply was already applied; nothing changed."
-            : `${applied.batch_size} ${applied.batch_size === 1 ? "item" : "items"} marked checked.`}
+            : `${applied.batch_size} ${applied.batch_size === 1 ? "item" : "items"} ${MARKED[applied.mode]}.`}
         </p>
         {reported.length > 0 && (
           <ul className="handoff-results">
@@ -690,7 +811,11 @@ function PasteCheckSheet({
           {busy
             ? "Saving…"
             : accept.length === 0
-              ? "Mark checked"
+              ? plan.mode === "correctness"
+                ? "Mark checked"
+                : plan.mode === "completeness"
+                  ? "Mark filled"
+                  : "Mark checked and filled"
               : `Apply to ${accept.length} ${accept.length === 1 ? "item" : "items"}`}
         </button>
         <button type="button" className="secondary" onClick={onClose}>

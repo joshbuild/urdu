@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import type { VocabItem } from "../../shared/api";
+import { FILLABLE_FIELDS, type VocabItem } from "../../shared/api";
 import {
   checkPrompt,
   describeInvalid,
@@ -70,6 +70,7 @@ describe("checkPrompt", () => {
     const text = checkPrompt(
       [item({ roman: "paani", english: "water" }), item({ id: "01J0000000000000000000000B" })],
       "C1",
+      { mode: "correctness", fields: [...FILLABLE_FIELDS] },
     );
     expect(text).toContain('"handoff_id": "C1"');
     expect(text).toContain('"vocab_id": "01J0000000000000000000000A"');
@@ -83,6 +84,41 @@ describe("checkPrompt", () => {
     expect(text).toContain("Never change");
     expect(text).toContain("JSON document alone");
   });
+
+  const items = [
+    item({ roman: "paani", english: "water" }),
+    item({ id: "01J0000000000000000000000B", english: "book", example_urdu: "x" }),
+  ];
+
+  it("in correctness names only the chosen fields and never asks for a fill", () => {
+    const text = checkPrompt(items, "C1", { mode: "correctness", fields: ["english"] });
+    expect(text).toContain('check only these fields of each item: "english"');
+    expect(text).toContain("right meaning");
+    expect(text).not.toContain("spelling Pakistanis actually type");
+    expect(text).toContain("Never add a field");
+    expect(text).not.toContain('"missing"');
+  });
+
+  it("in completeness lists each item's missing chosen fields and never asks for a change", () => {
+    const text = checkPrompt(items, "C1", {
+      mode: "completeness",
+      fields: ["roman", "example_urdu"],
+    });
+    expect(text).toContain("You are completing entries");
+    // The first item has roman, so lacks only example_urdu; the second lacks roman.
+    expect(text).toMatch(/"roman": "paani",[\s\S]*?"missing": \[\s*"example_urdu"\s*\]/);
+    expect(text).toMatch(/"example_urdu": "x",\s*"missing": \[\s*"roman"\s*\]/);
+    expect(text).toContain("Never change or remove");
+    expect(text).not.toContain("Correctness:");
+  });
+
+  it("in both asks for the two together, with neither prohibition", () => {
+    const text = checkPrompt(items, "C1", { mode: "both", fields: ["roman", "english"] });
+    expect(text).toContain("Correctness:");
+    expect(text).toContain("Completeness:");
+    expect(text).not.toContain("Never add a field");
+    expect(text).not.toContain("Never change or remove");
+  });
 });
 
 describe("every prompt", () => {
@@ -90,7 +126,7 @@ describe("every prompt", () => {
     for (const text of [
       newVocabPrompt("H1"),
       fillInPrompt([item({})], "R1"),
-      checkPrompt([item({})], "C1"),
+      checkPrompt([item({})], "C1", { mode: "both", fields: ["notes"] }),
     ]) {
       expect(text).toContain("strict JSON");
       expect(text).toContain("never use a double quotation mark");
