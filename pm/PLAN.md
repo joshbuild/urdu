@@ -44,6 +44,7 @@
 - f07 `coach-client`: FR-G Option 2 (chosen by mp02). Voice screen, Worker-brokered GPT-Live-1 WebRTC session (FR-B5), Coach prompt in-repo (start from `mini-plans/mp02-coach-instructions.md` and the TODO tuning notes), tools through cookie routes over the f06 domain logic (260918h), spend display and caps. f06 Stage 3's bearer routes and OpenAPI move to v1.
 - f10 `coach-followups` (planned, added 2026-09-22, DECISIONS 260922a): opens straight after f07 closes. Three small slices sharing one phone smoke: a Coach vocab-edit voice tool (FR-F8) with an optional interval reset, tappable Urdu in transcript bubbles, and the most recent transcript kept on the device.
 - f11 `vocab-check` (🟡 in progress, opened 2026-09-23): a ChatGPT copy–paste round trip that checks existing entries for accuracy; per-field old → new preview, ticked fields overwritten, schedule untouched (FR-F9).
+- f13 `check-modes` (🟡 in progress, opened 2026-09-28): the check gains a dialog (correctness / completeness / both, fields, up to 50 items, only unchecked) and a per-mode `filled_at` stamp (migration 0006); completeness replaces the FR-F7 fill-in pair.
 - **Exit:** After a Voice session, new vocabulary and quiz results are in D1 via the Coach client, with the clipboard handoff verified as a working fallback. v0 is complete; amend `VISION.md` §16 line on custom voice tutors to match the shipped option.
 
 ### Phase 4 — v1 (coarse)
@@ -67,3 +68,4 @@
 | f10 | — (doc not drafted; scope in Phase 3 above and DECISIONS 260922a) | planned | Coach vocab edits by voice, tappable Urdu in transcripts, last transcript kept on device (DECISIONS 260922a). |
 | f11 | `features/f11-vocab-check.md` | 🟡 in progress (s01–s03 built, s04 phone next) | ChatGPT round trip that checks existing vocab for accuracy and overwrites accepted corrections (FR-F9). |
 | f12 | `features/f12-day-anchored-ladders.md` | 🟡 in progress (s01–s04 built, s05 phone next) | Ladders anchored on a 1-day rung, new words enter just below it, no decimals on screen. |
+| f13 | `features/f13-check-modes.md` | 🟡 in progress (s01 next) | Copy check prompt opens a dialog: correctness, completeness or both, fields, count, only unchecked; completeness replaces the fill-in pair (FR-F9, retires FR-F7). |
