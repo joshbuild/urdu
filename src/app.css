@@ -696,24 +696,6 @@ button.grade--hesitant {
   border-bottom: 1px solid #e3eae8;
 }
 
-.handoff-fills {
-  margin: 6px 0 0;
-}
-
-.handoff-fills div {
-  display: grid;
-  grid-template-columns: 7em 1fr;
-  gap: 8px;
-}
-
-.handoff-fills dt {
-  color: #5a7472;
-}
-
-.handoff-fills dd {
-  margin: 0;
-}
-
 /* f11: a correction's change as a tickable old → new pair, stacked to fit a phone. */
 label.check.change {
   align-items: flex-start;

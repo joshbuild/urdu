@@ -1,8 +1,8 @@
 // f06 Stages 1-2: the ChatGPT round trip at the top of the Vocab list. Copy a prompt, run it
-// in any ChatGPT chat, paste the JSON reply back. New vocab (FR-F4/F6) saves on paste; fill-ins
-// (FR-F7) are previewed and saved only on confirmation; f11 corrections (FR-F9) are previewed
-// with a tick per change and apply only the ticked ones. f13: Copy check prompt opens a dialog of
-// check options (mode, fields, how many, only unchecked).
+// in any ChatGPT chat, paste the JSON reply back. New vocab (FR-F4/F6) saves on paste; f11
+// corrections (FR-F9) are previewed with a tick per change and apply only the ticked ones. f13:
+// Copy check prompt opens a dialog of check options (mode, fields, how many, only unchecked); its
+// completeness mode replaced the f06 fill-in pair (FR-F7).
 
 import { useState } from "react";
 import {
@@ -16,12 +16,9 @@ import {
   type FieldChange,
   type FillableField,
   type HandoffResponse,
-  type IncompleteResponse,
   type InvalidRequestResponse,
   MAX_CHECK_BATCH,
   type ProposalResult,
-  type RevisionResult,
-  type RevisionsResponse,
 } from "../../shared/api";
 import { Sheet } from "../reader/Sheet";
 import {
@@ -41,14 +38,7 @@ import {
   storeCheckOptions,
   toggleOptionField,
 } from "./checkOptions";
-import {
-  checkPrompt,
-  describeInvalid,
-  FIELD_LABELS,
-  fillInPrompt,
-  newVocabPrompt,
-  parsePasted,
-} from "./prompts";
+import { checkPrompt, describeInvalid, FIELD_LABELS, newVocabPrompt, parsePasted } from "./prompts";
 
 type Posted<T> = { ok: true; body: T } | { ok: false; message: string };
 
@@ -100,50 +90,7 @@ export function HandoffPanel({
 }) {
   const [copied, setCopied] = useState<Copied>({ kind: "none" });
   const [busy, setBusy] = useState(false);
-  const [pasting, setPasting] = useState<"new" | "fill" | "options" | "check" | null>(null);
-
-  // After fill-ins save, the note from Copy fill-in prompt counts items that may now be complete,
-  // so it is replaced with a fresh count.
-  async function recount() {
-    try {
-      const response = await fetch("/api/vocab/incomplete", { cache: "no-store" });
-      if (!response.ok) throw new Error("incomplete failed");
-      const { total } = (await response.json()) as IncompleteResponse;
-      setCopied({
-        kind: "copied",
-        note:
-          total === 0
-            ? "Fill-ins saved. Every item is complete."
-            : `Fill-ins saved. ${total} ${total === 1 ? "item still has" : "items still have"} empty fields.`,
-      });
-    } catch {
-      setCopied({ kind: "none" });
-    }
-  }
-
-  async function copyFillIn() {
-    setBusy(true);
-    try {
-      const response = await fetch("/api/vocab/incomplete", { cache: "no-store" });
-      if (!response.ok) throw new Error("incomplete failed");
-      const { items, total } = (await response.json()) as IncompleteResponse;
-      if (items.length === 0) {
-        setCopied({ kind: "copied", note: "Every item is complete; nothing to fill in." });
-        return;
-      }
-      const more = total > items.length ? ` of ${total}; repeat for the rest` : "";
-      setCopied(
-        await copy(
-          fillInPrompt(items),
-          `Fill-in prompt copied (${items.length} items${more}). Paste it into ChatGPT.`,
-        ),
-      );
-    } catch {
-      setCopied({ kind: "copied", note: "Could not load incomplete items. Try again." });
-    } finally {
-      setBusy(false);
-    }
-  }
+  const [pasting, setPasting] = useState<"new" | "options" | "check" | null>(null);
 
   // The Worker picks and records the batch, so the prompt waits on it.
   async function copyCheck(options: CheckOptions) {
@@ -185,12 +132,6 @@ export function HandoffPanel({
         <button type="button" className="secondary" onClick={() => setPasting("new")}>
           Paste new vocab
         </button>
-        <button type="button" className="secondary" onClick={copyFillIn} disabled={busy}>
-          Copy fill-in prompt
-        </button>
-        <button type="button" className="secondary" onClick={() => setPasting("fill")}>
-          Paste fill-ins
-        </button>
         <button type="button" className="secondary" onClick={() => setPasting("options")}>
           Copy check prompt
         </button>
@@ -219,15 +160,6 @@ export function HandoffPanel({
           onOpen={(id) => {
             setPasting(null);
             onOpen(id);
-          }}
-        />
-      )}
-      {pasting === "fill" && (
-        <PasteFillSheet
-          onClose={() => setPasting(null)}
-          onChanged={() => {
-            onChanged();
-            void recount();
           }}
         />
       )}
@@ -441,122 +373,6 @@ function PasteNewSheet({
           )}
           <button type="button" onClick={submit} disabled={busy}>
             {busy ? "Saving…" : "Save to vault"}
-          </button>
-          <button type="button" className="secondary" onClick={onClose}>
-            Cancel
-          </button>
-        </>
-      )}
-    </Sheet>
-  );
-}
-
-function RevisionLine({ r }: { r: RevisionResult }) {
-  return (
-    <li>
-      <span className="urdu-inline" dir="rtl" lang="ur">
-        {r.urdu}
-      </span>
-      {r.outcome === "rejected" && <> · Rejected ({r.reason})</>}
-      {r.outcome === "nothing" && <> · Nothing to fill</>}
-      {r.outcome === "fill" && (
-        <dl className="handoff-fills">
-          {Object.entries(r.fills).map(([field, value]) => (
-            <div key={field}>
-              <dt>{FIELD_LABELS[field as keyof typeof FIELD_LABELS]}</dt>
-              <dd dir="auto">{value}</dd>
-            </div>
-          ))}
-        </dl>
-      )}
-      {r.outcome !== "rejected" && r.kept.length > 0 && (
-        <p className="hint">Kept existing: {r.kept.map((f) => FIELD_LABELS[f]).join(", ")}</p>
-      )}
-    </li>
-  );
-}
-
-function PasteFillSheet({ onClose, onChanged }: { onClose: () => void; onChanged: () => void }) {
-  const [text, setText] = useState("");
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState("");
-  const [payload, setPayload] = useState<unknown>(null);
-  const [plan, setPlan] = useState<RevisionsResponse | null>(null);
-  const [saved, setSaved] = useState<RevisionsResponse | null>(null);
-
-  async function preview() {
-    const pasted = parsePasted(text);
-    if (!pasted.ok) return setError(pasted.message);
-    setBusy(true);
-    setError("");
-    const posted = await postJson<RevisionsResponse>(
-      "/api/handoffs/revisions?preview=1",
-      pasted.value,
-    );
-    setBusy(false);
-    if (!posted.ok) return setError(posted.message);
-    setPayload(pasted.value);
-    setPlan(posted.body);
-  }
-
-  async function save() {
-    setBusy(true);
-    setError("");
-    const posted = await postJson<RevisionsResponse>("/api/handoffs/revisions", payload);
-    setBusy(false);
-    if (!posted.ok) return setError(posted.message);
-    setSaved(posted.body);
-    onChanged();
-  }
-
-  const fills = plan?.results.filter((r) => r.outcome === "fill").length ?? 0;
-  const shown = saved ?? plan;
-
-  return (
-    <Sheet label="Paste fill-ins" onClose={onClose}>
-      <p className="eyebrow">
-        {saved ? "FILL-INS SAVED" : plan ? "PREVIEW FILL-INS" : "PASTE FILL-INS"}
-      </p>
-      {shown ? (
-        <>
-          {shown.repeat && (
-            <p className="hint">This reply was already applied; saving again changes nothing.</p>
-          )}
-          <ul className="handoff-results">
-            {shown.results.map((r) => (
-              <RevisionLine key={r.vocab_id} r={r} />
-            ))}
-          </ul>
-          {error && (
-            <p className="error" role="alert">
-              {error}
-            </p>
-          )}
-          {saved || plan?.repeat || fills === 0 ? (
-            <button type="button" onClick={onClose}>
-              Done
-            </button>
-          ) : (
-            <>
-              <button type="button" onClick={save} disabled={busy}>
-                {busy ? "Saving…" : `Save ${fills} ${fills === 1 ? "item" : "items"}`}
-              </button>
-              <button type="button" className="secondary" onClick={onClose}>
-                Cancel
-              </button>
-            </>
-          )}
-        </>
-      ) : (
-        <>
-          <PasteBox value={text} onChange={setText} />
-          {error && (
-            <p className="error" role="alert">
-              {error}
-            </p>
-          )}
-          <button type="button" onClick={preview} disabled={busy}>
-            {busy ? "Checking…" : "Preview"}
           </button>
           <button type="button" className="secondary" onClick={onClose}>
             Cancel

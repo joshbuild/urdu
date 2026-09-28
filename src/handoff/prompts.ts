@@ -1,4 +1,4 @@
-// f06: the ChatGPT round trip's prompts (FR-F6, FR-F7) and paste parsing. Pure, so the node
+// f06: the ChatGPT round trip's prompts (FR-F6; f11/f13 FR-F9) and paste parsing. Pure, so the node
 // project tests them. Each prompt carries a fresh handoff_id for the chat to echo, which makes a
 // pasted reply idempotent: pasting it twice is a no-op in Urdu Core. The standing ChatGPT
 // Project version of newVocabPrompt is chatgpt-project-instructions.md; keep the two in step.
@@ -47,11 +47,6 @@ My words (Urdu, Roman Urdu or English — if English, give the everyday Urdu for
 `;
 }
 
-// The fields an item lacks, which are what the fill-in prompt asks for.
-export function missingFields(item: VocabItem): FillableField[] {
-  return FILLABLE_FIELDS.filter((field) => item[field] === null);
-}
-
 // Each item as the chat sees it: its id, its urdu and every field it has. With `missing`, also the
 // chosen fields it lacks, which a completeness check asks the chat to supply.
 function listItems(items: readonly VocabItem[], missing?: readonly FillableField[]): string {
@@ -66,27 +61,6 @@ function listItems(items: readonly VocabItem[], missing?: readonly FillableField
     return entry;
   });
   return JSON.stringify(listed, null, 2);
-}
-
-export function fillInPrompt(items: readonly VocabItem[], handoffId: string = ulid()): string {
-  return `You are helping me complete entries in my Urdu vocabulary app. Each item below is missing some fields. For each item, supply only the fields it lacks, among: ${FILLABLE_FIELDS.join(", ")}. Do not repeat or change fields it already has, and keep "urdu" exactly as given so I can match your reply to the item.
-
-${CONVENTIONS}
-
-Items:
-${listItems(items)}
-
-Return exactly this JSON shape, copying handoff_id as given, one revision per item, with vocab_id and urdu copied from the item:
-
-{
-  "handoff_id": "${handoffId}",
-  "revisions": [
-    { "vocab_id": "...", "urdu": "...", "roman": "...", "english": "..." }
-  ]
-}
-
-${JSON_ONLY}
-`;
 }
 
 const quoted = (fields: readonly FillableField[]) => fields.map((f) => `"${f}"`).join(", ");

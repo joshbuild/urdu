@@ -1,4 +1,4 @@
-// Validation for clipboard handoffs (f06, FR-F4/F7; f11 corrections, FR-F9). Strict: a payload with any bad field is
+// Validation for clipboard handoffs (f06, FR-F4; f11 corrections and f13 check options, FR-F9). Strict: a payload with any bad field is
 // rejected whole, with the field's path, and never repaired. Rejecting whole keeps a handoff_id
 // unrecorded, so the corrected reply can be pasted again under the same id.
 
@@ -17,9 +17,7 @@ import {
   MAX_CHECK_BATCH,
   MAX_HANDOFF_ID_LENGTH,
   MAX_HANDOFF_PROPOSALS,
-  MAX_HANDOFF_REVISIONS,
   type Revision,
-  type RevisionsRequest,
 } from "../../shared/api";
 import {
   isRecord,
@@ -139,30 +137,6 @@ function revision(value: unknown, allowed = REVISION_FIELDS): Parsed<Revision> {
     out[field] = text.value;
   }
   return { ok: true, value: out };
-}
-
-export function parseRevisions(body: unknown): Parsed<RevisionsRequest> {
-  if (!isRecord(body)) return fail(undefined, "body must be a JSON object");
-  const extra = unknownKey(body, new Set(["handoff_id", "revisions"]));
-  if (extra) return fail(extra, "is not a recognised field");
-
-  const id = handoffId(body.handoff_id);
-  if (!id.ok) return id;
-  const items = list(body, "revisions", MAX_HANDOFF_REVISIONS);
-  if (!items.ok) return items;
-
-  const revisions: Revision[] = [];
-  const seen = new Set<string>();
-  for (const [i, item] of items.value.entries()) {
-    const parsed = at(`revisions[${i}]`, revision(item));
-    if (!parsed.ok) return parsed;
-    if (seen.has(parsed.value.vocab_id)) {
-      return fail(`revisions[${i}].vocab_id`, "appears more than once");
-    }
-    seen.add(parsed.value.vocab_id);
-    revisions.push(parsed.value);
-  }
-  return { ok: true, value: { handoff_id: id.value, revisions } };
 }
 
 // A correction is a revision that may also remove (null) and must say why. An empty or null

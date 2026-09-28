@@ -32,7 +32,6 @@ app.route("/", unlockRoutes);
 // Session required from here on
 app.use("/api/*", requireSession);
 app.route("/", lockRoutes);
-// Before vocabRoutes, so /api/vocab/incomplete is not read as an item id.
 app.route("/", handoffRoutes);
 app.route("/", vocabRoutes);
 app.route("/", reviewRoutes);

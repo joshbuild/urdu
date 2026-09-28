@@ -1,22 +1,16 @@
-// Clipboard handoff routes (f06 Stages 1-2, FR-F4/F6/F7; f11 accuracy check, FR-F9). Mounted
+// Clipboard handoff routes (f06 Stages 1-2, FR-F4/F6; f11/f13 check, FR-F9, which replaced the
+// FR-F7 fill-in routes). Mounted
 // behind requireSession: the sponsor pastes the chat's reply into the PWA, so the session cookie
 // is the right credential. The bearer-token /coach/* routes are Stage 3.
 
 import { Hono } from "hono";
-import type { CheckBatchResponse, ConflictResponse, IncompleteResponse } from "../../shared/api";
+import type { CheckBatchResponse, ConflictResponse } from "../../shared/api";
 import { correctVocab, issueCheckBatch, NOT_ISSUED } from "../domain/check";
-import { ID_CONFLICT, importHandoff, incompleteVocab, reviseVocab } from "../domain/handoff";
-import {
-  parseCheckOptions,
-  parseCorrections,
-  parseHandoff,
-  parseRevisions,
-} from "../domain/handoff-input";
+import { ID_CONFLICT, importHandoff } from "../domain/handoff";
+import { parseCheckOptions, parseCorrections, parseHandoff } from "../domain/handoff-input";
 import { activeLadderId } from "../domain/settings";
 import type { AppEnv } from "../env";
 import { invalid, readJson } from "./api-vocab";
-
-export const MAX_INCOMPLETE_LIMIT = 20;
 
 const conflict: ConflictResponse = {
   error: "conflict",
@@ -36,17 +30,6 @@ handoffRoutes.post("/api/handoffs", async (c) => {
     new Date(),
     await activeLadderId(c.env.DB),
   );
-  return result === ID_CONFLICT ? c.json(conflict, 409) : c.json(result);
-});
-
-// ?preview=1 plans the fills and writes nothing; without it the fills are saved.
-handoffRoutes.post("/api/handoffs/revisions", async (c) => {
-  const body = await readJson(c);
-  if (body === undefined) return invalid(c, { message: "body must be valid JSON" });
-  const parsed = parseRevisions(body);
-  if (!parsed.ok) return invalid(c, parsed.error);
-  const preview = c.req.query("preview") === "1";
-  const result = await reviseVocab(c.env.DB, parsed.value, new Date(), preview);
   return result === ID_CONFLICT ? c.json(conflict, 409) : c.json(result);
 });
 
@@ -81,9 +64,4 @@ handoffRoutes.post("/api/handoffs/corrections", async (c) => {
     });
   }
   return result === ID_CONFLICT ? c.json(conflict, 409) : c.json(result);
-});
-
-handoffRoutes.get("/api/vocab/incomplete", async (c) => {
-  const body: IncompleteResponse = await incompleteVocab(c.env.DB, MAX_INCOMPLETE_LIMIT);
-  return c.json(body);
 });

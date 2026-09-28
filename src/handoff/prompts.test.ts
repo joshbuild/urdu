@@ -1,13 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { FILLABLE_FIELDS, type VocabItem } from "../../shared/api";
-import {
-  checkPrompt,
-  describeInvalid,
-  fillInPrompt,
-  missingFields,
-  newVocabPrompt,
-  parsePasted,
-} from "./prompts";
+import { checkPrompt, describeInvalid, newVocabPrompt, parsePasted } from "./prompts";
 
 const item = (over: Partial<VocabItem>): VocabItem => ({
   id: "01J0000000000000000000000A",
@@ -51,17 +44,6 @@ describe("newVocabPrompt", () => {
   it("makes a fresh id each time by default", () => {
     const id = (t: string) => t.match(/"handoff_id": "([^"]+)"/)?.[1];
     expect(id(newVocabPrompt())).not.toBe(id(newVocabPrompt()));
-  });
-});
-
-describe("fillInPrompt", () => {
-  it("lists each item's id, urdu and present fields only", () => {
-    const text = fillInPrompt([item({ english: "water" })], "R1");
-    expect(text).toContain('"handoff_id": "R1"');
-    expect(text).toContain('"vocab_id": "01J0000000000000000000000A"');
-    expect(text).toContain('"english": "water"');
-    expect(text).not.toContain('"roman": null');
-    expect(text).toContain('"revisions"');
   });
 });
 
@@ -125,22 +107,11 @@ describe("every prompt", () => {
   it("asks for strict JSON with no double quotes inside text values", () => {
     for (const text of [
       newVocabPrompt("H1"),
-      fillInPrompt([item({})], "R1"),
       checkPrompt([item({})], "C1", { mode: "both", fields: ["notes"] }),
     ]) {
       expect(text).toContain("strict JSON");
       expect(text).toContain("never use a double quotation mark");
     }
-  });
-});
-
-describe("missingFields", () => {
-  it("names the empty fillable fields", () => {
-    expect(missingFields(item({ roman: "paani", notes: "n" }))).toEqual([
-      "english",
-      "example_urdu",
-      "example_english",
-    ]);
   });
 });
 

@@ -1,20 +1,13 @@
-// Clipboard handoffs (f06, FR-F2/F4/F7). The chat proposes; this code decides. Each handoff_id is
+// Clipboard handoffs (f06, FR-F2/F4). The chat proposes; this code decides. Each handoff_id is
 // recorded once in `handoffs`, and a repeat returns the stored outcome without writing.
 
-import {
-  FILLABLE_FIELDS,
-  type FillableField,
-  type HandoffRequest,
-  type HandoffResponse,
-  type HandoffStatus,
-  type ProposalResult,
-  type RevisionResult,
-  type RevisionsRequest,
-  type RevisionsResponse,
-  type VocabItem,
+import type {
+  HandoffRequest,
+  HandoffResponse,
+  HandoffStatus,
+  ProposalResult,
 } from "../../shared/api";
-import { urduKey } from "../../shared/normalize";
-import { createVocab, toItem, type VocabRow } from "./vocab";
+import { createVocab } from "./vocab";
 
 // A handoff_id already used by the other kind of paste is a conflict, not a repeat.
 export const ID_CONFLICT = "id_conflict";
@@ -81,92 +74,4 @@ export async function importHandoff(
   }
   await recordHandoff(db, request.handoff_id, request, "applied", results, now).run();
   return { handoff_id: request.handoff_id, repeat: false, results };
-}
-
-function planRevision(
-  revision: RevisionsRequest["revisions"][number],
-  item: VocabItem | undefined,
-): RevisionResult {
-  const { vocab_id, urdu } = revision;
-  if (!item) return { vocab_id, urdu, outcome: "rejected", reason: "no item has this id" };
-  // Compared by key, so a reply that drops or adds tashkeel still matches its item.
-  if (urduKey(urdu) !== item.urdu_key) {
-    return {
-      vocab_id,
-      urdu,
-      outcome: "rejected",
-      reason: `urdu does not match the stored item (${item.urdu})`,
-    };
-  }
-  const fills: Partial<Record<FillableField, string>> = {};
-  const kept: FillableField[] = [];
-  for (const field of FILLABLE_FIELDS) {
-    const value = revision[field];
-    if (value == null) continue;
-    if (item[field] === null) fills[field] = value;
-    else kept.push(field);
-  }
-  return Object.keys(fills).length > 0
-    ? { vocab_id, urdu, outcome: "fill", fills, kept }
-    : { vocab_id, urdu, outcome: "nothing", kept };
-}
-
-// FR-F7: fills empty fields only. The schedule and review history are untouched. A preview
-// computes the same results and writes nothing, not even the handoff row.
-export async function reviseVocab(
-  db: D1Database,
-  request: RevisionsRequest,
-  now: Date,
-  preview: boolean,
-): Promise<RevisionsResponse | typeof ID_CONFLICT> {
-  const { handoff_id } = request;
-  const stored = await storedOutcome<RevisionResult[]>(db, handoff_id, "revised");
-  if (stored === ID_CONFLICT) return stored;
-  if (stored) return { handoff_id, preview, repeat: true, results: stored };
-
-  const ids = request.revisions.map((r) => r.vocab_id);
-  const { results: rows } = await db
-    .prepare(`SELECT * FROM vocab WHERE id IN (${ids.map(() => "?").join(", ")})`)
-    .bind(...ids)
-    .all<VocabRow>();
-  const byId = new Map(rows.map((row) => [row.id, toItem(row)]));
-  const results = request.revisions.map((r) => planRevision(r, byId.get(r.vocab_id)));
-  if (preview) return { handoff_id, preview, repeat: false, results };
-
-  const at = now.toISOString();
-  // COALESCE keeps any text written since the plan was made: empty-only holds even in a race.
-  const updates = results.flatMap((r) => {
-    if (r.outcome !== "fill") return [];
-    const fields = Object.keys(r.fills) as FillableField[];
-    const sets = fields.map((f) => `${f} = COALESCE(${f}, ?)`).join(", ");
-    return [
-      db
-        .prepare(`UPDATE vocab SET ${sets}, updated_at = ? WHERE id = ?`)
-        .bind(...fields.map((f) => r.fills[f]), at, r.vocab_id),
-    ];
-  });
-  await db.batch([...updates, recordHandoff(db, handoff_id, request, "revised", results, now)]);
-  return { handoff_id, preview, repeat: false, results };
-}
-
-const MISSING = FILLABLE_FIELDS.map((f) => `${f} IS NULL`).join(" OR ");
-
-// Items lacking any fillable field. Those missing Roman or English come first: they matter most
-// for review.
-export async function incompleteVocab(
-  db: D1Database,
-  limit: number,
-): Promise<{ items: VocabItem[]; total: number }> {
-  const [rows, count] = await db.batch([
-    db
-      .prepare(
-        `SELECT * FROM vocab WHERE ${MISSING}
-         ORDER BY (roman IS NULL OR english IS NULL) DESC, added_at ASC, id ASC LIMIT ?`,
-      )
-      .bind(limit),
-    db.prepare(`SELECT count(*) AS n FROM vocab WHERE ${MISSING}`),
-  ]);
-  const items = (rows?.results ?? []) as VocabRow[];
-  const total = (count?.results[0] as { n: number } | undefined)?.n ?? 0;
-  return { items: items.map(toItem), total };
 }

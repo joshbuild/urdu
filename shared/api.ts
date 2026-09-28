@@ -205,11 +205,10 @@ export type ImportResponse = {
 
 export const MAX_IMPORT_BATCH = 200;
 
-// --- Clipboard handoff (f06, FR-F4/F6/F7). The app writes handoff_id and session_at into the
-// --- prompt it copies; the chat echoes them back with its proposals or revisions.
+// --- Clipboard handoff (f06, FR-F4/F6). The app writes handoff_id and session_at into the
+// --- prompt it copies; the chat echoes them back with its proposals.
 
 export const MAX_HANDOFF_PROPOSALS = 50;
-export const MAX_HANDOFF_REVISIONS = 20;
 export const MAX_HANDOFF_ID_LENGTH = 100;
 
 // handoffs.status values (Appendix A leaves them to f06). The voice ones (f07) key one tool call
@@ -255,7 +254,7 @@ export type HandoffResponse = {
   results: ProposalResult[];
 };
 
-// FR-F7: fields a revision may fill, only where the stored item has none.
+// The text fields a check may correct, remove or fill (FR-F9); FR-F7 fill-ins used them first.
 export const FILLABLE_FIELDS = [
   "roman",
   "english",
@@ -265,33 +264,11 @@ export const FILLABLE_FIELDS = [
 ] as const;
 export type FillableField = (typeof FILLABLE_FIELDS)[number];
 
+// A pasted row naming an item by id, echoing its urdu, with proposed field values. The base of a
+// check correction.
 export type Revision = { vocab_id: string; urdu: string } & Partial<
   Record<FillableField, string | null>
 >;
-
-export type RevisionsRequest = { handoff_id: string; revisions: Revision[] };
-
-export type RevisionResult =
-  | {
-      vocab_id: string;
-      urdu: string;
-      outcome: "fill";
-      fills: Partial<Record<FillableField, string>>;
-      // Proposed values dropped because the field already has text.
-      kept: FillableField[];
-    }
-  | { vocab_id: string; urdu: string; outcome: "nothing"; kept: FillableField[] }
-  | { vocab_id: string; urdu: string; outcome: "rejected"; reason: string };
-
-export type RevisionsResponse = {
-  handoff_id: string;
-  // Preview writes nothing; a confirmed request writes the "fill" rows.
-  preview: boolean;
-  repeat: boolean;
-  results: RevisionResult[];
-};
-
-export type IncompleteResponse = { items: VocabItem[]; total: number };
 
 // f11 accuracy check (FR-F9). A batch is the least recently checked items, recorded by the Worker
 // under a handoff_id it mints, so the corrections paste can be judged against it. f13 adds modes:

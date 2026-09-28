@@ -8,6 +8,10 @@ to production D1 **before** the deploy. Otherwise every vocab read fails on the 
 
 Tick as you go. **If a step fails, stop and note what you saw.**
 
+*f13 note (2026-09-28):* if the deploy you run from here on also carries f13 (migration 0006
+must be applied first; see smoke-test-13 Part A), the batch already copied in C1 still works
+under its old rules. Only D2 changes, as marked there.
+
 ---
 
 ## Part A — migrate, then deploy (Git Bash, repo root)
@@ -72,8 +76,11 @@ has something to correct, plant two mistakes in that batch first.
 
 - [ ] D1 Tap **Paste check reply**, paste **the same reply** again, **Preview**. Expected:
       "This reply was already applied; nothing changed." and a Done button.
-- [ ] D2 Tap **Copy check prompt** again. The count of never-checked items has dropped by
-      20, and the new prompt lists different items (none of the first batch).
+- [ ] D2 Tap **Copy check prompt** again. *(After the f13 deploy this opens a Check options
+      sheet: leave Correctness, every field, 20 and Only unchecked off, and tap **Copy
+      prompt**; the note then reads "Check prompt copied (20 of N items; M not yet checked for
+      correctness)".)* The count of never-checked items has dropped by 20, and the new prompt
+      lists different items (none of the first batch).
 - [ ] D3 (Optional) Run D2's prompt through ChatGPT. If it says everything is fine
       (`"corrections": []`), the preview says "the chat found nothing to change" and the
       button reads **Mark checked**. Tap it: "20 items marked checked".
