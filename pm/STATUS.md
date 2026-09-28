@@ -12,6 +12,7 @@
 - f11 `vocab-check` — 🟡 IN PROGRESS, s01–s03 built 2026-09-24; s04 phone under way (0004 remote + deployed; smoke-test-11 at B1) → `features/f11-vocab-check.md`
 - f12 `day-anchored-ladders` — 🟡 IN PROGRESS, s01–s04 built 2026-09-27; s05 phone next (0005 remote, deploy, smoke-test-12) → `features/f12-day-anchored-ladders.md`
 - f13 `check-modes` — 🟡 IN PROGRESS, s01–s04 built 2026-09-28; s05 phone next (0006 remote, deploy, smoke-test-13) → `features/f13-check-modes.md`
+- f14 `new-word-finder` — 🟡 IN PROGRESS, opened and stress-tested 2026-09-28; s01 route next → `features/f14-new-word-finder.md`
 - mp03 `review-ahead-hours` — 🟡 IN PROGRESS, s01–s03 built 2026-09-27; s04 phone next (smoke-test-mp03, rides the f12 deploy; no migration) → `mini-plans/mp03-review-ahead-hours.md`
 
 ## Next Session Pointers
