@@ -68,4 +68,4 @@
 | f10 | — (doc not drafted; scope in Phase 3 above and DECISIONS 260922a) | planned | Coach vocab edits by voice, tappable Urdu in transcripts, last transcript kept on device (DECISIONS 260922a). |
 | f11 | `features/f11-vocab-check.md` | 🟡 in progress (s01–s03 built, s04 phone next) | ChatGPT round trip that checks existing vocab for accuracy and overwrites accepted corrections (FR-F9). |
 | f12 | `features/f12-day-anchored-ladders.md` | 🟡 in progress (s01–s04 built, s05 phone next) | Ladders anchored on a 1-day rung, new words enter just below it, no decimals on screen. |
-| f13 | `features/f13-check-modes.md` | 🟡 in progress (s01 next) | Copy check prompt opens a dialog: correctness, completeness or both, fields, count, only unchecked; completeness replaces the fill-in pair (FR-F9, retires FR-F7). |
+| f13 | `features/f13-check-modes.md` | 🟡 in progress (s01–s04 built, s05 phone next) | Copy check prompt opens a dialog: correctness, completeness or both, fields, count, only unchecked; completeness replaces the fill-in pair (FR-F9, retires FR-F7). |

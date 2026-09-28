@@ -1,6 +1,6 @@
 # Feature Plan — Check Modes
 
-**Status**: 🟡 IN PROGRESS — *opened 2026-09-28 (grill settled, stress-tested); s01 batch next.*
+**Status**: 🟡 IN PROGRESS — *opened 2026-09-28; s01–s04 built the same day; s05 phone next (sponsor applies 0006 remotely, deploys, runs smoke-test-13).*
 **Handle**: `f13`
 **Created**: *2026-09-28* · **Updated**: *2026-09-28*
 
@@ -157,14 +157,14 @@ buttons to four.
 
 ### Roadmap
 
-0. **s00 plan:** grill settled and stress-tested 2026-09-28.
-1. **s01 batch:** migration 0006 + test; `VocabItem.filled_at`; `CheckOptions` and its parser;
+0. **s00 plan:** ✅ grill settled and stress-tested 2026-09-28.
+1. **s01 batch:** ✅ 2026-09-28. migration 0006 + test; `VocabItem.filled_at`; `CheckOptions` and its parser;
    mode-aware selection, counts and payload; cap 50; tests.
-2. **s02 apply:** scope rules (`ignored`), the legacy rule, per-mode stamps, `mode` on preview,
+2. **s02 apply:** ✅ 2026-09-28. scope rules (`ignored`), the legacy rule, per-mode stamps, `mode` on preview,
    apply and repeat; tests.
-3. **s03 client:** options model + dialog; mode-aware `checkPrompt`; ignored line and mode
+3. **s03 client:** ✅ 2026-09-28. options model + dialog; mode-aware `checkPrompt`; ignored line and mode
    wording in the sheets; tests.
-4. **s04 retire fill-ins:** remove the FR-F7 client and Worker code and tests; PRD ripple;
+4. **s04 retire fill-ins:** ✅ 2026-09-28. remove the FR-F7 client and Worker code and tests; PRD ripple;
    write `smoke-tests/smoke-test-13.md`; reword smoke-test-11's remaining steps (C1, D2) for
    the dialog's defaults and the new copy note.
 5. **s05 phone:** sponsor applies 0005 (if not yet) and 0006 remotely, deploys, runs
@@ -178,12 +178,15 @@ the suite s04, the phone s05.
 
 ### Recently Completed
 
+- 2026-09-28: s01–s04 built (`90f588a`, `6e2d574`, `bd3b7ed`, `d6c9fa2`); migration 0006 applied locally; `pnpm check` green at 548. The dialog has not been seen in a browser.
 - 2026-09-28: stress-tested: 11 findings resolved by the agent, none escalated (see Decisions).
 - 2026-09-28: drafted from the sponsor's request; grill settled (below).
 
 ### Next Steps
 
-- Build s01 batch.
+- s05 phone: the sponsor applies 0006 (and 0005 if pending) remotely, deploys, runs
+  `smoke-tests/smoke-test-13.md`; then ripple (PRD FR-F9 / Appendix A lose *planned*, AGENTS
+  Project state, PLAN) and `/pm-close f13`.
 
 ### Open Questions
 
@@ -210,3 +213,13 @@ the suite s04, the phone s05.
     has its own note.
   - The draft said the export validates `revised`; nothing does. It stays in `HANDOFF_STATUSES`
     because stored rows carry it.
+- 2026-09-28 (agent, build):
+  - Correctness candidates are items with at least one chosen field present, so an item with
+    no text fields at all is left to completeness. f11's `{}` request inherits this; the one
+    f11 test that relied on bare items now gives them an English meaning.
+  - The f11 correction tests issue a `both` batch of every field, which allows every kind of
+    change as an f11 batch did; the scope rules have their own tests.
+  - `checkPrompt` lists every present field as context, even unchosen ones, and tells the chat
+    they are context only.
+  - The one conflict test the revisions route carried (an id used by the other kind of paste)
+    now pastes a check batch's id as new vocab.
