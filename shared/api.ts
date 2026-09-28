@@ -69,6 +69,8 @@ export type VocabSort = (typeof VOCAB_SORTS)[number];
 
 export type VocabListResponse = { items: VocabItem[]; total: number };
 export type DueResponse = { items: VocabItem[]; today: string };
+// mp03: due times of items not yet due, ascending, with the Worker's clock to count them against.
+export type UpcomingResponse = { now: string; due_at: string[] };
 export type StatusResponse = {
   total: number;
   due: number;

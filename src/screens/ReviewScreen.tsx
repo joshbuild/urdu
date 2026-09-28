@@ -1,23 +1,26 @@
 // f05: the Review tab — start (FR-E1), card and reveal (FR-E2), grade or skip (FR-E3), tally
 // (FR-E4). The Worker applies each grade (FR-A4); this screen only says which button was tapped.
 
-import { useReducer, useState } from "react";
+import { useEffect, useReducer, useState } from "react";
 import type {
   DueResponse,
   ReviewDirection,
   ReviewRequest,
   StatusResponse,
+  UpcomingResponse,
   VocabItem,
 } from "../../shared/api";
 import { ladder } from "../../shared/ladders";
 import { GRADE_LABELS, GRADES, type Grade } from "../../shared/mastery";
 import { speak } from "../reader/speech";
 import {
+  AHEAD_STOPS,
+  type AheadStop,
+  aheadStop,
+  countWithin,
   currentItem,
   dueQuery,
   initialSession,
-  MAX_AHEAD_DAYS,
-  parseAheadDays,
   promptSide,
   sessionReducer,
 } from "../review/session";
@@ -27,6 +30,14 @@ const DIRECTION_LABELS: Record<Exclude<ReviewDirection, "oral">, string> = {
   ur_en: "Urdu → English",
   en_ur: "English → Urdu",
 };
+
+function aheadHint(ahead: AheadStop, upcoming: UpcomingResponse | null): string {
+  if (ahead.seconds === 0) return "Only items due now.";
+  const span = `in the next ${ahead.label}. Grades count from now.`;
+  if (upcoming === null) return `Also includes items due ${span}`;
+  const n = countWithin(upcoming.due_at, upcoming.now, ahead.seconds);
+  return `${n.toLocaleString()} more ${n === 1 ? "item falls" : "items fall"} due ${span}`;
+}
 
 export function ReviewScreen({
   status,
@@ -40,16 +51,34 @@ export function ReviewScreen({
 }) {
   const [state, dispatch] = useReducer(sessionReducer, initialSession);
   const [direction, setDirection] = useState<ReviewDirection>("ur_en");
-  const [aheadText, setAheadText] = useState("0");
-  const ahead = parseAheadDays(aheadText);
+  const [stop, setStop] = useState(0);
+  const ahead = aheadStop(stop);
+  // Due times still to come, for the count under the slider. Refetched each time the start
+  // screen shows, so a finished session's new due times count; null until loaded or on failure.
+  const [upcoming, setUpcoming] = useState<UpcomingResponse | null>(null);
   const [loading, setLoading] = useState(false);
   const [startError, setStartError] = useState("");
+
+  const atStart = state.phase === "start";
+  useEffect(() => {
+    if (!atStart) return;
+    const controller = new AbortController();
+    fetch("/api/vocab/upcoming", { cache: "no-store", signal: controller.signal })
+      .then((response) => (response.ok ? response.json() : null))
+      .then((data: UpcomingResponse | null) => setUpcoming(data))
+      .catch(() => {
+        if (!controller.signal.aborted) setUpcoming(null);
+      });
+    return () => controller.abort();
+  }, [atStart]);
 
   async function start() {
     setLoading(true);
     setStartError("");
     try {
-      const response = await fetch(dueQuery(readSessionLimit(), ahead), { cache: "no-store" });
+      const response = await fetch(dueQuery(readSessionLimit(), ahead.seconds), {
+        cache: "no-store",
+      });
       if (response.status === 401) return onChanged();
       if (!response.ok) throw new Error("due failed");
       const data: DueResponse = await response.json();
@@ -120,26 +149,27 @@ export function ReviewScreen({
             </label>
           ))}
         </fieldset>
-        <label htmlFor="review-ahead">Review ahead (days)</label>
+        <label htmlFor="review-ahead" className="ahead-label">
+          Review ahead <output htmlFor="review-ahead">{ahead.label}</output>
+        </label>
         <input
           id="review-ahead"
-          type="number"
-          inputMode="numeric"
+          type="range"
           min={0}
-          max={MAX_AHEAD_DAYS}
-          value={aheadText}
-          onChange={(event) => setAheadText(event.target.value)}
+          max={AHEAD_STOPS.length - 1}
+          step={1}
+          value={stop}
+          onChange={(event) => setStop(Number(event.target.value))}
+          aria-valuetext={ahead.label}
           aria-describedby="review-ahead-hint"
         />
         <p id="review-ahead-hint" className="hint">
-          {ahead === 0
-            ? "0 reviews only what is due now."
-            : `Also includes items due in the next ${ahead} ${ahead === 1 ? "day" : "days"}. Grades count from now.`}
+          {aheadHint(ahead, upcoming)}
         </p>
         <button
           type="button"
           onClick={start}
-          disabled={loading || (status.due === 0 && ahead === 0)}
+          disabled={loading || (status.due === 0 && ahead.seconds === 0)}
         >
           {loading ? "Loading…" : "Start review"}
         </button>

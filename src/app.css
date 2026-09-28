@@ -134,6 +134,26 @@ button.secondary {
   font-size: 0.875rem;
 }
 
+/* mp03 review ahead: the chosen stop sits at the right of the label row. */
+.ahead-label {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.ahead-label output {
+  color: #054e51;
+}
+
+/* The range input opts out of the text-field box the global input rule draws. */
+input[type="range"] {
+  min-height: 44px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  accent-color: #054e51;
+}
+
 .counts {
   display: grid;
   grid-template-columns: 1fr 1fr;

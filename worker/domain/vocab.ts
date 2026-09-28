@@ -304,6 +304,22 @@ export async function dueVocab(
   return results.map(toItem);
 }
 
+// mp03 review-ahead count: due times after `now` and up to `until`, ascending. Never-reviewed
+// items (null) are already due, so they are not upcoming.
+export async function upcomingDueTimes(
+  db: D1Database,
+  now: string,
+  until: string,
+): Promise<string[]> {
+  const { results } = await db
+    .prepare(
+      "SELECT due_at FROM vocab WHERE due_at IS NOT NULL AND due_at > ? AND due_at <= ? ORDER BY due_at ASC",
+    )
+    .bind(now, until)
+    .all<{ due_at: string }>();
+  return results.map((row) => row.due_at);
+}
+
 export async function vocabCounts(
   db: D1Database,
   now: string,

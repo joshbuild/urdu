@@ -93,17 +93,40 @@ export function promptSide(
   return { side: "urdu", text: item.urdu };
 }
 
-// Review ahead (f05, sponsor request 2026-09-18): the Worker accepts 0..365 days.
-export const MAX_AHEAD_DAYS = 365;
+// Review ahead (f05; mp03, sponsor request 2026-09-27): the slider snaps through these stops,
+// in seconds. The last one matches the Worker's one-year cap.
+const HOUR = 3_600;
+const DAY = 86_400;
+export type AheadStop = { seconds: number; label: string };
+const NOW: AheadStop = { seconds: 0, label: "Now" };
+export const AHEAD_STOPS: readonly AheadStop[] = [
+  NOW,
+  ...[1, 2, 3, 5, 8, 12, 16, 20].map((h) => ({
+    seconds: h * HOUR,
+    label: `${h} ${h === 1 ? "hour" : "hours"}`,
+  })),
+  ...[1, 2, 3, 5].map((d) => ({ seconds: d * DAY, label: `${d} ${d === 1 ? "day" : "days"}` })),
+  { seconds: 7 * DAY, label: "1 week" },
+  { seconds: 14 * DAY, label: "2 weeks" },
+  { seconds: 30 * DAY, label: "1 month" },
+  { seconds: 91 * DAY, label: "3 months" },
+  { seconds: 182 * DAY, label: "6 months" },
+  { seconds: 365 * DAY, label: "1 year" },
+];
 
-export function parseAheadDays(raw: string): number {
-  const text = raw.trim();
-  if (!/^\d+$/.test(text)) return 0;
-  return Math.min(Number(text), MAX_AHEAD_DAYS);
+// The stop at a slider position; anything off the track reads as Now.
+export function aheadStop(index: number): AheadStop {
+  return AHEAD_STOPS[index] ?? NOW;
 }
 
-export function dueQuery(limit: number, ahead: number): string {
+// How many of `dueAt` (the upcoming list) fall due within `seconds` of the Worker's `now`.
+export function countWithin(dueAt: readonly string[], now: string, seconds: number): number {
+  const cutoff = Date.parse(now) + seconds * 1000;
+  return dueAt.filter((at) => Date.parse(at) <= cutoff).length;
+}
+
+export function dueQuery(limit: number, aheadSeconds: number): string {
   const params = new URLSearchParams({ limit: String(limit) });
-  if (ahead > 0) params.set("ahead", String(ahead));
+  if (aheadSeconds > 0) params.set("ahead_seconds", String(aheadSeconds));
   return `/api/vocab/due?${params}`;
 }

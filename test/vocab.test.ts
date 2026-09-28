@@ -1,6 +1,6 @@
 import { env, exports } from "cloudflare:workers";
 import { beforeEach, describe, expect, it } from "vitest";
-import type { VocabItem } from "../shared/api";
+import type { UpcomingResponse, VocabItem } from "../shared/api";
 import { todayIn } from "../shared/dates";
 import { addSeconds, ladder } from "../shared/ladders";
 import { type Api, clearTables, unlockedApi } from "./client";
@@ -11,6 +11,7 @@ const KITAB_ARABIC_KAF_WITH_KASRA = "\u{0643}\u{0650}\u{062A}\u{0627}\u{0628}"; 
 const BAHUT_SHUKRIYA = "\u{0628}\u{06C1}\u{062A} \u{0634}\u{06A9}\u{0631}\u{06CC}\u{06C1}"; // بہت شکریہ
 const PANI = "\u{067E}\u{0627}\u{0646}\u{06CC}"; // پانی
 const GHAR = "\u{06AF}\u{06BE}\u{0631}"; // گھر
+const DOST = "\u{062F}\u{0648}\u{0633}\u{062A}"; // دوست
 
 let api: Api;
 let today: string;
@@ -34,6 +35,7 @@ async function json<T>(res: Response, status = 200): Promise<T> {
 
 // An instant `days` from now (fractions allowed), as the Worker stores it.
 const inDays = (days: number) => new Date(Date.now() + days * 86_400_000).toISOString();
+const inHours = (hours: number) => inDays(hours / 24);
 
 async function setReviewDates(id: string, last: string | null, due: string | null) {
   await env.DB.prepare("UPDATE vocab SET last_reviewed_at = ?, due_at = ? WHERE id = ?")
@@ -411,12 +413,12 @@ describe("GET /api/vocab/due", () => {
     expect((await api("GET", "/api/vocab/due?limit=0")).status).toBe(400);
   });
 
-  it("reviews ahead: includes items due within the next N days, still in due order", async () => {
+  it("reviews ahead: includes items due within the next N seconds, still in due order", async () => {
     const now = await create({ urdu: KITAB });
-    const inTwo = await create({ urdu: PANI });
+    const inTwoHours = await create({ urdu: PANI });
     const inFive = await create({ urdu: GHAR });
     await setReviewDates(now.id, inDays(-1), inDays(-0.01));
-    await setReviewDates(inTwo.id, inDays(-0.1), inDays(1.9));
+    await setReviewDates(inTwoHours.id, inDays(-0.1), inHours(2));
     await setReviewDates(inFive.id, inDays(-0.1), inDays(4.9));
 
     const ids = async (query: string) =>
@@ -424,11 +426,33 @@ describe("GET /api/vocab/due", () => {
         (i) => i.id,
       );
     expect(await ids("")).toEqual([now.id]);
-    expect(await ids("?ahead=2")).toEqual([now.id, inTwo.id]);
-    expect(await ids("?ahead=5")).toEqual([now.id, inTwo.id, inFive.id]);
-    for (const bad of ["-1", "366", "abc"]) {
-      expect((await api("GET", `/api/vocab/due?ahead=${bad}`)).status).toBe(400);
+    expect(await ids("?ahead_seconds=3600")).toEqual([now.id]);
+    expect(await ids("?ahead_seconds=10800")).toEqual([now.id, inTwoHours.id]);
+    expect(await ids("?ahead_seconds=432000")).toEqual([now.id, inTwoHours.id, inFive.id]);
+    expect((await api("GET", "/api/vocab/due?ahead_seconds=31536000")).status).toBe(200);
+    for (const bad of ["-1", "31536001", "1.5", "abc"]) {
+      expect((await api("GET", `/api/vocab/due?ahead_seconds=${bad}`)).status).toBe(400);
     }
+  });
+});
+
+describe("GET /api/vocab/upcoming", () => {
+  it("lists due times after now and within a year, soonest first", async () => {
+    const fresh = await create({ urdu: KITAB });
+    const due = await create({ urdu: PANI });
+    const later = await create({ urdu: GHAR });
+    const soon = await create({ urdu: BAHUT_SHUKRIYA });
+    const beyond = await create({ urdu: DOST });
+    const [laterAt, soonAt] = [inDays(3), inHours(2)];
+    await setReviewDates(fresh.id, null, null);
+    await setReviewDates(due.id, inDays(-2), inDays(-1));
+    await setReviewDates(later.id, inDays(-1), laterAt);
+    await setReviewDates(soon.id, inDays(-1), soonAt);
+    await setReviewDates(beyond.id, inDays(-1), inDays(400));
+
+    const body = await json<UpcomingResponse>(await api("GET", "/api/vocab/upcoming"));
+    expect(Math.abs(Date.parse(body.now) - Date.now())).toBeLessThan(60_000);
+    expect(body.due_at).toEqual([soonAt, laterAt]);
   });
 });
 
@@ -512,6 +536,7 @@ describe("auth", () => {
       ["GET", "/api/tags"],
       ["GET", "/api/vocab"],
       ["GET", "/api/vocab/due"],
+      ["GET", "/api/vocab/upcoming"],
       ["GET", "/api/vocab/x"],
       ["POST", "/api/vocab"],
       ["PATCH", "/api/vocab/x"],

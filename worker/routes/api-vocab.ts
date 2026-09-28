@@ -7,6 +7,7 @@ import {
   type InvalidRequestResponse,
   type StatusResponse,
   type TagsResponse,
+  type UpcomingResponse,
   VOCAB_SORTS,
   type VocabListResponse,
   type VocabSort,
@@ -21,6 +22,7 @@ import {
   getVocab,
   listTags,
   listVocab,
+  upcomingDueTimes,
   updateVocab,
   vocabCounts,
   type WriteResult,
@@ -31,7 +33,8 @@ import type { AppEnv } from "../env";
 export const DEFAULT_LIST_LIMIT = 50;
 export const DEFAULT_DUE_LIMIT = 20;
 export const MAX_LIMIT = 200;
-export const MAX_AHEAD_DAYS = 365;
+// Review ahead reaches at most a year (mp03 takes it in seconds; f05 took whole days).
+export const MAX_AHEAD_SECONDS = 365 * 86_400;
 
 type Ctx = Context<AppEnv>;
 
@@ -154,13 +157,23 @@ vocabRoutes.get("/api/vocab", async (c) => {
 vocabRoutes.get("/api/vocab/due", async (c) => {
   const limit = intParam(c, "limit", DEFAULT_DUE_LIMIT, 1, MAX_LIMIT);
   if (isError(limit)) return invalid(c, limit);
-  // f05 review ahead: also take items falling due within the next `ahead` days.
-  const ahead = intParam(c, "ahead", 0, 0, MAX_AHEAD_DAYS);
+  // Review ahead (f05, by the second since mp03): also take items falling due within that span.
+  const ahead = intParam(c, "ahead_seconds", 0, 0, MAX_AHEAD_SECONDS);
   if (isError(ahead)) return invalid(c, ahead);
-  const cutoff = addSeconds(new Date().toISOString(), ahead * 86_400);
+  const cutoff = addSeconds(new Date().toISOString(), ahead);
   const body: DueResponse = {
     items: await dueVocab(c.env.DB, cutoff, limit, tagParam(c)),
     today: today(c),
+  };
+  return c.json(body);
+});
+
+// mp03: what each review-ahead stop would add. Registered before /api/vocab/:id.
+vocabRoutes.get("/api/vocab/upcoming", async (c) => {
+  const now = new Date().toISOString();
+  const body: UpcomingResponse = {
+    now,
+    due_at: await upcomingDueTimes(c.env.DB, now, addSeconds(now, MAX_AHEAD_SECONDS)),
   };
   return c.json(body);
 });

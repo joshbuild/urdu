@@ -1,10 +1,12 @@
 import { describe, expect, it } from "vitest";
 import type { VocabItem } from "../../shared/api";
 import {
+  AHEAD_STOPS,
+  aheadStop,
+  countWithin,
   currentItem,
   dueQuery,
   initialSession,
-  parseAheadDays,
   promptSide,
   type SessionAction,
   type SessionState,
@@ -144,16 +146,33 @@ describe("promptSide", () => {
 });
 
 describe("review ahead", () => {
-  it("parses the days field, treating junk as 0 and capping at 365", () => {
-    expect(parseAheadDays("")).toBe(0);
-    expect(parseAheadDays(" 7 ")).toBe(7);
-    expect(parseAheadDays("-3")).toBe(0);
-    expect(parseAheadDays("2.5")).toBe(0);
-    expect(parseAheadDays("9999")).toBe(365);
+  it("steps from Now to one year, strictly increasing", () => {
+    expect(AHEAD_STOPS[0]).toEqual({ seconds: 0, label: "Now" });
+    expect(AHEAD_STOPS.at(-1)).toEqual({ seconds: 365 * 86_400, label: "1 year" });
+    const seconds = AHEAD_STOPS.map((s) => s.seconds);
+    expect(seconds).toEqual([...new Set(seconds)].sort((a, b) => a - b));
+    expect(AHEAD_STOPS.map((s) => s.label).slice(1, 4)).toEqual(["1 hour", "2 hours", "3 hours"]);
+    expect(AHEAD_STOPS.find((s) => s.seconds === 86_400)?.label).toBe("1 day");
+    expect(aheadStop(3).label).toBe("3 hours");
+    expect(aheadStop(99)).toEqual(AHEAD_STOPS[0]);
   });
 
-  it("adds ahead to the due query only when set", () => {
+  it("counts upcoming due times up to and including the cutoff", () => {
+    const now = "2026-09-27T12:00:00.000Z";
+    const dueAt = [
+      "2026-09-27T13:00:00.000Z",
+      "2026-09-27T15:00:00.000Z",
+      "2026-09-27T15:00:00.001Z",
+      "2026-09-30T12:00:00.000Z",
+    ];
+    expect(countWithin(dueAt, now, 0)).toBe(0);
+    expect(countWithin(dueAt, now, 3 * 3_600)).toBe(2);
+    expect(countWithin(dueAt, now, 3 * 86_400)).toBe(4);
+    expect(countWithin([], now, 3_600)).toBe(0);
+  });
+
+  it("adds ahead_seconds to the due query only when set", () => {
     expect(dueQuery(20, 0)).toBe("/api/vocab/due?limit=20");
-    expect(dueQuery(20, 3)).toBe("/api/vocab/due?limit=20&ahead=3");
+    expect(dueQuery(20, 10_800)).toBe("/api/vocab/due?limit=20&ahead_seconds=10800");
   });
 });
