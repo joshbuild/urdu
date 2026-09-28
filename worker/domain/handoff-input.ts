@@ -3,9 +3,13 @@
 // unrecorded, so the corrected reply can be pasted again under the same id.
 
 import {
+  CHECK_MODES,
+  type CheckMode,
+  type CheckOptions,
   type Correction,
   type CorrectionAccept,
   type CorrectionsRequest,
+  DEFAULT_CHECK_COUNT,
   FILLABLE_FIELDS,
   type FillableField,
   type HandoffProposal,
@@ -251,4 +255,46 @@ export function parseCorrections(body: unknown, preview: boolean): Parsed<Correc
     accept.push(parsed.value);
   }
   return { ok: true, value: { ...request, accept } };
+}
+
+// f13: the check batch's options. Every key is optional, so {} (f11's request) is a correctness
+// check of every field, 20 items, rotation over the whole vault.
+export function parseCheckOptions(body: unknown): Parsed<CheckOptions> {
+  if (!isRecord(body)) return fail(undefined, "body must be a JSON object");
+  const extra = unknownKey(body, new Set(["mode", "fields", "count", "only_unchecked"]));
+  if (extra) return fail(extra, "is not a recognised field");
+
+  const mode = body.mode ?? "correctness";
+  if (!(CHECK_MODES as readonly unknown[]).includes(mode)) {
+    return fail("mode", `must be one of ${CHECK_MODES.join(", ")}`);
+  }
+  let fields: FillableField[] = [...FILLABLE_FIELDS];
+  if (body.fields !== undefined) {
+    if (!Array.isArray(body.fields) || body.fields.length === 0) {
+      return fail("fields", "must be a non-empty array");
+    }
+    fields = [];
+    for (const [i, field] of body.fields.entries()) {
+      if (!(FILLABLE_FIELDS as readonly unknown[]).includes(field)) {
+        return fail(`fields[${i}]`, `must be one of ${FILLABLE_FIELDS.join(", ")}`);
+      }
+      if (fields.includes(field)) return fail(`fields[${i}]`, "appears more than once");
+      fields.push(field);
+    }
+  }
+  const count = body.count ?? DEFAULT_CHECK_COUNT;
+  if (!Number.isInteger(count) || (count as number) < 1 || (count as number) > MAX_CHECK_BATCH) {
+    return fail("count", `must be a whole number from 1 to ${MAX_CHECK_BATCH}`);
+  }
+  const onlyUnchecked = body.only_unchecked ?? false;
+  if (typeof onlyUnchecked !== "boolean") return fail("only_unchecked", "must be a boolean");
+  return {
+    ok: true,
+    value: {
+      mode: mode as CheckMode,
+      fields,
+      count: count as number,
+      only_unchecked: onlyUnchecked,
+    },
+  };
 }

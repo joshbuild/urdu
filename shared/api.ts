@@ -37,6 +37,9 @@ export type VocabItem = {
   // UTC instant this item was last in an applied accuracy check (f11); null means never checked.
   // Only the check apply writes it, and a stamp is not an edit, so updated_at is left alone.
   checked_at: string | null;
+  // UTC instant this item was last in an applied completeness check (f13); null means never.
+  // Written like checked_at: only by the check apply, and without touching updated_at.
+  filled_at: string | null;
   created_at: string;
   updated_at: string;
 };
@@ -291,15 +294,32 @@ export type RevisionsResponse = {
 export type IncompleteResponse = { items: VocabItem[]; total: number };
 
 // f11 accuracy check (FR-F9). A batch is the least recently checked items, recorded by the Worker
-// under a handoff_id it mints, so the corrections paste can be judged against it.
-export const MAX_CHECK_BATCH = 20;
+// under a handoff_id it mints, so the corrections paste can be judged against it. f13 adds modes:
+// correctness fixes wrong fields, completeness fills empty ones, both does the two.
+export const MAX_CHECK_BATCH = 50;
+export const DEFAULT_CHECK_COUNT = 20;
+
+export const CHECK_MODES = ["correctness", "completeness", "both"] as const;
+export type CheckMode = (typeof CHECK_MODES)[number];
+
+// The body of POST /api/handoffs/check-batch. Every key is optional; {} is f11's request.
+export type CheckOptions = {
+  mode: CheckMode;
+  // Non-empty: the fields the chat may check or fill.
+  fields: FillableField[];
+  count: number;
+  // Only items never checked in this mode (checked_at or filled_at null).
+  only_unchecked: boolean;
+};
 
 export type CheckBatchResponse = {
-  // Null only when the vault is empty: nothing to check, and nothing recorded.
+  // Null when no item qualifies: nothing to check, and nothing recorded.
   handoff_id: string | null;
   items: VocabItem[];
-  // Items in the whole vault never checked, for the copy note.
-  never_checked: number;
+  // For the copy note: items in the vault this mode and these fields could check, and how many
+  // of them have never been checked this way.
+  candidates: number;
+  unchecked: number;
 };
 
 // A proposed field is present: a string replaces or fills it, null removes it. `urdu` is the

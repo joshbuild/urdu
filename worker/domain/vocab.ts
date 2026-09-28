@@ -111,6 +111,7 @@ export async function createVocab(
     source: input.source,
     airtable_id: null,
     checked_at: null,
+    filled_at: null,
     created_at: at,
     updated_at: at,
   };

@@ -3,6 +3,7 @@
 // 0003 → 0004 (f11): checked_at arrives null on every row, the rows otherwise untouched.
 // 0004 → 0005 (f12): the setting moves to its day-anchored successor and untouched new items to
 // its entry rung; nothing else changes.
+// 0005 → 0006 (f13): filled_at arrives null on every row, the rows otherwise untouched.
 import { env } from "cloudflare:workers";
 import { beforeEach, describe, expect, it } from "vitest";
 
@@ -274,5 +275,33 @@ describe("migration 0005_day_anchored_ladders", () => {
     expect(await active()).toBe("99");
     const first = await db.prepare("SELECT * FROM vocab ORDER BY id").first();
     expect(first).toEqual({ ...before[0], ladder_id: 8, ladder_step: 2, interval_seconds: 36327 });
+  });
+});
+
+describe("migration 0006_vocab_fill", () => {
+  it("adds filled_at as null on every row, keeps the rows, and indexes the rotation", async () => {
+    for (const prefix of ["0002", "0003", "0004", "0005"]) await apply(prefix);
+    await db.batch(
+      ["01J00000000000000000000001", "01J00000000000000000000002"].map((id, i) =>
+        db
+          .prepare(
+            `INSERT INTO vocab (id, urdu, urdu_key, kind, english, ladder_id, ladder_step,
+               interval_seconds, added_at, last_reviewed_at, due_at, source, checked_at,
+               created_at, updated_at)
+             VALUES (?, ?, ?, 'word', 'x', 8, 2, 36327, ?, ?, ?, 'manual', ?, ?, ?)`,
+          )
+          .bind(id, `w${i}`, `w${i}`, NOW, NOW, NOW, i === 0 ? NOW : null, NOW, NOW),
+      ),
+    );
+    const before = (await db.prepare("SELECT * FROM vocab ORDER BY id").all()).results;
+
+    await apply("0006");
+
+    const after = (await db.prepare("SELECT * FROM vocab ORDER BY id").all()).results;
+    expect(after).toEqual(before.map((row) => ({ ...row, filled_at: null })));
+    const index = await db
+      .prepare("SELECT sql FROM sqlite_master WHERE type = 'index' AND name = 'vocab_fill'")
+      .first<{ sql: string }>();
+    expect(index?.sql).toContain("(filled_at, added_at)");
   });
 });

@@ -4,6 +4,8 @@
 
 import {
   type CheckBatchResponse,
+  type CheckMode,
+  type CheckOptions,
   type Correction,
   type CorrectionAccept,
   type CorrectionPlan,
@@ -13,7 +15,6 @@ import {
   FILLABLE_FIELDS,
   type FieldChange,
   type FillableField,
-  MAX_CHECK_BATCH,
   type VocabItem,
 } from "../../shared/api";
 import { correctStep } from "../../shared/ladders";
@@ -22,29 +23,76 @@ import { ulid } from "../../shared/ulid";
 import { ID_CONFLICT } from "./handoff";
 import { toItem, type VocabRow } from "./vocab";
 
-// Rotation through the whole vault: never checked first, then the longest since a check.
-const CHECK_ORDER = "checked_at ASC NULLS FIRST, added_at ASC, id ASC";
+type Selection = { candidates: string; unchecked: string; order: string };
 
-// Every call records a new `check_issued` batch; one never pasted back is a harmless row. The
-// outcome stays null until the corrections are applied. An empty vault records nothing.
-export async function issueCheckBatch(db: D1Database, now: Date): Promise<CheckBatchResponse> {
-  const [rows, count] = await db.batch([
-    db.prepare(`SELECT * FROM vocab ORDER BY ${CHECK_ORDER} LIMIT ?`).bind(MAX_CHECK_BATCH),
-    db.prepare("SELECT count(*) AS n FROM vocab WHERE checked_at IS NULL"),
+// Each mode rotates on its own stamp: never stamped first, then the longest since. Field names
+// come from FILLABLE_FIELDS, never from the request, so they are safe to interpolate.
+function selection({ mode, fields }: CheckOptions): Selection {
+  const missing = `(${fields.map((f) => `${f} IS NULL`).join(" OR ")})`;
+  const present = `(${fields.map((f) => `${f} IS NOT NULL`).join(" OR ")})`;
+  const tail = "added_at ASC, id ASC";
+  if (mode === "correctness") {
+    return {
+      candidates: present,
+      unchecked: "checked_at IS NULL",
+      order: `checked_at ASC NULLS FIRST, ${tail}`,
+    };
+  }
+  if (mode === "completeness") {
+    return {
+      candidates: missing,
+      unchecked: "filled_at IS NULL",
+      order: `filled_at ASC NULLS FIRST, ${tail}`,
+    };
+  }
+  // Both: the older of the two stamps, a null counting as oldest (''). The fill stamp counts
+  // only while the item is missing a field, as in the unchecked test.
+  const check = "coalesce(checked_at, '')";
+  const fill = `CASE WHEN ${missing} THEN coalesce(filled_at, '') ELSE ${check} END`;
+  return {
+    candidates: "1 = 1",
+    unchecked: `(checked_at IS NULL OR (${missing} AND filled_at IS NULL))`,
+    order: `min(${check}, ${fill}) ASC, ${tail}`,
+  };
+}
+
+// Every call records a new `check_issued` batch holding its ids, mode and fields; one never
+// pasted back is a harmless row. The outcome stays null until the corrections are applied. No
+// qualifying item records nothing.
+export async function issueCheckBatch(
+  db: D1Database,
+  options: CheckOptions,
+  now: Date,
+): Promise<CheckBatchResponse> {
+  const { candidates, unchecked, order } = selection(options);
+  const where = options.only_unchecked ? `${candidates} AND ${unchecked}` : candidates;
+  const [rows, all, fresh] = await db.batch([
+    db.prepare(`SELECT * FROM vocab WHERE ${where} ORDER BY ${order} LIMIT ?`).bind(options.count),
+    db.prepare(`SELECT count(*) AS n FROM vocab WHERE ${candidates}`),
+    db.prepare(`SELECT count(*) AS n FROM vocab WHERE ${candidates} AND ${unchecked}`),
   ]);
   const items = ((rows?.results ?? []) as VocabRow[]).map(toItem);
-  const never_checked = (count?.results[0] as { n: number } | undefined)?.n ?? 0;
-  if (items.length === 0) return { handoff_id: null, items, never_checked };
+  const count = (r: typeof all) => (r?.results[0] as { n: number } | undefined)?.n ?? 0;
+  const counts = { candidates: count(all), unchecked: count(fresh) };
+  if (items.length === 0) return { handoff_id: null, items, ...counts };
 
   const handoff_id = ulid(now.getTime());
+  const payload: BatchPayload = {
+    vocab_ids: items.map((i) => i.id),
+    mode: options.mode,
+    fields: options.fields,
+  };
   await db
     .prepare(
       "INSERT INTO handoffs (id, imported_at, payload, status, outcome) VALUES (?, ?, ?, 'check_issued', NULL)",
     )
-    .bind(handoff_id, now.toISOString(), JSON.stringify({ vocab_ids: items.map((i) => i.id) }))
+    .bind(handoff_id, now.toISOString(), JSON.stringify(payload))
     .run();
-  return { handoff_id, items, never_checked };
+  return { handoff_id, items, ...counts };
 }
+
+// A batch issued by f11, before modes, has no mode or fields.
+type BatchPayload = { vocab_ids: string[]; mode?: CheckMode; fields?: FillableField[] };
 
 // The handoff_id names no batch this app issued.
 export const NOT_ISSUED = "not_issued";

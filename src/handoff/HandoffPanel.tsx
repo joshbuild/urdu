@@ -139,11 +139,11 @@ export function HandoffPanel({
     const posted = await postJson<CheckBatchResponse>("/api/handoffs/check-batch", {});
     setBusy(false);
     if (!posted.ok) return setCopied({ kind: "copied", note: posted.message });
-    const { handoff_id, items, never_checked } = posted.body;
+    const { handoff_id, items, unchecked } = posted.body;
     if (handoff_id === null) {
       return setCopied({ kind: "copied", note: "Your vault is empty; nothing to check." });
     }
-    const fresh = never_checked > 0 ? `; ${never_checked} never checked in the vault` : "";
+    const fresh = unchecked > 0 ? `; ${unchecked} never checked in the vault` : "";
     setCopied(
       await copy(
         checkPrompt(items, handoff_id),

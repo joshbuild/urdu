@@ -6,7 +6,12 @@ import { Hono } from "hono";
 import type { CheckBatchResponse, ConflictResponse, IncompleteResponse } from "../../shared/api";
 import { correctVocab, issueCheckBatch, NOT_ISSUED } from "../domain/check";
 import { ID_CONFLICT, importHandoff, incompleteVocab, reviseVocab } from "../domain/handoff";
-import { parseCorrections, parseHandoff, parseRevisions } from "../domain/handoff-input";
+import {
+  parseCheckOptions,
+  parseCorrections,
+  parseHandoff,
+  parseRevisions,
+} from "../domain/handoff-input";
 import { activeLadderId } from "../domain/settings";
 import type { AppEnv } from "../env";
 import { invalid, readJson } from "./api-vocab";
@@ -45,10 +50,14 @@ handoffRoutes.post("/api/handoffs/revisions", async (c) => {
   return result === ID_CONFLICT ? c.json(conflict, 409) : c.json(result);
 });
 
-// f11: selects and records the next check batch. The body is ignored.
+// f11/f13: selects and records the next check batch for the options in the body.
 handoffRoutes.post("/api/handoffs/check-batch", async (c) => {
-  const body: CheckBatchResponse = await issueCheckBatch(c.env.DB, new Date());
-  return c.json(body);
+  const body = await readJson(c);
+  if (body === undefined) return invalid(c, { message: "body must be valid JSON" });
+  const parsed = parseCheckOptions(body);
+  if (!parsed.ok) return invalid(c, parsed.error);
+  const batch: CheckBatchResponse = await issueCheckBatch(c.env.DB, parsed.value, new Date());
+  return c.json(batch);
 });
 
 // f11: ?preview=1 plans the corrections and writes nothing; without it the body carries `accept`

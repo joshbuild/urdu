@@ -102,11 +102,11 @@ describe("parsing /api/handoffs/corrections", () => {
       "corrections[1].vocab_id",
     ],
     [
-      "more than 20",
+      "more than 50",
       false,
       {
         handoff_id: "h",
-        corrections: Array.from({ length: 21 }, (_, i) => ({ ...fix, vocab_id: `v${i}` })),
+        corrections: Array.from({ length: 51 }, (_, i) => ({ ...fix, vocab_id: `v${i}` })),
       },
       "corrections",
     ],
@@ -205,9 +205,10 @@ describe("POST /api/handoffs/corrections?preview=1", () => {
   });
 
   it("rejects rows outside the batch, deleted since the copy, or with the wrong urdu", async () => {
-    const kitab = await create({ urdu: KITAB });
-    const pani = await create({ urdu: PANI });
-    const ghar = await create({ urdu: GHAR });
+    // Each has a field to check: a correctness batch skips items with none.
+    const kitab = await create({ urdu: KITAB, english: "book" });
+    const pani = await create({ urdu: PANI, english: "water" });
+    const ghar = await create({ urdu: GHAR, english: "house" });
     const handoff_id = await issue();
     const later = await create({ urdu: KHANA });
     await api("DELETE", `/api/vocab/${ghar.id}`);
