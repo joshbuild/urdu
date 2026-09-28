@@ -11,6 +11,8 @@
 
 ### Added
 
+- **Find new words** on the Vocab tab: paste a word list from ChatGPT to see which words you already have, then copy only the new ones back to the chat for `vocab-json`. The ChatGPT Project instructions gain a `vocab-list` command that gives that list in Urdu script, one word per line.
+- An ⓘ beside each ChatGPT button row on the Vocab tab shows that round trip's steps.
 - Settings › About shows the app's version (the commit it was built from), when that commit was made and when the app was built.
 - Ready-made instructions for a ChatGPT Project: type `vocab-json` at the end of a chat to get the new words as JSON for Paste new vocab.
 - Voice tab: talk Urdu with the Coach, with a live transcript, elapsed time and a running cost; ask it to add a word and see each add succeed or fail before it confirms. Leaving the tab or hiding the app ends the session.

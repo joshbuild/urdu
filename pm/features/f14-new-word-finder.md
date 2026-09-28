@@ -1,6 +1,6 @@
 # Feature Plan — New Word Finder
 
-**Status**: 🟡 IN PROGRESS — *opened 2026-09-28; s01 next.*
+**Status**: 🟡 IN PROGRESS — *opened 2026-09-28; s01–s03 built the same day; s04 phone next (sponsor deploys, re-pastes the Project instructions, runs smoke-test-14).*
 **Handle**: `f14`
 **Created**: *2026-09-28* · **Updated**: *2026-09-28*
 
@@ -111,8 +111,8 @@ a reminder of the steps.
   only by tashkeel) returns `existing` with the stored id and spelling; an unknown word returns
   null; order is kept; a repeated entry is answered twice; more than 90 words (a second chunk)
   match correctly; 400 on a non-object body, an unknown key, a missing, empty or 501-entry
-  `words`, a non-string entry, an entry that is blank or longer than 500, and an entry with no
-  Urdu letters (each with its `words[i]` path); 401 without a session; the vocab table is
+  `words`, a non-string entry, an entry that is blank or longer than 500, and an entry of
+  punctuation only (each with its `words[i]` path); 401 without a session; the vocab table is
   unchanged afterwards.
 - **Client tests (s02, `src/handoff/wordList.test.ts`):** the extraction rules above: one per
   line; numbering, bullets, parentheses and Latin glosses stripped; each separator; a line with
@@ -135,12 +135,12 @@ a reminder of the steps.
 ### Roadmap
 
 0. **s00 plan:** ✅ 2026-09-28, stress-tested the same day.
-1. **s01 route:** `MatchRequest`/`MatchResponse` + `MAX_MATCH_WORDS` in `shared/api.ts`;
+1. **s01 route:** ✅ 2026-09-28. `MatchRequest`/`MatchResponse` + `MAX_MATCH_WORDS` in `shared/api.ts`;
    `parseMatch` in `worker/domain/vocab-input.ts`; `matchVocab` in `worker/domain/vocab.ts`;
    `POST /api/vocab/match` in `api-vocab.ts`; Worker tests.
-2. **s02 client:** `wordList.ts` + tests; `FindWordsSheet`; the three-row layout with ⓘ boxes;
+2. **s02 client:** ✅ 2026-09-28. `wordList.ts` + tests; `FindWordsSheet`; the three-row layout with ⓘ boxes;
    CSS; the Project instructions additions.
-3. **s03 docs:** PRD FR-F10; CHANGELOG; write `smoke-tests/smoke-test-14.md`.
+3. **s03 docs:** ✅ 2026-09-28. PRD FR-F10; CHANGELOG; write `smoke-tests/smoke-test-14.md`.
 4. **s04 phone:** the sponsor deploys (no migration), re-pastes the Project instructions and runs
    smoke-test-14; close.
 
@@ -166,12 +166,13 @@ In order: s02 posts to s01's route; s03 describes what s01–s02 built; s04 need
 
 ### Recently Completed
 
+- 2026-09-28: s01–s03 built (`d58f956`, `61bac87`, docs commit); `pnpm check` green at 583. The rows and sheet were seen in headless Edge at phone width against `pnpm dev`.
 - 2026-09-28: stress-tested: 9 findings resolved by the agent, none escalated (see Decisions).
 - 2026-09-28: drafted from the sponsor's request (option 2 of three, chosen in conversation).
 
 ### Next Steps
 
-- s01 route.
+- s04 phone: the sponsor deploys (no migration), re-pastes `src/handoff/chatgpt-project-instructions.md` into the ChatGPT Project and runs `smoke-tests/smoke-test-14.md`; then AGENTS Project state, PLAN and `/pm-close f14`.
 
 ### Open Questions
 
@@ -201,3 +202,11 @@ In order: s02 posts to s01's route; s03 describes what s01–s02 built; s04 need
     beside the buttons they describe.
   - **Label "Find new words"**, so it isn't confused with Copy check prompt.
   - **No migration and no new `handoffs` status**; the deploy needs no remote step.
+- 2026-09-28 (agent, build):
+  - The Worker's rule is a non-empty `urdu_key`, the same as `createVocab`, so a Latin-only
+    entry passes the route and simply matches nothing. The client strips Latin before it posts,
+    so only punctuation-only entries are refused; the test uses one.
+  - `vocab-list` asks for Urdu script even when the source is Roman Urdu or Devanagari, which
+    also covers Hindi-script YouTube transcripts (the sponsor's question that led here).
+  - The known-words heading gets a top margin (`.eyebrow.find-known`) after the first render
+    showed it tight under the copy button.
