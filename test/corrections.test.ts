@@ -1,13 +1,14 @@
 // f11 accuracy check (FR-F9): corrections preview and apply (s02).
 import { env } from "cloudflare:workers";
 import { beforeEach, describe, expect, it } from "vitest";
-import type {
-  CheckBatchResponse,
-  CorrectionPlan,
-  CorrectionResult,
-  CorrectionsResponse,
-  InvalidRequestResponse,
-  VocabItem,
+import {
+  type CheckBatchResponse,
+  type CorrectionPlan,
+  type CorrectionResult,
+  type CorrectionsResponse,
+  FILLABLE_FIELDS,
+  type InvalidRequestResponse,
+  type VocabItem,
 } from "../shared/api";
 import { correctStep } from "../shared/ladders";
 import { applyCorrections, readItems } from "../worker/domain/check";
@@ -40,8 +41,12 @@ async function getItem(id: string): Promise<VocabItem> {
   return json(await api("GET", `/api/vocab/${id}`));
 }
 
-async function issue(): Promise<string> {
-  const batch = await json<CheckBatchResponse>(await api("POST", "/api/handoffs/check-batch", {}));
+// A "both" batch of every field allows every kind of change, as an f11 batch did; the f13 scope
+// rules have their own tests below.
+async function issue(options: object = { mode: "both" }): Promise<string> {
+  const batch = await json<CheckBatchResponse>(
+    await api("POST", "/api/handoffs/check-batch", options),
+  );
   if (!batch.handoff_id) throw new Error("no batch issued");
   return batch.handoff_id;
 }
@@ -147,7 +152,14 @@ describe("parsing /api/handoffs/corrections", () => {
     const item = await create({ urdu: PANI, english: "water", notes: "n" });
     const handoff_id = await issue();
     const empty = await json<CorrectionsResponse>(await preview({ handoff_id, corrections: [] }));
-    expect(empty).toEqual({ handoff_id, preview: true, repeat: false, batch_size: 1, results: [] });
+    expect(empty).toEqual({
+      handoff_id,
+      preview: true,
+      repeat: false,
+      mode: "both",
+      batch_size: 1,
+      results: [],
+    });
 
     const body = await json<CorrectionsResponse>(
       await preview({
@@ -185,6 +197,7 @@ describe("POST /api/handoffs/corrections?preview=1", () => {
       handoff_id,
       preview: true,
       repeat: false,
+      mode: "both",
       batch_size: 1,
       results: [
         {
@@ -196,6 +209,7 @@ describe("POST /api/handoffs/corrections?preview=1", () => {
             { field: "roman", old: "kitab", new: "kitaab" },
             { field: "example_english", old: null, new: "My book." },
           ],
+          ignored: [],
           reason: "long vowel",
         },
       ],
@@ -257,10 +271,18 @@ describe("POST /api/handoffs/corrections?preview=1", () => {
         urdu: KHANA,
         outcome: "nothing",
         changes: [],
+        ignored: [],
         reason: "r",
         urdu_suggestion: KHAANA,
       },
-      { vocab_id: kitab.id, urdu: KITAB, outcome: "nothing", changes: [], reason: "r" },
+      {
+        vocab_id: kitab.id,
+        urdu: KITAB,
+        outcome: "nothing",
+        changes: [],
+        ignored: [],
+        reason: "r",
+      },
     ]);
   });
 
@@ -344,7 +366,13 @@ describe("POST /api/handoffs/corrections (apply)", () => {
     const row = await handoffRow(handoff_id);
     expect(row?.status).toBe("checked");
     const payload = JSON.parse(row?.payload ?? "");
-    expect(payload).toEqual({ vocab_ids: expect.any(Array), corrections, accept });
+    expect(payload).toEqual({
+      vocab_ids: expect.any(Array),
+      mode: "both",
+      fields: [...FILLABLE_FIELDS],
+      corrections,
+      accept,
+    });
     // Items added in the same millisecond order by id, which is random within it.
     expect(payload.vocab_ids.sort()).toEqual([kitab.id, pani.id, left.id].sort());
     expect(JSON.parse(row?.outcome ?? "")).toEqual(body.results);
@@ -420,7 +448,14 @@ describe("POST /api/handoffs/corrections (apply)", () => {
       corrections: [{ vocab_id: item.id, urdu: PANI, english: "water (n.)", reason: "r" }],
       accept: [{ vocab_id: item.id, fields: { english: "water" }, reset: true }],
     };
-    const body = await applyCorrections(env.DB, request, [item.id], stale, new Date(), 8);
+    const body = await applyCorrections(
+      env.DB,
+      request,
+      { mode: "correctness", fields: null, vocab_ids: [item.id] },
+      stale,
+      new Date(),
+      8,
+    );
     if (typeof body === "string") throw new Error(body);
     const result = checked(body.results[0]);
     expect(result).toMatchObject({ written: [], kept: ["english"], reset: "skipped" });
@@ -473,5 +508,155 @@ describe("POST /api/handoffs/corrections (apply)", () => {
     );
     expect(previewed).toEqual({ ...first, repeat: true });
     expect(await getItem(item.id)).toEqual(stamped);
+  });
+});
+
+describe("f13 scope rules", () => {
+  const stamps = async (id: string) =>
+    env.DB.prepare("SELECT checked_at, filled_at FROM vocab WHERE id = ?")
+      .bind(id)
+      .first<{ checked_at: string | null; filled_at: string | null }>();
+
+  // roman and english present, notes and the examples empty.
+  const setup = () => create({ urdu: KITAB, roman: "kitab", english: "book" });
+
+  // A proposal touching every kind of change: fix roman, remove english, fill notes and the
+  // Urdu example.
+  const everything = (id: string, handoff_id: string) => ({
+    handoff_id,
+    corrections: [
+      {
+        vocab_id: id,
+        urdu: KITAB,
+        roman: "kitaab",
+        english: null,
+        notes: "common",
+        example_urdu: KITAB,
+        reason: "r",
+      },
+    ],
+  });
+
+  const planOf = async (body: object) => {
+    const res = await json<CorrectionsResponse>(await preview(body));
+    if (!res.preview) throw new Error("expected a preview");
+    const [plan] = res.results;
+    if (!plan || plan.outcome === "rejected") throw new Error("expected a plan");
+    return { mode: res.mode, fields: plan.changes.map((c) => c.field), ignored: plan.ignored };
+  };
+
+  it("correctness fixes and removes chosen fields, and ignores fills and other fields", async () => {
+    const item = await setup();
+    const handoff_id = await issue({ fields: ["roman", "notes", "example_urdu"] });
+    expect(await planOf(everything(item.id, handoff_id))).toEqual({
+      mode: "correctness",
+      fields: ["roman"],
+      ignored: ["english", "notes", "example_urdu"],
+    });
+  });
+
+  it("completeness fills chosen empty fields, and ignores fixes, removals and other fields", async () => {
+    const item = await setup();
+    const handoff_id = await issue({ mode: "completeness", fields: ["roman", "notes"] });
+    expect(await planOf(everything(item.id, handoff_id))).toEqual({
+      mode: "completeness",
+      fields: ["notes"],
+      ignored: ["roman", "english", "example_urdu"],
+    });
+  });
+
+  it("both allows every change to a chosen field", async () => {
+    const item = await setup();
+    const handoff_id = await issue({ mode: "both", fields: ["roman", "english", "notes"] });
+    expect(await planOf(everything(item.id, handoff_id))).toEqual({
+      mode: "both",
+      fields: ["roman", "english", "notes"],
+      ignored: ["example_urdu"],
+    });
+  });
+
+  it("a plan left with only ignored changes is nothing", async () => {
+    const item = await setup();
+    const handoff_id = await issue({ mode: "completeness", fields: ["notes"] });
+    const res = await json<CorrectionsResponse>(
+      await preview({
+        handoff_id,
+        corrections: [{ vocab_id: item.id, urdu: KITAB, roman: "kitaab", reason: "r" }],
+      }),
+    );
+    expect(res.results[0]).toMatchObject({ outcome: "nothing", changes: [], ignored: ["roman"] });
+  });
+
+  it("an accept naming an ignored field is kept, never written", async () => {
+    const item = await setup();
+    const handoff_id = await issue({ mode: "completeness" });
+    const body = {
+      handoff_id,
+      corrections: [{ vocab_id: item.id, urdu: KITAB, roman: "kitaab", notes: "n", reason: "r" }],
+    };
+    const res = await json<CorrectionsResponse>(
+      await apply({
+        ...body,
+        accept: [{ vocab_id: item.id, fields: { roman: "kitab", notes: null }, reset: false }],
+      }),
+    );
+    expect(res.results[0]).toMatchObject({
+      outcome: "checked",
+      written: [{ field: "notes", old: null, new: "n" }],
+      kept: ["roman"],
+    });
+    expect(await getItem(item.id)).toMatchObject({ roman: "kitab", notes: "n" });
+  });
+
+  it.each([
+    ["correctness", true, false],
+    ["completeness", false, true],
+    ["both", true, true],
+  ])("a %s apply stamps its own column(s), and a repeat reports the mode", async (mode, c, f) => {
+    const item = await setup();
+    const handoff_id = await issue({ mode });
+    const res = await json<CorrectionsResponse>(
+      await apply({ handoff_id, corrections: [], accept: [] }),
+    );
+    expect(res.mode).toBe(mode);
+    const row = await stamps(item.id);
+    expect(row?.checked_at !== null).toBe(c);
+    expect(row?.filled_at !== null).toBe(f);
+    expect((await getItem(item.id)).updated_at).toBe(item.updated_at);
+
+    const repeat = await json<CorrectionsResponse>(await preview({ handoff_id, corrections: [] }));
+    expect(repeat).toMatchObject({ repeat: true, mode });
+    expect(JSON.parse((await handoffRow(handoff_id))?.payload ?? "")).toMatchObject({ mode });
+  });
+
+  it("a batch issued before modes keeps f11's rules and stamps checked_at", async () => {
+    const item = await setup();
+    const handoff_id = "01K00000000000000000000F11";
+    await env.DB.prepare(
+      "INSERT INTO handoffs (id, imported_at, payload, status, outcome) VALUES (?, ?, ?, 'check_issued', NULL)",
+    )
+      .bind(handoff_id, item.added_at, JSON.stringify({ vocab_ids: [item.id] }))
+      .run();
+    expect(await planOf(everything(item.id, handoff_id))).toEqual({
+      mode: "correctness",
+      fields: ["roman", "english", "notes", "example_urdu"],
+      ignored: [],
+    });
+    await json(await apply({ handoff_id, corrections: [], accept: [] }));
+    expect(await stamps(item.id)).toMatchObject({ filled_at: null });
+    expect((await stamps(item.id))?.checked_at).not.toBeNull();
+  });
+
+  it("accepts 50 corrections", async () => {
+    const res = await preview({
+      handoff_id: "none",
+      corrections: Array.from({ length: 50 }, (_, i) => ({
+        vocab_id: `v${i}`,
+        urdu: KITAB,
+        reason: "r",
+      })),
+    });
+    // Parsed, then refused only because no such batch was issued.
+    expect((await json<InvalidRequestResponse>(res, 400)).field).toBe("handoff_id");
   });
 });

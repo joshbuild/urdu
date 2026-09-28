@@ -356,6 +356,9 @@ export type CorrectionPlan =
       // "nothing": no proposed value differs from the stored one.
       outcome: "correct" | "nothing";
       changes: FieldChange[];
+      // f13: proposed changes the batch's mode or fields don't allow, never tickable: a field not
+      // chosen, a fill in a correctness check, an overwrite or removal in a completeness check.
+      ignored: FillableField[];
       reason: string;
       urdu_suggestion?: string;
     };
@@ -386,6 +389,8 @@ export type CorrectionsResponse =
       handoff_id: string;
       preview: true;
       repeat: false;
+      // f13: the batch's mode; a batch issued before modes reports correctness.
+      mode: CheckMode;
       batch_size: number;
       results: CorrectionPlan[];
     }
@@ -393,6 +398,7 @@ export type CorrectionsResponse =
       handoff_id: string;
       preview: false;
       repeat: boolean;
+      mode: CheckMode;
       // Every item in the batch is stamped checked, including those the chat left out.
       batch_size: number;
       results: CorrectionResult[];

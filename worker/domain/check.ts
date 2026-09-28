@@ -97,9 +97,15 @@ type BatchPayload = { vocab_ids: string[]; mode?: CheckMode; fields?: FillableFi
 // The handoff_id names no batch this app issued.
 export const NOT_ISSUED = "not_issued";
 
-type Batch =
-  | { status: "check_issued"; vocab_ids: string[] }
-  | { status: "checked"; vocab_ids: string[]; results: CorrectionResult[] };
+// What a batch may change. `fields` null is a batch issued by f11, before modes: every field,
+// no mode rule, stamped as a correctness check.
+export type Scope = { mode: CheckMode; fields: FillableField[] | null };
+
+type Batch = Scope &
+  (
+    | { status: "check_issued"; vocab_ids: string[] }
+    | { status: "checked"; vocab_ids: string[]; results: CorrectionResult[] }
+  );
 
 async function readBatch(
   db: D1Database,
@@ -111,10 +117,11 @@ async function readBatch(
     .first<{ status: string; payload: string; outcome: string | null }>();
   if (!row) return NOT_ISSUED;
   if (row.status !== "check_issued" && row.status !== "checked") return ID_CONFLICT;
-  const { vocab_ids } = JSON.parse(row.payload) as { vocab_ids: string[] };
+  const { vocab_ids, mode, fields } = JSON.parse(row.payload) as BatchPayload;
+  const scope: Scope = { mode: mode ?? "correctness", fields: fields ?? null };
   return row.status === "checked"
-    ? { status: "checked", vocab_ids, results: JSON.parse(row.outcome ?? "[]") }
-    : { status: "check_issued", vocab_ids };
+    ? { ...scope, status: "checked", vocab_ids, results: JSON.parse(row.outcome ?? "[]") }
+    : { ...scope, status: "check_issued", vocab_ids };
 }
 
 export async function readItems(db: D1Database, ids: string[]): Promise<Map<string, VocabItem>> {
@@ -125,12 +132,23 @@ export async function readItems(db: D1Database, ids: string[]): Promise<Map<stri
   return new Map(results.map((row) => [row.id, toItem(row)]));
 }
 
+// f13: whether the batch's mode and fields let a proposal change this field. The chat only
+// proposes; this decides, whatever the prompt asked.
+function allowed(scope: Scope, change: FieldChange): boolean {
+  if (scope.fields === null) return true;
+  if (!scope.fields.includes(change.field)) return false;
+  if (scope.mode === "correctness") return change.old !== null;
+  if (scope.mode === "completeness") return change.old === null;
+  return true;
+}
+
 // Judges one correction against the stored item. A proposed value equal to the stored one, and a
-// suggestion with the item's own key, are dropped.
+// suggestion with the item's own key, are dropped; a change the scope doesn't allow is ignored.
 export function planCorrection(
   correction: Correction,
   batch: ReadonlySet<string>,
   item: VocabItem | undefined,
+  scope: Scope,
 ): CorrectionPlan {
   const { vocab_id, urdu, reason } = correction;
   if (!batch.has(vocab_id)) {
@@ -147,10 +165,13 @@ export function planCorrection(
     };
   }
   const changes: FieldChange[] = [];
+  const ignored: FillableField[] = [];
   for (const field of FILLABLE_FIELDS) {
     const proposed = correction[field];
     if (proposed === undefined || proposed === item[field]) continue;
-    changes.push({ field, old: item[field], new: proposed });
+    const change = { field, old: item[field], new: proposed };
+    if (allowed(scope, change)) changes.push(change);
+    else ignored.push(field);
   }
   const suggestion = correction.urdu_suggestion;
   return {
@@ -158,6 +179,7 @@ export function planCorrection(
     urdu,
     outcome: changes.length > 0 ? "correct" : "nothing",
     changes,
+    ignored,
     reason,
     ...(suggestion !== undefined && urduKey(suggestion) !== item.urdu_key
       ? { urdu_suggestion: suggestion }
@@ -177,17 +199,20 @@ export async function correctVocab(
   const { handoff_id } = request;
   const batch = await readBatch(db, handoff_id);
   if (batch === ID_CONFLICT || batch === NOT_ISSUED) return batch;
+  const { mode } = batch;
   const batch_size = batch.vocab_ids.length;
   if (batch.status === "checked") {
-    return { handoff_id, preview: false, repeat: true, batch_size, results: batch.results };
+    return { handoff_id, preview: false, repeat: true, mode, batch_size, results: batch.results };
   }
   const items = await readItems(db, batch.vocab_ids);
   if (request.accept === undefined) {
     const ids = new Set(batch.vocab_ids);
-    const results = request.corrections.map((c) => planCorrection(c, ids, items.get(c.vocab_id)));
-    return { handoff_id, preview: true, repeat: false, batch_size, results };
+    const results = request.corrections.map((c) =>
+      planCorrection(c, ids, items.get(c.vocab_id), batch),
+    );
+    return { handoff_id, preview: true, repeat: false, mode, batch_size, results };
   }
-  return applyCorrections(db, request, batch.vocab_ids, items, now, activeLadderId);
+  return applyCorrections(db, request, batch, items, now, activeLadderId);
 }
 
 // Every write also requires the batch to be unapplied, so when two applies of one batch race,
@@ -272,30 +297,45 @@ function planApply(
   return { result, statements };
 }
 
+// Which stamps an applied batch writes: a correctness check is checked_at, a completeness check
+// filled_at.
+const STAMPS: Readonly<Record<CheckMode, string>> = {
+  correctness: "checked_at = ?1",
+  completeness: "filled_at = ?1",
+  both: "checked_at = ?1, filled_at = ?1",
+};
+
 // The plan is made from `items`, a read taken just before the write; the SQL guards are the
 // backstop. Exported so a test can pass a read that has gone stale.
 export async function applyCorrections(
   db: D1Database,
   request: CorrectionsRequest,
-  vocabIds: string[],
+  batch: Scope & { vocab_ids: string[] },
   items: ReadonlyMap<string, VocabItem>,
   now: Date,
   activeLadderId: number,
 ): Promise<CorrectionsResponse | typeof ID_CONFLICT> {
   const { handoff_id } = request;
+  const { mode, vocab_ids: vocabIds } = batch;
   const at = now.toISOString();
   const ids = new Set(vocabIds);
   const accepts = new Map((request.accept ?? []).map((a) => [a.vocab_id, a]));
 
   const planned = request.corrections.map((c): Planned => {
     const item = items.get(c.vocab_id);
-    const plan = planCorrection(c, ids, item);
+    const plan = planCorrection(c, ids, item, batch);
     if (plan.outcome === "rejected") return { result: plan, statements: [] };
     if (!item) throw new Error("a planned correction has no item");
     return planApply(db, handoff_id, plan, item, accepts.get(c.vocab_id), at, activeLadderId);
   });
   const results = planned.map((p) => p.result);
-  const payload = { vocab_ids: vocabIds, corrections: request.corrections, accept: request.accept };
+  // Mode and fields stay in the payload, so a repeat still knows its mode.
+  const payload = {
+    vocab_ids: vocabIds,
+    ...(batch.fields !== null ? { mode, fields: batch.fields } : {}),
+    corrections: request.corrections,
+    accept: request.accept,
+  };
   const writes = planned.flatMap((p) => p.statements);
 
   const outcomes = await db.batch([
@@ -303,8 +343,9 @@ export async function applyCorrections(
     // A stamp is not an edit: updated_at is left alone. Ids deleted since the copy match no row.
     db
       .prepare(
-        `UPDATE vocab SET checked_at = ? WHERE id IN (${vocabIds.map(() => "?").join(", ")})
-           AND ${OPEN}`,
+        `UPDATE vocab SET ${STAMPS[mode]}
+         WHERE id IN (${vocabIds.map((_, i) => `?${i + 2}`).join(", ")})
+           AND ${OPEN.replace("?", `?${vocabIds.length + 2}`)}`,
       )
       .bind(at, ...vocabIds, handoff_id),
     db
@@ -325,6 +366,7 @@ export async function applyCorrections(
       handoff_id,
       preview: false,
       repeat: true,
+      mode,
       batch_size: vocabIds.length,
       results: stored.results,
     };
@@ -353,5 +395,12 @@ export async function applyCorrections(
       .bind(JSON.stringify(results), handoff_id)
       .run();
   }
-  return { handoff_id, preview: false, repeat: false, batch_size: vocabIds.length, results };
+  return {
+    handoff_id,
+    preview: false,
+    repeat: false,
+    mode,
+    batch_size: vocabIds.length,
+    results,
+  };
 }
