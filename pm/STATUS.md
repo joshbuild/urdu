@@ -11,7 +11,7 @@
 - f07 `coach-client` — 🟡 IN PROGRESS, s01–s04 built (migration 0003 applied remotely and deployed 2026-09-23); s05 prompt tuning next → `features/f07-coach-client.md`
 - f11 `vocab-check` — 🟡 IN PROGRESS, s01–s03 built 2026-09-24; s04 phone under way (0004 remote + deployed; smoke-test-11 at B1) → `features/f11-vocab-check.md`
 - f12 `day-anchored-ladders` — 🟡 IN PROGRESS, s01–s04 built 2026-09-27; s05 phone next (0005 remote, deploy, smoke-test-12) → `features/f12-day-anchored-ladders.md`
-- mp03 `review-ahead-hours` — 🟡 IN PROGRESS, planned + stress-tested 2026-09-27; s01–s03 build, s04 phone → `mini-plans/mp03-review-ahead-hours.md`
+- mp03 `review-ahead-hours` — 🟡 IN PROGRESS, s01–s03 built 2026-09-27; s04 phone next (smoke-test-mp03, rides the f12 deploy; no migration) → `mini-plans/mp03-review-ahead-hours.md`
 
 ## Next Session Pointers
 *The 1–3 concrete next actions for a cold start.*
