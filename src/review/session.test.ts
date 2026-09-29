@@ -45,6 +45,7 @@ const run = (actions: SessionAction[], from: SessionState = initialSession) =>
   actions.reduce(sessionReducer, from);
 
 const start: SessionAction = { type: "start", items: [item("a"), item("b")], direction: "ur_en" };
+const recorded: SessionAction = { type: "recorded", eventId: "event-a", grade: "correct" };
 
 describe("sessionReducer", () => {
   it("starts on the first card, hidden", () => {
@@ -56,7 +57,7 @@ describe("sessionReducer", () => {
 
   it("an empty queue goes straight to the tally", () => {
     const state = run([{ type: "start", items: [], direction: "ur_en" }]);
-    expect(state).toEqual({ phase: "done", tally: { graded: 0, skipped: 0 } });
+    expect(state).toMatchObject({ phase: "done", tally: { graded: 0, skipped: 0 } });
   });
 
   it("will not grade before reveal", () => {
@@ -68,7 +69,7 @@ describe("sessionReducer", () => {
   it("advances only once the grade is recorded, and counts it", () => {
     const pending = run([start, { type: "reveal" }, { type: "submit" }]);
     expect(currentItem(pending)?.id).toBe("a");
-    const next = run([{ type: "recorded" }], pending);
+    const next = run([recorded], pending);
     expect(currentItem(next)?.id).toBe("b");
     if (next.phase !== "card") throw new Error("expected card");
     expect(next.revealed).toBe(false);
@@ -91,7 +92,7 @@ describe("sessionReducer", () => {
     expect(failed.error).toBe("offline");
     expect(failed.revealed).toBe(true);
     expect(currentItem(failed)?.id).toBe("a");
-    const retried = run([{ type: "submit" }, { type: "recorded" }], failed);
+    const retried = run([{ type: "submit" }, recorded], failed);
     expect(currentItem(retried)?.id).toBe("b");
   });
 
@@ -109,21 +110,49 @@ describe("sessionReducer", () => {
   });
 
   it("the last card leads to the tally", () => {
-    const state = run([
-      start,
-      { type: "reveal" },
-      { type: "submit" },
-      { type: "recorded" },
-      { type: "skip" },
-    ]);
-    expect(state).toEqual({ phase: "done", tally: { graded: 1, skipped: 1 } });
+    const state = run([start, { type: "reveal" }, { type: "submit" }, recorded, { type: "skip" }]);
+    expect(state).toMatchObject({ phase: "done", tally: { graded: 1, skipped: 1 } });
   });
 
   it("ending early keeps the tally so far, but not mid-POST", () => {
     const pending = run([start, { type: "reveal" }, { type: "submit" }]);
     expect(run([{ type: "end" }], pending)).toBe(pending);
-    const ended = run([{ type: "recorded" }, { type: "end" }], pending);
-    expect(ended).toEqual({ phase: "done", tally: { graded: 1, skipped: 0 } });
+    const ended = run([recorded, { type: "end" }], pending);
+    expect(ended).toMatchObject({ phase: "done", tally: { graded: 1, skipped: 0 } });
+  });
+
+  it("goes back to a graded card and replaces its grade without increasing the tally", () => {
+    const corrected = run([
+      start,
+      { type: "reveal" },
+      { type: "submit" },
+      recorded,
+      { type: "back" },
+      { type: "submit" },
+      { type: "recorded", eventId: "event-a", grade: "wrong" },
+    ]);
+    expect(currentItem(corrected)?.id).toBe("b");
+    if (corrected.phase !== "card") throw new Error("expected card");
+    expect(corrected.tally).toEqual({ graded: 1, skipped: 0 });
+    expect(corrected.history[0]).toMatchObject({ grade: "wrong", eventId: "event-a" });
+  });
+
+  it("lets a skipped card be graded after going back", () => {
+    const state = run([
+      start,
+      { type: "skip" },
+      { type: "back" },
+      { type: "reveal" },
+      { type: "submit" },
+      recorded,
+    ]);
+    if (state.phase !== "card") throw new Error("expected card");
+    expect(state.tally).toEqual({ graded: 1, skipped: 0 });
+  });
+
+  it("returns from the tally to the last card", () => {
+    const state = run([start, { type: "skip" }, { type: "skip" }, { type: "back" }]);
+    expect(currentItem(state)?.id).toBe("b");
   });
 
   it("reset returns to the start panel", () => {

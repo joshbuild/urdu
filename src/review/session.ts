@@ -2,8 +2,18 @@
 // Mastery arithmetic stays in the Worker: the client only records which grade was tapped.
 
 import type { ReviewDirection, VocabItem } from "../../shared/api";
+import type { Grade } from "../../shared/mastery";
 
 export type Tally = { graded: number; skipped: number };
+export type CompletedCard =
+  | { kind: "graded"; eventId: string; grade: Grade; revealed: true }
+  | { kind: "skipped"; revealed: boolean };
+type SessionProgress = {
+  queue: VocabItem[];
+  direction: ReviewDirection;
+  history: CompletedCard[];
+  tally: Tally;
+};
 
 export type SessionState =
   | { phase: "start" }
@@ -16,17 +26,20 @@ export type SessionState =
       pending: boolean;
       error: string | null;
       tally: Tally;
+      history: CompletedCard[];
     }
-  | { phase: "done"; tally: Tally };
+  | ({ phase: "done" } & SessionProgress);
 
 export type SessionAction =
   | { type: "start"; items: VocabItem[]; direction: ReviewDirection }
   | { type: "reveal" }
   | { type: "submit" }
-  | { type: "recorded" }
+  | { type: "recorded"; eventId: string; grade: Grade }
   | { type: "failed"; message: string }
   // Also used when the item vanished (404) mid-session: it counts as skipped, never graded.
   | { type: "skip" }
+  | { type: "back" }
+  | { type: "next" }
   | { type: "end" }
   | { type: "reset" };
 
@@ -34,17 +47,36 @@ export const initialSession: SessionState = { phase: "start" };
 
 const EMPTY: Tally = { graded: 0, skipped: 0 };
 
-function advance(state: Extract<SessionState, { phase: "card" }>, tally: Tally): SessionState {
+function advance(
+  state: Extract<SessionState, { phase: "card" }>,
+  completed: CompletedCard,
+): SessionState {
+  const history = [...state.history];
+  history[state.index] = completed;
+  const tally = {
+    graded: history.filter((entry) => entry.kind === "graded").length,
+    skipped: history.filter((entry) => entry.kind === "skipped").length,
+  };
   const index = state.index + 1;
-  if (index >= state.queue.length) return { phase: "done", tally };
-  return { ...state, index, revealed: false, pending: false, error: null, tally };
+  if (index >= state.queue.length)
+    return { phase: "done", queue: state.queue, direction: state.direction, history, tally };
+  return {
+    ...state,
+    history,
+    index,
+    revealed: history[index]?.revealed ?? false,
+    pending: false,
+    error: null,
+    tally,
+  };
 }
 
 export function sessionReducer(state: SessionState, action: SessionAction): SessionState {
   if (action.type === "reset") return initialSession;
   if (action.type === "start") {
     if (state.phase === "card") return state;
-    if (action.items.length === 0) return { phase: "done", tally: EMPTY };
+    if (action.items.length === 0)
+      return { phase: "done", queue: [], direction: action.direction, history: [], tally: EMPTY };
     return {
       phase: "card",
       queue: action.items,
@@ -54,6 +86,18 @@ export function sessionReducer(state: SessionState, action: SessionAction): Sess
       pending: false,
       error: null,
       tally: EMPTY,
+      history: [],
+    };
+  }
+  if (action.type === "back" && state.phase === "done" && state.history.length > 0) {
+    const index = state.history.length - 1;
+    return {
+      ...state,
+      phase: "card",
+      index,
+      revealed: state.history[index]?.revealed ?? false,
+      pending: false,
+      error: null,
     };
   }
   if (state.phase !== "card") return state;
@@ -67,14 +111,39 @@ export function sessionReducer(state: SessionState, action: SessionAction): Sess
       return { ...state, pending: true, error: null };
     case "recorded":
       if (!state.pending) return state;
-      return advance(state, { ...state.tally, graded: state.tally.graded + 1 });
+      return advance(state, {
+        kind: "graded",
+        eventId: action.eventId,
+        grade: action.grade,
+        revealed: true,
+      });
     case "failed":
       return { ...state, pending: false, error: action.message };
     case "skip":
-      return advance(state, { ...state.tally, skipped: state.tally.skipped + 1 });
+      if (state.history[state.index]?.kind === "graded") return state;
+      return advance(state, { kind: "skipped", revealed: state.revealed });
+    case "back":
+      if (state.pending || state.index === 0) return state;
+      return {
+        ...state,
+        index: state.index - 1,
+        revealed: state.history[state.index - 1]?.revealed ?? false,
+        error: null,
+      };
+    case "next": {
+      const completed = state.history[state.index];
+      if (state.pending || !completed) return state;
+      return advance(state, completed);
+    }
     case "end":
       if (state.pending) return state;
-      return { phase: "done", tally: state.tally };
+      return {
+        phase: "done",
+        queue: state.queue,
+        direction: state.direction,
+        history: state.history,
+        tally: state.tally,
+      };
   }
 }
 

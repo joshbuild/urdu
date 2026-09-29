@@ -11,7 +11,7 @@ import type {
   VocabItem,
 } from "../../shared/api";
 import { scheduleReview } from "../../shared/ladders";
-import type { Grade } from "../../shared/mastery";
+import { GRADES, type Grade } from "../../shared/mastery";
 import { ulid } from "../../shared/ulid";
 import { getVocab } from "./vocab";
 
@@ -28,6 +28,123 @@ export type ReviewResult =
   | { ok: false; error: "not_found" }
   // The row changed between read and write; nothing was written.
   | { ok: false; error: "stale" };
+
+// Replace a PWA grade on the most recent review of this item. The original event keeps its
+// identity and review instant; its before-state remains the source for the new schedule.
+export async function amendReview(
+  db: D1Database,
+  eventId: string,
+  grade: Grade,
+): Promise<ReviewResult | { ok: false; error: "invalid" }> {
+  if (!GRADES.includes(grade)) return { ok: false, error: "invalid" };
+  const event = await db
+    .prepare("SELECT * FROM review_events WHERE id = ?")
+    .bind(eventId)
+    .first<ReviewEvent>();
+  if (event?.source !== "pwa" || event.prompt_support !== "none") {
+    return { ok: false, error: "not_found" };
+  }
+  const current = await getVocab(db, event.vocab_id);
+  if (!current) return { ok: false, error: "not_found" };
+  const newer = await db
+    .prepare(
+      "SELECT id FROM review_events WHERE vocab_id = ? AND id <> ? AND reviewed_at >= ? LIMIT 1",
+    )
+    .bind(event.vocab_id, event.id, event.reviewed_at)
+    .first();
+  if (
+    newer ||
+    current.updated_at !== event.reviewed_at ||
+    current.last_reviewed_at !== event.reviewed_at ||
+    current.ladder_id !== event.ladder_id ||
+    current.ladder_step !== event.step_after ||
+    current.interval_seconds !== event.interval_after ||
+    current.due_at !== event.due_after
+  )
+    return { ok: false, error: "stale" };
+  if (grade === event.grade) return { ok: true, item: current, event };
+
+  const before: VocabItem = {
+    ...current,
+    ladder_id: event.ladder_before_id,
+    ladder_step: event.step_before,
+    interval_seconds: event.interval_before,
+    due_at: event.due_before,
+    last_reviewed_at:
+      event.due_before === null
+        ? null
+        : new Date(Date.parse(event.due_before) - event.interval_before * 1000).toISOString(),
+  };
+  const next = scheduleReview(before, grade, event.direction, event.ladder_id, event.reviewed_at);
+  const updatedEvent: ReviewEvent = {
+    ...event,
+    grade,
+    applied_delta: next.applied_delta,
+    ladder_id: next.ladder_id,
+    step_after: next.ladder_step,
+    interval_after: next.interval_seconds,
+    due_after: next.due_at,
+  };
+  const guard = `id = ? AND updated_at = ? AND last_reviewed_at = ?
+    AND ladder_id = ? AND ladder_step = ? AND interval_seconds = ? AND due_at = ?
+    AND NOT EXISTS (SELECT 1 FROM review_events WHERE vocab_id = ? AND id <> ? AND reviewed_at >= ?)`;
+  const binds = [
+    current.id,
+    current.updated_at,
+    current.last_reviewed_at,
+    current.ladder_id,
+    current.ladder_step,
+    current.interval_seconds,
+    current.due_at,
+    event.vocab_id,
+    event.id,
+    event.reviewed_at,
+  ];
+  const [eventUpdate, itemUpdate] = await db.batch([
+    db
+      .prepare(`UPDATE review_events SET grade = ?, applied_delta = ?, ladder_id = ?,
+      step_after = ?, interval_after = ?, due_after = ?
+      WHERE id = ? AND grade = ? AND EXISTS (SELECT 1 FROM vocab WHERE ${guard})`)
+      .bind(
+        grade,
+        next.applied_delta,
+        next.ladder_id,
+        next.ladder_step,
+        next.interval_seconds,
+        next.due_at,
+        event.id,
+        event.grade,
+        ...binds,
+      ),
+    db
+      .prepare(`UPDATE vocab SET ladder_id = ?, ladder_step = ?, interval_seconds = ?,
+      due_at = ? WHERE ${guard} AND EXISTS
+      (SELECT 1 FROM review_events WHERE id = ? AND grade = ?)`)
+      .bind(
+        next.ladder_id,
+        next.ladder_step,
+        next.interval_seconds,
+        next.due_at,
+        ...binds,
+        event.id,
+        grade,
+      ),
+  ]);
+  if (eventUpdate?.meta.changes !== 1 || itemUpdate?.meta.changes !== 1) {
+    return { ok: false, error: "stale" };
+  }
+  return {
+    ok: true,
+    item: {
+      ...current,
+      ladder_id: next.ladder_id,
+      ladder_step: next.ladder_step,
+      interval_seconds: next.interval_seconds,
+      due_at: next.due_at,
+    },
+    event: updatedEvent,
+  };
+}
 
 export async function recordReview(
   db: D1Database,

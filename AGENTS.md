@@ -64,7 +64,7 @@ Test-run discipline (this workstation has been wedged by concurrent Vitest runs)
 - Run the smallest relevant test file first: `pnpm test shared/mastery.test.ts`
   (or `pnpm vitest run --project worker test/auth.test.ts`). Run the full suite
   only once, after targeted tests pass.
-- `vitest.config.ts` caps `maxWorkers: 2`. Do not raise it, and do not override it
+- `vitest.config.ts` caps `maxWorkers: 1`. Do not raise it, and do not override it
   with a higher `--maxWorkers` on the CLI.
 - If the machine bogs down, check for leftover `node.exe` / `workerd.exe` after a
   run finishes and kill the strays.

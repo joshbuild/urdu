@@ -4,6 +4,7 @@
 
 ### Changed
 
+- Review cards now speak when you tap the Urdu word, with no separate Speak button.
 - Review ahead is a slider instead of a days box: it snaps from Now through 1, 2, 3, 5, 8, 12, 16 and 20 hours, days, weeks and months to 1 year, and says how many more items each step adds.
 - The ChatGPT buttons on the Vocab tab read as matching pairs: **Copy new-vocab prompt** (was Copy prompt) and **Paste check reply** (was Paste corrections).
 - The ChatGPT prompts ask for strict JSON with no double quotes inside the text, so replies paste first time; a bad paste now says what to ask the chat for.
@@ -11,6 +12,7 @@
 
 ### Added
 
+- A Back button in reviews lets you revisit the previous card and correct an accidental grade, including after the last card.
 - **Find new words** on the Vocab tab: paste a word list from ChatGPT to see which words you already have, then copy only the new ones back to the chat for `vocab-json`. The ChatGPT Project instructions gain a `vocab-list` command that gives that list in Urdu script, one word per line.
 - An ⓘ beside each ChatGPT button row on the Vocab tab shows that round trip's steps.
 - Settings › About shows the app's version (the commit it was built from), when that commit was made and when the app was built.

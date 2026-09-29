@@ -6,6 +6,7 @@ import type {
   DueResponse,
   ReviewDirection,
   ReviewRequest,
+  ReviewResponse,
   StatusResponse,
   UpcomingResponse,
   VocabItem,
@@ -107,17 +108,28 @@ export function ReviewScreen({
 
   async function grade(item: VocabItem, value: Grade) {
     if (state.phase !== "card" || state.pending) return;
+    const previous = state.history[state.index];
     dispatch({ type: "submit" });
     const body: ReviewRequest = { grade: value, direction: state.direction };
     try {
-      const response = await fetch(`/api/vocab/${encodeURIComponent(item.id)}/reviews`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
-      });
-      if (response.status === 201) return dispatch({ type: "recorded" });
+      const response = await fetch(
+        previous?.kind === "graded"
+          ? `/api/reviews/${encodeURIComponent(previous.eventId)}`
+          : `/api/vocab/${encodeURIComponent(item.id)}/reviews`,
+        {
+          method: previous?.kind === "graded" ? "PATCH" : "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(previous?.kind === "graded" ? { grade: value } : body),
+        },
+      );
+      if (response.status === 201 || response.status === 200) {
+        const data: ReviewResponse = await response.json();
+        dispatch({ type: "recorded", eventId: data.event.id, grade: value });
+        onChanged();
+        return;
+      }
       // Deleted since the queue loaded: nothing to grade, so it counts as skipped.
-      if (response.status === 404) return dispatch({ type: "skip" });
+      if (response.status === 404 && previous?.kind !== "graded") return dispatch({ type: "skip" });
       if (response.status === 401) {
         dispatch({ type: "failed", message: "This device is locked. Unlock, then try again." });
         return onChanged();
@@ -126,7 +138,9 @@ export function ReviewScreen({
         type: "failed",
         message:
           response.status === 409
-            ? "This item changed while grading. Tap a grade again."
+            ? previous?.kind === "graded"
+              ? "This item changed since that grade. The earlier grade cannot be corrected here."
+              : "This item changed while grading. Tap a grade again."
             : "Could not record that grade. Tap it again to retry.",
       });
     } catch {
@@ -222,6 +236,11 @@ export function ReviewScreen({
             <dd>{skipped}</dd>
           </div>
         </dl>
+        {state.history.length > 0 && (
+          <button type="button" className="secondary" onClick={() => dispatch({ type: "back" })}>
+            Back to last card
+          </button>
+        )}
         <button type="button" onClick={finish}>
           Back to review
         </button>
@@ -232,7 +251,19 @@ export function ReviewScreen({
   const item = currentItem(state);
   if (!item) return null;
   const prompt = promptSide(item, state.direction);
-  const urduShowing = prompt.side === "urdu" || state.revealed;
+  const completed = state.history[state.index];
+  const urduWord = (
+    <button
+      type="button"
+      className="review-speak-word urdu-inline vocab-headword"
+      dir="rtl"
+      lang="ur"
+      aria-label={`Speak ${item.urdu}`}
+      onClick={() => speak(item.urdu, voice)}
+    >
+      {item.urdu}
+    </button>
+  );
 
   return (
     <section className="panel review-card">
@@ -240,29 +271,31 @@ export function ReviewScreen({
         <p className="eyebrow">
           {state.index + 1} OF {state.queue.length}
         </p>
-        <button
-          type="button"
-          className="back"
-          onClick={() => dispatch({ type: "end" })}
-          disabled={state.pending}
-        >
-          End session
-        </button>
+        <div className="review-top-actions">
+          {state.index > 0 && (
+            <button
+              type="button"
+              className="back"
+              onClick={() => dispatch({ type: "back" })}
+              disabled={state.pending}
+            >
+              Back
+            </button>
+          )}
+          <button
+            type="button"
+            className="back"
+            onClick={() => dispatch({ type: "end" })}
+            disabled={state.pending}
+          >
+            End session
+          </button>
+        </div>
       </div>
 
-      {prompt.side === "english" ? (
-        <p className="review-prompt">{prompt.text}</p>
-      ) : (
-        <p className="urdu-inline vocab-headword" dir="rtl" lang="ur">
-          {item.urdu}
-        </p>
-      )}
+      {prompt.side === "english" ? <p className="review-prompt">{prompt.text}</p> : urduWord}
 
-      {state.revealed && prompt.side === "english" && (
-        <p className="urdu-inline vocab-headword" dir="rtl" lang="ur">
-          {item.urdu}
-        </p>
-      )}
+      {state.revealed && prompt.side === "english" && urduWord}
 
       {state.revealed && (
         <dl className="entry">
@@ -296,12 +329,11 @@ export function ReviewScreen({
         </dl>
       )}
 
-      {urduShowing && (
-        <button type="button" className="secondary" onClick={() => speak(item.urdu, voice)}>
-          Speak
-        </button>
+      {completed?.kind === "graded" && (
+        <p className="hint" role="status">
+          Recorded: {GRADE_LABELS[completed.grade]}. Choose another grade to correct it.
+        </p>
       )}
-
       {state.error && (
         <p className="error" role="alert">
           {state.error}
@@ -326,14 +358,25 @@ export function ReviewScreen({
             Reveal
           </button>
         )}
-        <button
-          type="button"
-          className="secondary"
-          onClick={() => dispatch({ type: "skip" })}
-          disabled={state.pending}
-        >
-          Skip
-        </button>
+        {completed?.kind === "graded" ? (
+          <button
+            type="button"
+            className="secondary"
+            onClick={() => dispatch({ type: "next" })}
+            disabled={state.pending}
+          >
+            Keep grade
+          </button>
+        ) : (
+          <button
+            type="button"
+            className="secondary"
+            onClick={() => dispatch({ type: "skip" })}
+            disabled={state.pending}
+          >
+            Skip
+          </button>
+        )}
       </div>
     </section>
   );

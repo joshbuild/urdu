@@ -200,6 +200,69 @@ describe("POST /api/vocab/:id/reviews", () => {
   });
 });
 
+describe("PATCH /api/reviews/:id", () => {
+  it("replaces a mistaken grade on the same event and recalculates from its original rung", async () => {
+    const item = await create({ urdu: KITAB });
+    const first = await json<ReviewResponse>(
+      await api("POST", `/api/vocab/${item.id}/reviews`, { grade: "correct", direction: "ur_en" }),
+      201,
+    );
+    const corrected = await json<ReviewResponse>(
+      await api("PATCH", `/api/reviews/${first.event.id}`, { grade: "wrong" }),
+    );
+    const expected = scheduleReview(
+      item,
+      "wrong",
+      "ur_en",
+      first.event.ladder_id,
+      first.event.reviewed_at,
+    );
+    expect(corrected.event).toMatchObject({
+      id: first.event.id,
+      grade: "wrong",
+      step_before: item.ladder_step,
+      step_after: expected.ladder_step,
+      due_after: expected.due_at,
+    });
+    expect(corrected.item).toMatchObject({
+      ladder_step: expected.ladder_step,
+      due_at: expected.due_at,
+      last_reviewed_at: first.event.reviewed_at,
+    });
+    expect(await events()).toEqual([corrected.event]);
+  });
+
+  it("refuses correction after a newer review or a vocab edit", async () => {
+    const item = await create({ urdu: KITAB });
+    const first = await json<ReviewResponse>(
+      await api("POST", `/api/vocab/${item.id}/reviews`, { grade: "correct", direction: "ur_en" }),
+      201,
+    );
+    await api("POST", `/api/vocab/${item.id}/reviews`, { grade: "correct", direction: "ur_en" });
+    expect((await api("PATCH", `/api/reviews/${first.event.id}`, { grade: "wrong" })).status).toBe(
+      409,
+    );
+    const other = await create({ urdu: PANI });
+    const review = await json<ReviewResponse>(
+      await api("POST", `/api/vocab/${other.id}/reviews`, { grade: "correct", direction: "ur_en" }),
+      201,
+    );
+    await env.DB.prepare("UPDATE vocab SET updated_at = ? WHERE id = ?")
+      .bind("2099-01-01T00:00:00.000Z", other.id)
+      .run();
+    expect((await api("PATCH", `/api/reviews/${review.event.id}`, { grade: "wrong" })).status).toBe(
+      409,
+    );
+  });
+
+  it("rejects malformed grades and unknown events", async () => {
+    expect((await api("PATCH", `/api/reviews/${UNKNOWN_ID}`, { grade: "wrong" })).status).toBe(404);
+    expect((await api("PATCH", `/api/reviews/${UNKNOWN_ID}`, { grade: "anything" })).status).toBe(
+      400,
+    );
+  });
+});
+
 describe("review service", () => {
   it("writes nothing when the row changed after it was read", async () => {
     const item = await create({ urdu: KITAB });

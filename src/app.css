@@ -587,6 +587,35 @@ button.danger {
   justify-content: space-between;
 }
 
+.review-top-actions {
+  display: flex;
+  gap: 8px;
+}
+
+button.review-speak-word {
+  display: block;
+  width: 100%;
+  margin: 8px 0;
+  padding: 4px 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  text-align: right;
+  cursor: pointer;
+}
+
+button.review-speak-word:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 2px;
+}
+
+@media (hover: hover) {
+  button.review-speak-word:hover:not(:disabled) {
+    background: transparent;
+    text-decoration: underline;
+  }
+}
+
 .review-top .back {
   width: auto;
 }

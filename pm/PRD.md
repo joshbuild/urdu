@@ -89,8 +89,8 @@ The sponsor already learns Urdu with (a) a ChatGPT "Urdu Coach" project used mai
 
 ### FR-E Review
 - **FR-E1** Session start: choose direction (Urdu to English default, English to Urdu) and see the due count; queue per FR-A7 capped at a per-session limit (default 20, adjustable in Settings). Optional **review ahead** also queues items with `due_at` up to now + a chosen span; grades still count from now (added 2026-09-18, sponsor request during smoke-test-05). The span is a slider that snaps through fixed stops from Now (default) to 1 year (1, 2, 3, 5, 8, 12, 16, 20 hours; 1, 2, 3, 5 days; 1, 2 weeks; 1, 3, 6 months; 1 year), shown beside it with how many more items it adds; the Worker takes it as `ahead_seconds` (0 to one year) and lists upcoming due times for the count (mp03, 2026-09-27).
-- **FR-E2** Card front shows the prompt side with a speak button whenever Urdu is showing; Reveal shows Urdu, Roman, English, notes, example.
-- **FR-E3** Five grade buttons in ladder order (Wrong, Partially correct, Hesitantly correct, Correct, Confidently correct); tapping records via FR-A4 and advances. Skip advances without recording.
+- **FR-E2** Card front shows the prompt side; tapping displayed Urdu speaks it. Reveal shows Urdu, Roman, English, notes, example. There is no separate Speak button on the review card.
+- **FR-E3** Five grade buttons in ladder order (Wrong, Partially correct, Hesitantly correct, Correct, Confidently correct); tapping records via FR-A4 and advances. Skip advances without recording. Back returns to the previous card, including from the end tally. A recorded grade can be replaced: the Worker recalculates from the event's original pre-review schedule and updates that event and item atomically. Correction is refused after an item change or later review. Returning to a skipped card allows it to be graded; keeping a recorded grade advances without another write.
 - **FR-E4** End of session shows counts graded and skipped. No streaks or statistics.
 
 ### FR-F Coach tool contract and handoff
