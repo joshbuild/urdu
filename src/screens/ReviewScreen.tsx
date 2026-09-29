@@ -76,6 +76,11 @@ export function ReviewScreen({
     return () => controller.abort();
   }, [atStart, loadUpcoming]);
 
+  // The tab remounts each time it is selected; the due count may have gone stale meanwhile.
+  useEffect(() => {
+    onChanged();
+  }, [onChanged]);
+
   // Items fall due while the app sits open, and nothing else refetches the counts.
   function refresh() {
     loadUpcoming();
