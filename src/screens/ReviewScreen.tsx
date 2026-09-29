@@ -1,7 +1,7 @@
 // f05: the Review tab — start (FR-E1), card and reveal (FR-E2), grade or skip (FR-E3), tally
 // (FR-E4). The Worker applies each grade (FR-A4); this screen only says which button was tapped.
 
-import { useEffect, useReducer, useState } from "react";
+import { useCallback, useEffect, useReducer, useState } from "react";
 import type {
   DueResponse,
   ReviewDirection,
@@ -59,18 +59,28 @@ export function ReviewScreen({
   const [loading, setLoading] = useState(false);
   const [startError, setStartError] = useState("");
 
+  const loadUpcoming = useCallback((signal?: AbortSignal) => {
+    fetch("/api/vocab/upcoming", { cache: "no-store", signal })
+      .then((response) => (response.ok ? response.json() : null))
+      .then((data: UpcomingResponse | null) => setUpcoming(data))
+      .catch(() => {
+        if (!signal?.aborted) setUpcoming(null);
+      });
+  }, []);
+
   const atStart = state.phase === "start";
   useEffect(() => {
     if (!atStart) return;
     const controller = new AbortController();
-    fetch("/api/vocab/upcoming", { cache: "no-store", signal: controller.signal })
-      .then((response) => (response.ok ? response.json() : null))
-      .then((data: UpcomingResponse | null) => setUpcoming(data))
-      .catch(() => {
-        if (!controller.signal.aborted) setUpcoming(null);
-      });
+    loadUpcoming(controller.signal);
     return () => controller.abort();
-  }, [atStart]);
+  }, [atStart, loadUpcoming]);
+
+  // Items fall due while the app sits open, and nothing else refetches the counts.
+  function refresh() {
+    loadUpcoming();
+    onChanged();
+  }
 
   async function start() {
     setLoading(true);
@@ -131,9 +141,14 @@ export function ReviewScreen({
     return (
       <section className="panel">
         <p className="eyebrow">REVIEW</p>
-        <h2>
-          {status.due.toLocaleString()} {status.due === 1 ? "item is" : "items are"} due.
-        </h2>
+        <div className="due-row">
+          <h2>
+            {status.due.toLocaleString()} {status.due === 1 ? "item is" : "items are"} due.
+          </h2>
+          <button type="button" className="secondary inline" onClick={refresh}>
+            Refresh
+          </button>
+        </div>
         <fieldset className="direction">
           <legend>Direction</legend>
           {(Object.keys(DIRECTION_LABELS) as (keyof typeof DIRECTION_LABELS)[]).map((key) => (

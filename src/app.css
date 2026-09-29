@@ -569,6 +569,18 @@ button.danger {
   margin: 0;
 }
 
+.due-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.due-row h2 {
+  margin: 0;
+}
+
 .review-top {
   display: flex;
   align-items: center;
