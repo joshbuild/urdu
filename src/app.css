@@ -938,6 +938,12 @@ button.link {
   overflow: visible;
 }
 
+/* Weeks run down the page, so cap the width or 13 rows grow very tall on a wide screen. */
+.dash-calendar {
+  max-width: 320px;
+  margin: 0 auto;
+}
+
 .dash-axis {
   display: flex;
   justify-content: space-between;
@@ -1110,4 +1116,16 @@ button.link {
 }
 .dash-heat--4 {
   --swatch: var(--chart-heat-4);
+}
+
+.dash-heat-count {
+  fill: var(--chart-heat-4);
+  font-size: 11px;
+  font-weight: 600;
+  text-anchor: middle;
+}
+
+.dash-heat--3 .dash-heat-count,
+.dash-heat--4 .dash-heat-count {
+  fill: #fff;
 }

@@ -2,7 +2,7 @@
 // themselves come from shared/dash.ts through GET /api/dash; nothing here derives a metric.
 
 import type { BandPoint, CalendarDay, RecallBand, RecallRate } from "../../shared/dash";
-import { weekdayOf } from "../../shared/dates";
+import { addDays, weekdayOf } from "../../shared/dates";
 import { LADDERS } from "../../shared/ladders";
 import { MASTERY_BANDS } from "../../shared/mastery";
 
@@ -40,13 +40,22 @@ export function shortDate(day: string): string {
   return `${d} ${MONTHS[m - 1]}`;
 }
 
-// The calendar as Monday-start columns of seven, null before the first day and after today.
-export function calendarColumns(days: readonly CalendarDay[]): (CalendarDay | null)[][] {
+// The calendar as Monday-start weeks of seven, null before the first day and after today.
+export function calendarWeeks(days: readonly CalendarDay[]): (CalendarDay | null)[][] {
   const first = days[0];
   if (!first) return [];
   const cells: (CalendarDay | null)[] = [...Array(weekdayOf(first.day)).fill(null), ...days];
   while (cells.length % 7 !== 0) cells.push(null);
   return Array.from({ length: cells.length / 7 }, (_, i) => cells.slice(i * 7, i * 7 + 7));
+}
+
+// A week's row heading: its Monday as "Sep 2", even when that Monday is padding.
+export function weekLabel(week: readonly (CalendarDay | null)[]): string {
+  const i = week.findIndex((d) => d !== null);
+  const day = week[i];
+  if (!day) return "";
+  const [, m, d] = addDays(day.day, -i).split("-").map(Number) as [number, number, number];
+  return `${MONTHS[m - 1]} ${d}`;
 }
 
 // One closed path per band, Permanent at the bottom and New on top, so growth in what is known

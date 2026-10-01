@@ -57,7 +57,7 @@ All six are pure functions in `shared/` (new `shared/dash.ts`) over the full `vo
   - **Ladder hint**, from the recognition rate (production shown alongside): > 90% → "Recall is high: a wider ladder would mean fewer reviews", or on Very wide (id 11) "Recall is high, on the widest ladder"; 80–90% → "On target"; < 80% → "Recall is low: try a denser ladder or add fewer new words", or on Very dense (id 7) "Recall is low: add fewer new words for a while". The server returns the band (`high` / `on_target` / `low` / `insufficient`); the client words it.
 - **J4 Trouble items**: items with ≥ 2 lapses in the last 30 days (any direction, any prompt support), ordered by lapse count desc, latest lapse desc, then `urdu`; at most 8. Each row: Urdu, English, lapse count, current band name; tapping it calls `openVocab(id)`. None → "No trouble items in the last 30 days".
 - **J5 Learning backlog**: now = items in bands 0–2 (New, Learning, Basic). Per week, the last 8 weeks including the current partial one: items added (`added_at`), and distinct items with an event crossing `interval_before` < 14 d → `interval_after` ≥ 14 d.
-- **J6 Review calendar**: 84 HOME_TZ days ending today, Monday-start columns, shaded by that day's review events (any source) in five steps: 0, 1–9, 10–19, 20–39, 40+.
+- **J6 Review calendar**: 84 HOME_TZ days ending today, Monday-start weeks as rows under a Mo–Su header, each headed by its Monday ("Sep 2") with the day's count in its chip (blank for 0), shaded by that day's review events (any source) in five steps: 0, 1–9, 10–19, 20–39, 40+.
 
 ### API and UI
 

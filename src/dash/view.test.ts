@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { BandPoint, CalendarDay } from "../../shared/dash";
-import { calendarColumns, percent, recallHint, shortDate, stackedAreas } from "./view";
+import { calendarWeeks, percent, recallHint, shortDate, stackedAreas, weekLabel } from "./view";
 
 describe("recallHint", () => {
   it("words each band, with the ladder ends", () => {
@@ -28,28 +28,34 @@ describe("shortDate", () => {
   });
 });
 
-describe("calendarColumns", () => {
+describe("calendarWeeks", () => {
   const days = (start: string, n: number): CalendarDay[] =>
     Array.from({ length: n }, (_, i) => {
       const d = new Date(Date.parse(`${start}T00:00:00Z`) + i * 86_400_000);
       return { day: d.toISOString().slice(0, 10), count: 0, level: 0 };
     });
 
-  it("puts each day in a Monday-start column, padding before the first and after today", () => {
+  it("puts each day in a Monday-start week, padding before the first and after today", () => {
     // 2026-07-10 is a Friday; 84 days later ends Thursday 2026-10-01.
-    const cols = calendarColumns(days("2026-07-10", 84));
-    expect(cols).toHaveLength(13);
-    expect(cols.every((c) => c.length === 7)).toBe(true);
-    expect(cols[0]?.slice(0, 4)).toEqual([null, null, null, null]);
-    expect(cols[0]?.[4]?.day).toBe("2026-07-10");
-    expect(cols[12]?.[3]?.day).toBe("2026-10-01");
-    expect(cols[12]?.slice(4)).toEqual([null, null, null]);
+    const weeks = calendarWeeks(days("2026-07-10", 84));
+    expect(weeks).toHaveLength(13);
+    expect(weeks.every((c) => c.length === 7)).toBe(true);
+    expect(weeks[0]?.slice(0, 4)).toEqual([null, null, null, null]);
+    expect(weeks[0]?.[4]?.day).toBe("2026-07-10");
+    expect(weeks[12]?.[3]?.day).toBe("2026-10-01");
+    expect(weeks[12]?.slice(4)).toEqual([null, null, null]);
   });
 
-  it("is exactly 12 columns when today is a Sunday", () => {
-    const cols = calendarColumns(days("2026-07-13", 84));
-    expect(cols).toHaveLength(12);
-    expect(cols.flat().every((c) => c !== null)).toBe(true);
+  it("is exactly 12 weeks when today is a Sunday", () => {
+    const weeks = calendarWeeks(days("2026-07-13", 84));
+    expect(weeks).toHaveLength(12);
+    expect(weeks.flat().every((c) => c !== null)).toBe(true);
+  });
+
+  it("heads each week with its Monday, padding included", () => {
+    const weeks = calendarWeeks(days("2026-07-10", 84));
+    expect(weekLabel(weeks[0] ?? [])).toBe("Jul 6");
+    expect(weekLabel(weeks[12] ?? [])).toBe("Sep 28");
   });
 });
 

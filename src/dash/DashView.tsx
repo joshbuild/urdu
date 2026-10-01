@@ -5,7 +5,7 @@
 import type { DashResponse } from "../../shared/api";
 import { MIN_RECALL_SAMPLE, type RecallRate } from "../../shared/dash";
 import { bandName, MASTERY_BANDS } from "../../shared/mastery";
-import { calendarColumns, percent, recallHint, shortDate, stackedAreas } from "./view";
+import { calendarWeeks, percent, recallHint, shortDate, stackedAreas, weekLabel } from "./view";
 
 type Props = { dash: DashResponse; onOpenVocab: (id: string) => void };
 
@@ -311,17 +311,14 @@ export function BacklogCard({ dash }: { dash: DashResponse }) {
 
 // J6
 export function CalendarCard({ dash }: { dash: DashResponse }) {
-  const columns = calendarColumns(dash.calendar);
-  const cell = 16;
-  const pitch = 20;
-  const left = 30;
-  const w = left + columns.length * pitch;
-  const h = 7 * pitch;
-  const labels: [number, string][] = [
-    [0, "Mon"],
-    [2, "Wed"],
-    [4, "Fri"],
-  ];
+  const weeks = calendarWeeks(dash.calendar);
+  const cell = 24;
+  const pitch = 28;
+  const left = 44;
+  const top = 18;
+  const w = left + 6 * pitch + cell;
+  const h = top + weeks.length * pitch - (pitch - cell);
+  const labels = ["Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"];
   return (
     <section className="panel dash-card" aria-labelledby="dash-calendar">
       <p className="eyebrow" id="dash-calendar">
@@ -333,28 +330,41 @@ export function CalendarCard({ dash }: { dash: DashResponse }) {
         role="img"
         aria-label="Reviews per day over the last 12 weeks"
       >
-        {labels.map(([row, text]) => (
-          <text key={text} className="dash-tick dash-tick--start" x={0} y={row * pitch + 13}>
+        {labels.map((text, c) => (
+          <text key={text} className="dash-tick" x={left + c * pitch + cell / 2} y={12}>
             {text}
           </text>
         ))}
-        {columns.map((col, c) =>
-          col.map((d, r) =>
-            d ? (
-              <rect
-                key={d.day}
-                className={`dash-heat dash-heat--${d.level}`}
-                x={left + c * pitch}
-                y={r * pitch}
-                width={cell}
-                height={cell}
-                rx={3}
-              >
-                <title>{`${shortDate(d.day)}: ${plural(d.count, "review", "reviews")}`}</title>
-              </rect>
-            ) : null,
-          ),
-        )}
+        {weeks.map((week, r) => (
+          <g key={weekLabel(week)}>
+            <text className="dash-tick dash-tick--start" x={0} y={top + r * pitch + cell / 2 + 4}>
+              {weekLabel(week)}
+            </text>
+            {week.map((d, c) =>
+              d ? (
+                <g key={d.day} className={`dash-heat dash-heat--${d.level}`}>
+                  <title>{`${shortDate(d.day)}: ${plural(d.count, "review", "reviews")}`}</title>
+                  <rect
+                    x={left + c * pitch}
+                    y={top + r * pitch}
+                    width={cell}
+                    height={cell}
+                    rx={4}
+                  />
+                  {d.count > 0 ? (
+                    <text
+                      className="dash-heat-count"
+                      x={left + c * pitch + cell / 2}
+                      y={top + r * pitch + cell / 2 + 4}
+                    >
+                      {d.count}
+                    </text>
+                  ) : null}
+                </g>
+              ) : null,
+            )}
+          </g>
+        ))}
       </svg>
       <p className="dash-axis dash-axis--end">
         <span>Less</span>

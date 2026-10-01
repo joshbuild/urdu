@@ -2,7 +2,11 @@
 
 ## Current state
 
-s01–s04 built 2026-10-01 (`0b58aa6`, `7eb3514`, `0501e1f`, `4625e56`); `pnpm check` green at 645. Done When 1–3 hold; 4 is the sponsor's phone run of `smoke-tests/smoke-test-16.md` after deploy (no migration), then `/pm-close f16`.
+s01–s04 built 2026-10-01 (`0b58aa6`, `7eb3514`, `0501e1f`, `4625e56`), calendar reworked in 261001c; `pnpm check` green at 646. Done When 1–3 hold; 4 is the sponsor's phone run of `smoke-tests/smoke-test-16.md` after deploy (no migration), then `/pm-close f16`.
+
+## 261001c
+
+The sponsor asked for the review calendar's axes flipped (weekdays as columns, labelled Mo Tu We Th Fr Sa Su), then for row headings naming each week's Monday ("Sep 2") and each day's review count inside its chip. `calendarColumns` became `calendarWeeks` (same output, now rendered as rows); new `weekLabel` in `src/dash/view.ts`, tested on padded first and last weeks. Cells grew to 24 units with counts in 11 px bold (white on the two darkest steps, blank for 0); the SVG is capped at 320 px wide and centred so 13 rows stay a sensible height. Rendered through `renderToStaticMarkup` with the real `app.css` and screenshotted in headless Edge at 360 px: labels, counts and padding cells read cleanly. J6 in `f16-dash.md` updated. `pnpm check` green at 646.
 
 ## 261001b
 

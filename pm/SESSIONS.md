@@ -7,6 +7,7 @@
 
 ## Log
 *Newest at top.*
+- 261001c · f16 dash · sponsor asked to flip the review calendar: weekdays as Mo–Su columns, weeks as rows headed by their Monday ("Sep 2"), review counts in the chips; checked headless at 360 px; `pnpm check` green at 646 → `features/f16-dash-journal.md`
 - 261001b · f16 dash · orchestrated s01–s04: `shared/dash.ts` derivations, `GET /api/dash`, the Dash tab with SVG charts, smoke-test-16; reviews caught a percent/hint contradiction, label collisions and test gaps; `pnpm check` green at 645; phone smoke next → `features/f16-dash-journal.md`
 - 261001a · f16 dash · sponsor asked for a motivating, useful dashboard; proposed six elements and a cut list; sponsor set Known at 14 d, kept the calendar without streaks, chose a sixth tab (DECISIONS 261001a, PRD FR-J). Opened and stress-tested (14 resolved, 2 escalated: no mock gate, tab after Review); no code yet → `features/f16-dash-journal.md`
 - 260929a · f15 review-correction · built guarded regrading, Back on review cards and end tally, and tap-to-speak Urdu; `pnpm check` green (589 tests); phone smoke next → `features/f15-review-correction-journal.md`
