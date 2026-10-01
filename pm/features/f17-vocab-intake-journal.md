@@ -1,5 +1,55 @@
 # f17 vocab-intake — journal
 
+**Current state (2026-10-01):** s01–s06 built, s07 doc ripple written; `pnpm check` green at 739. Migration 0007 is local only. Owed to the sponsor: `scripts/smoke.ts` against `pnpm dev`, then back up, apply 0005–0007 remotely, deploy, and run smoke-test-17 over two days.
+
+## 261001e
+
+Orchestrated run, s01–s07. The sponsor chose to build on main ahead of the pending 0005/0006 deploy, so any deploy from here carries f17 and 0007.
+
+**s01** (`2d4e8ce`) added migration 0007:
+- the `sources` and `harvests` tables, plus `vocab.harvest_id` and `released_at`;
+- a backfill setting `released_at` to `added_at`.
+
+The due predicate now excludes queued items and orders `due_at` nulls last. `createVocab` takes `queued`/`harvestId`, the Airtable insert releases at `added_at`, a tracked review releases via `coalesce`, and the export carries the new tables. Tests were written first, with 6 assertion reds (e.g. `expected null to be '2026-10-01T20:11:42.926Z'`). Three existing tests changed for the FR-A7 order and the export keys, and `pnpm check` then went red on the schema test's exact table list, which was fixed. On a local copy (38 rows), 0007 released every row at its `added_at` and queued none. The `scripts/smoke.ts` run against `pnpm dev` was not done: reading the secret from `.dev.vars` was denied, so it is owed to the sponsor. Review found no bugs. It found one gap (the Airtable release was untested), now pinned.
+
+**s02** (`db17166`) added:
+- `worker/domain/intake.ts`: the top-up with its claim, Intake, Release one and the batch size;
+- `/api/intake/release` and `/api/vocab/:id/release`;
+- the intake counts on status;
+- the top-up at the status, due, dash and voice call sites.
+
+The red was route 404s and `status.intake` undefined. The domain top-up tests passed on their first run, because `intake.ts` had been written before them. Review found the concurrency test passed even without the SQL claim guard (the second call saw a full pile anyway). The write half was split out as `claimAndRelease` and tested against a stale claim. A voice due-tool test was added, and the `updated_at` assertions were made meaningful by backdating.
+
+**s03** (`528f72d`) added source and harvest CRUD, the overview, the details and the harvest paste. 23 reds (`expected 404 to be 201`) went green on the first build. Review found that `http:x.test` passed the URL check, which would make a second source for the same page. The check now requires `//`, and PATCH validation tests were added.
+
+**s04** (`92e620f`): the Dash leaves queued items out of J1, J2 and J5, and J5 counts `started` by `released_at`. It had 4 reds.
+
+**s05** (`6b3eb04`): the Harvest tab, the tank, the moved round trip and the tab swap. The tabs test went red first; the tank and request modules were written alongside their tests. The headless 360 px check used `renderToStaticMarkup` in a 360 px iframe, with `preloaded` props added so views render without fetching. Nothing was clipped, and the six tabs fit.
+
+On re-reading `VocabDetail`, the agent noticed that the CSRF `requireJson` guard returns 415 on a bodyless DELETE, which the Harvest deletes would have hit on the phone; the review had missed it. Review also found:
+- a stale `SourceView` after opening another source;
+- no Back while a harvest fails to load;
+- the delete error showing outside its sheet;
+- the 401 wording;
+- labels on a repeated paste.
+
+All were fixed.
+
+**s06** (`472891e`):
+- the Review start counts, the compact tank and Intake;
+- a Queued badge, a Queued only filter (Worker `?queued=true`, with a red of `expected 4 to be 3`) and Release now;
+- New words per day.
+
+A headless check showed "10 / new" breaking in the heading, so each count is now joined to its word with a no-break space. Review found a double tap on Intake could release two batches (the button re-enabled before the refreshed counts arrived), now held until the status changes. It also found shared Release/Delete busy labels.
+
+**s07** (`ba09dd0`) rippled the change into:
+- PRD: FR-A6/A7, D1/D2, E1, F6, I1, J1/J2/J5, FR-K (built) and Appendix A;
+- AGENTS: the invariant, Project state and the PWA component;
+- CHANGELOG;
+- smoke-test-17;
+- smoke-test-16's tab line;
+- the Project instructions' note.
+
 ## 261001d
 
 Sponsor note: harvesting a big batch on the weekend of 2026-09-26 overloaded review. Asked for a

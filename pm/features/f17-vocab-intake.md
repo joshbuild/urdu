@@ -332,3 +332,10 @@ the sponsor can see which stories have been harvested and how far each harvest h
   and the new-after-due order would hide the words it pulls in.
 - 2026-10-01 — Dash J1/J5 count items from `released_at`, so the backlog measures words in
   review, not words waiting.
+- 2026-10-01 (build) — A source URL must start `http://` or `https://` literally. The URL parser
+  also accepts `http:x.test`, which would make a second source for the same page, because
+  matching is exact.
+- 2026-10-01 (build) — **Queued only** and **Due only** clear each other: they narrow to
+  disjoint sets.
+- 2026-10-01 (build) — Intake stays disabled until the refreshed status arrives, so a double tap
+  can't release a second batch against the old offer.
