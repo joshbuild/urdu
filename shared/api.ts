@@ -1,6 +1,7 @@
 // Request and response shapes for the /api vocab, review and export routes (f01 s05, s06). Field names match the
 // D1 columns and the Coach contract (snake_case).
 
+import type { Dash } from "./dash";
 import type { Ladder } from "./ladders";
 import type { Grade, LegacyLevel } from "./mastery";
 import type { VocabKind } from "./normalize";
@@ -148,6 +149,10 @@ export type ExportResponse = {
   tags: Tag[];
   handoffs: Handoff[];
 };
+
+// f16 (FR-J): the Dash's six blocks, derived by shared/dash.ts. The active ladder lets the client
+// word the recall hint at either end of the ladder range.
+export type DashResponse = Dash & { active_ladder_id: number; generated_at: string };
 
 export type DuplicateResponse = { error: "duplicate"; existing_id: string };
 export type ConflictResponse = { error: "conflict"; message: string };

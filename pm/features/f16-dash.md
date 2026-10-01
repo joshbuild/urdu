@@ -69,9 +69,9 @@ All six are pure functions in `shared/` (new `shared/dash.ts`) over the full `vo
 
 ### Testing
 
-- `shared/dash.test.ts`: Known edge (exactly 14 d counts; never-reviewed excluded); band replay before the first event, between events, and for event-less imports; forecast split of overdue/new/today across a HOME_TZ midnight and a DST change; recall filters (`due_before` null, prompt support, 30-day edge), direction split, min-sample cut-off, and the hint bands at both ladder ends; trouble threshold, order and cap; backlog week bucketing and Known crossings; calendar steps and the 84-day window.
+- `shared/dash.test.ts`: Known edge (exactly 14 d counts; never-reviewed excluded); band replay before the first event, between events, and for event-less imports; forecast split of overdue/new/today across a HOME_TZ midnight and a DST change; recall filters (`due_before` null, prompt support, 30-day edge), direction split, min-sample cut-off, and the recall bands; trouble threshold, order and cap; backlog week bucketing and Known crossings; calendar steps and the 84-day window.
 - Worker (`test/dash.test.ts`): 401 without a session; empty vault; a seeded vault returns the expected blocks; the route leaves `vocab` and `review_events` unchanged.
-- Client: the Dash renders empty, sparse (2 days, below min sample) and full fixtures; tapping a trouble item calls `openVocab`.
+- Client: the Dash renders empty, sparse (2 days, below min sample) and full fixtures; tapping a trouble item calls `openVocab`; the hint wording at both ladder ends (Very dense id 7, Very wide id 11), which only the client knows.
 - Visual (agent): render the Dash from the three fixtures to static HTML with `app.css` in the scratchpad and screenshot headless at 360 px.
 
 ### Done When
@@ -112,3 +112,7 @@ All six are pure functions in `shared/` (new `shared/dash.ts`) over the full `vo
 - 2026-10-01 — The server returns the recall band and the client words the hint, so wording changes need no API change.
 - 2026-10-01 — Two full-table reads in the Worker, not SQL aggregates: the derivations stay pure, testable functions in `shared/`, and the scan is cheap at this size.
 - 2026-10-01 — Sponsor: no mock gate before s03; the Dash tab goes after Review, and Read stays the default tab.
+- 2026-10-01 (s01) — The band history's today point uses each item's current band, not the replayed one, so it always matches the Known headline and the Vocab tab after a step correction or check reset (neither records an event). A jump between yesterday and today is the honest picture.
+- 2026-10-01 (s01) — Beyond 90 days the history is a point every 7 days counting back from today, not Monday-aligned: the last point is always today. The Monday week applies to the backlog and calendar.
+- 2026-10-01 (s01) — Trouble ties on lapses and latest lapse sort by `urdu` code point, not a locale collation: deterministic in Node and workerd alike.
+- 2026-10-01 (s02) — Cost: `buildDash` on 800 items × 5,000 events runs 21–30 ms warm and about 60 ms cold in Node, inside the plan's 100 ms trigger, after memoising the home day per 15-minute slot. The Workers free plan's 10 ms CPU cap is the open risk; the phone smoke checks that the route loads. SQL aggregates are the fallback.

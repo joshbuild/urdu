@@ -14,6 +14,7 @@ import { requireJson, requireSession } from "./auth/middleware";
 import type { AppEnv } from "./env";
 import { adminRoutes } from "./routes/api-admin";
 import { lockRoutes, unlockRoutes } from "./routes/api-auth";
+import { dashRoutes } from "./routes/api-dash";
 import { handoffRoutes } from "./routes/api-handoff";
 import { reviewRoutes } from "./routes/api-review";
 import { settingsRoutes } from "./routes/api-settings";
@@ -36,6 +37,7 @@ app.route("/", handoffRoutes);
 app.route("/", vocabRoutes);
 app.route("/", reviewRoutes);
 app.route("/", settingsRoutes);
+app.route("/", dashRoutes);
 app.route("/", adminRoutes);
 app.route("/", voiceRoutes);
 
