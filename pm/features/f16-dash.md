@@ -1,6 +1,6 @@
 # Feature Plan — Dash
 
-**Status**: 🟡 IN PROGRESS — opened 2026-10-01; s01 next
+**Status**: 🟡 IN PROGRESS — opened and stress-tested 2026-10-01; s01 next
 **Handle**: `f16`
 **Created**: *2026-10-01* · **Updated**: *2026-10-01*
 
@@ -48,44 +48,67 @@ Six elements (FR-J1–J6), top to bottom:
 
 ### Metric definitions
 
-- **Recall event**: a review event with `due_before` not null (the item had been reviewed before) and `prompt_support = 'none'`, source PWA or Coach. **Recalled** = `hesitant`, `correct` or `confident`; `wrong` and `partial` are lapses. Recognition = `ur_en`; production = `en_ur` + `oral`. Minimum sample: 30 events per direction.
-- **Band history**: replay each item's events in order (`interval_after`) from `added_at`; items imported from Airtable start on their imported interval at `added_at`. One point per HOME_TZ day.
-- **Reaching Known** in a week: an event whose `interval_before` < 14 d and `interval_after` ≥ 14 d.
-- **Overdue**: `due_at` ≤ now, plus never-reviewed items (null `due_at`).
+All six are pure functions in `shared/` (new `shared/dash.ts`) over the full `vocab` and `review_events` rows plus `now` and HOME_TZ. HOME_TZ days come from `todayIn`/`addDays` (`shared/dates.ts`); a week starts Monday. "Lapse" = `wrong` or `partial`.
+
+- **J1 Known**: items with `last_reviewed_at` not null and current `interval_seconds` ≥ `KNOWN_MIN_SECONDS` (14 d, new constant in `shared/mastery.ts`). An overdue item still counts: the interval is the schedule's claim, and overdue load shows in J2.
+  - **Band history**: an item exists from its `added_at` day. Its band on day D is `bandForInterval(interval_after)` of its last event on or before the end of D. Before its first event it is New if that event's `due_before` is null, else `bandForInterval(interval_before)`. An item with no events uses its current `masteryBand`. Range: from the day of the earliest review event (today if none) to today; one point per day up to 90 days, per week beyond. Drawn once there are ≥ 2 days; before that, the headline alone with "History builds as you review".
+- **J2 Due forecast**: **Overdue** = `due_at` ≤ now. **New** = never reviewed (`due_at` null), its own count, not overdue. Then one bar per HOME_TZ day by `due_at`: today (now → end of today) and the next 13 days.
+- **J3 Recall rate**: events in the last 30 days (`reviewed_at` ≥ now − 30 d) with `due_before` not null and `prompt_support = 'none'`, any source. Recalled = `hesitant`, `correct`, `confident`. Recognition = `ur_en`; production = `en_ur` + `oral`. Review-ahead events count. Each direction shows rate and `n`; below 30 events it shows "not enough reviews yet (n)" and no hint.
+  - **Ladder hint**, from the recognition rate (production shown alongside): > 90% → "Recall is high: a wider ladder would mean fewer reviews", or on Very wide (id 11) "Recall is high, on the widest ladder"; 80–90% → "On target"; < 80% → "Recall is low: try a denser ladder or add fewer new words", or on Very dense (id 7) "Recall is low: add fewer new words for a while". The server returns the band (`high` / `on_target` / `low` / `insufficient`); the client words it.
+- **J4 Trouble items**: items with ≥ 2 lapses in the last 30 days (any direction, any prompt support), ordered by lapse count desc, latest lapse desc, then `urdu`; at most 8. Each row: Urdu, English, lapse count, current band name; tapping it calls `openVocab(id)`. None → "No trouble items in the last 30 days".
+- **J5 Learning backlog**: now = items in bands 0–2 (New, Learning, Basic). Per week, the last 8 weeks including the current partial one: items added (`added_at`), and distinct items with an event crossing `interval_before` < 14 d → `interval_after` ≥ 14 d.
+- **J6 Review calendar**: 84 HOME_TZ days ending today, Monday-start columns, shaded by that day's review events (any source) in five steps: 0, 1–9, 10–19, 20–39, 40+.
+
+### API and UI
+
+- `GET /api/dash` (session cookie, like the other `/api/*` reads) returns `DashResponse` (in `shared/api.ts`): the six blocks plus `active_ladder_id` and `generated_at`. The Worker reads `vocab` and `review_events` in full and runs `shared/dash.ts`. Revisit with SQL aggregates if the route exceeds 100 ms locally on a 5,000-event fixture.
+- Read-only: the route writes nothing; no D1 migration.
+- **Tab**: `dash`, label "Dash", order Read · Vocab · Review · Dash · Voice · Settings; Read stays the default. If six labels crowd at 360 px, tighten tab padding or font; no icon set (no new dependency).
+- Fetched each time the tab opens (as Review refreshes its due count), with loading text and an error line with Retry. Each element owns its empty state; an empty vault shows all six without errors.
+- Charts are hand-written SVG React components in `src/dash/`, coloured from new chart tokens on the app's `:root`. The app has a light theme only; no dark mode is added. No chart library.
 
 ### Testing
 
-- `shared/`: recall classification and split, band replay, Known crossing, forecast bucketing across a HOME_TZ day boundary and DST, trouble ranking ties.
-- Worker: `GET /api/dash` against seeded vocab and events; empty vault; requires a session.
-- Client: Dash renders the sparse first weeks (short history, below-minimum recall) without broken charts.
-- Phone: six tabs fit the bar; each chart reads at phone width in light and dark; tapping a trouble item opens it on Vocab.
+- `shared/dash.test.ts`: Known edge (exactly 14 d counts; never-reviewed excluded); band replay before the first event, between events, and for event-less imports; forecast split of overdue/new/today across a HOME_TZ midnight and a DST change; recall filters (`due_before` null, prompt support, 30-day edge), direction split, min-sample cut-off, and the hint bands at both ladder ends; trouble threshold, order and cap; backlog week bucketing and Known crossings; calendar steps and the 84-day window.
+- Worker (`test/dash.test.ts`): 401 without a session; empty vault; a seeded vault returns the expected blocks; the route leaves `vocab` and `review_events` unchanged.
+- Client: the Dash renders empty, sparse (2 days, below min sample) and full fixtures; tapping a trouble item calls `openVocab`.
+- Visual (agent): render the Dash from the three fixtures to static HTML with `app.css` in the scratchpad and screenshot headless at 360 px.
 
 ### Done When
 
-1. Focused tests and `pnpm check` pass.
-2. Sponsor verifies `smoke-tests/smoke-test-16.md` on the installed phone after deployment.
+1. `shared/dash.test.ts`, the worker test and the client tests pass, then `pnpm check` is green. *(s01–s03)*
+2. Headless 360 px screenshots of the empty, sparse and full fixtures show no overlapping or clipped text, axes or bars. *(s03; agent eyeball, owed)*
+3. AGENTS Project state, CHANGELOG and `smoke-tests/smoke-test-16.md` are written; PRD FR-J is marked built. *(s04)*
+4. Sponsor runs smoke-test-16 on the installed phone after deploy (no migration): six tabs fit; each element reads sensibly; Known and the backlog are plausible against the Vocab tab; grading one due item then reopening Dash moves today's calendar cell and the forecast; a trouble item opens on Vocab. *(s04; sponsor eyeball, owed)*
 
 ### Roadmap
 
-- **s01** `shared/` metric derivations and `GET /api/dash`, with tests.
-- **s02** Dash tab: layout mock first (both themes, phone width), then the six elements as SVG.
-- **s03** Docs (AGENTS Project state, changelog), smoke-test-16, deploy and phone verification.
+- **s01** `KNOWN_MIN_SECONDS` and `shared/dash.ts`, with `shared/dash.test.ts`. No I/O.
+- **s02** `DashResponse` in `shared/api.ts`, `GET /api/dash`, worker test. Needs s01.
+- **s03** Dash tab: wiring, SVG chart components, the six sections with loading/error/empty states, client tests, headless check. Needs s02. No mock gate (sponsor, 2026-10-01).
+- **s04** Docs and smoke-test-16; the sponsor deploys and runs it on the phone.
 
 ## Status
 
 ### Recently Completed
 
-- 2026-10-01 — Proposal agreed with the sponsor; DECISIONS 261001a, PRD FR-J, PLAN and STATUS updated; f16 opened.
+- 2026-10-01 — Proposal agreed with the sponsor; DECISIONS 261001a, PRD FR-J, PLAN and STATUS updated; f16 opened. Stress-tested the same day: metric definitions pinned, the first slice split into derivations (s01) and route (s02), Done When made checkable.
 
 ### Next Steps
 
-- s01: add `KNOWN_MIN_SECONDS` and the metric functions in `shared/`, then the Worker route.
+- s01: `KNOWN_MIN_SECONDS` and `shared/dash.ts` with `shared/dash.test.ts`.
 
 ### Open Questions
 
-- Should review-ahead events (reviewed before `due_before`) count towards the recall rate? They are easier than on-time reviews and inflate it; mp03 makes them common. Leaning: count them, and revisit if the rate sits above the band.
-- Six tabs on the phone bar: check the fit in s02; shorten labels or use icons if it crowds.
+- None blocking.
 
 ## Decisions
 
 - 2026-10-01 — A Hesitantly correct grade counts as recalled for the recall rate: the answer was produced, and its delta (0) keeps the item in place rather than demoting it. This is the usual pass/fail line for SRS retention targets.
+- 2026-10-01 — Review-ahead events count towards the recall rate. Excluding them needs a cut-off for "early" that mp03's hour-level spans make arbitrary, and the rate is computed, never stored, so this is a one-commit change if the rate sits above the band.
+- 2026-10-01 — Never-reviewed items show as New beside the forecast, not as overdue: they are intake, not a missed schedule.
+- 2026-10-01 — Known counts an overdue item: the interval is the schedule's claim, and overdue load is J2's job.
+- 2026-10-01 — Trouble needs ≥ 2 lapses in 30 days; one miss is ordinary forgetting.
+- 2026-10-01 — The server returns the recall band and the client words the hint, so wording changes need no API change.
+- 2026-10-01 — Two full-table reads in the Worker, not SQL aggregates: the derivations stay pure, testable functions in `shared/`, and the scan is cheap at this size.
+- 2026-10-01 — Sponsor: no mock gate before s03; the Dash tab goes after Review, and Read stays the default tab.

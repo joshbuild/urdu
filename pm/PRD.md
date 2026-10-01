@@ -122,9 +122,9 @@ The sponsor already learns Urdu with (a) a ChatGPT "Urdu Coach" project used mai
 ### FR-J Dash *(f16, planned 2026-10-01, DECISIONS 261001a)*
 A sixth tab, **Dash**, read-only. Every element measures knowledge rather than activity and points at a next action. Metrics are derived in `shared/` from `vocab` and `review_events` and served by one Worker read; viewing the Dash changes nothing. Days are HOME_TZ calendar days.
 - **FR-J1** **Known**: the count of items whose current interval is 14 days or more, with a chart of item counts per mastery band (FR-A2) over time.
-- **FR-J2** **Due forecast**: items falling due on each of the next 14 days, preceded by the count overdue now.
+- **FR-J2** **Due forecast**: items falling due today and on each of the next 13 days, preceded by the count overdue now and, separately, the count never reviewed.
 - **FR-J3** **Recall rate**: the share of tracked reviews of previously reviewed items, without prompt support, graded Hesitantly correct or better, over the last 30 days, split recognition (`ur_en`) vs production (`en_ur`, `oral`). It shows a target band and a one-line ladder hint, and shows the sample size and "not enough reviews yet" below a minimum sample.
-- **FR-J4** **Trouble items**: up to 8 items with the most Wrong or Partially correct grades in the last 30 days; each opens on the Vocab tab.
+- **FR-J4** **Trouble items**: up to 8 items with two or more Wrong or Partially correct grades in the last 30 days, most first; each opens on the Vocab tab.
 - **FR-J5** **Learning backlog**: items in New, Learning or Basic now, with items added and items reaching Known per week.
 - **FR-J6** **Review calendar**: 12 weeks of days shaded by tracked reviews. No streak count.
 
