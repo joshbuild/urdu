@@ -101,7 +101,7 @@ describe("GET /api/dash", () => {
       { id: shaky.id, urdu: PANI, english: "a word", lapses: 2, band: expect.any(Number) },
     ]);
     expect(dash.backlog.now).toBe(2);
-    expect(dash.backlog.weeks.at(-1)?.added).toBe(3);
+    expect(dash.backlog.weeks.at(-1)?.started).toBe(3);
     expect(dash.calendar.at(-1)).toEqual({ day: dash.today, count: 2, level: 1 });
     expect(fresh.id).toBeTruthy();
   });

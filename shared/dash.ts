@@ -1,6 +1,8 @@
 // The Dash's derivations (f16, PRD FR-J1–J6). Pure functions over the whole vault and its review
 // history: the Worker reads both tables and calls buildDash, the client only draws the result.
-// Days are home-timezone calendar days; weeks start on Monday. Nothing here writes.
+// Days are home-timezone calendar days; weeks start on Monday. Nothing here writes. Queued items
+// (f17, released_at null) are words waiting, not words in review: the vault-state blocks (J1, J2,
+// J5) leave them out, and an item exists from its released_at day.
 
 import type { ReviewEvent, VocabItem } from "./api";
 import { addDays, dateIn, weekdayOf } from "./dates";
@@ -16,7 +18,14 @@ import {
 
 export type DashVocab = Pick<
   VocabItem,
-  "id" | "urdu" | "english" | "added_at" | "interval_seconds" | "last_reviewed_at" | "due_at"
+  | "id"
+  | "urdu"
+  | "english"
+  | "added_at"
+  | "released_at"
+  | "interval_seconds"
+  | "last_reviewed_at"
+  | "due_at"
 >;
 export type DashEvent = Pick<
   ReviewEvent,
@@ -42,7 +51,8 @@ export type TroubleItem = {
   lapses: number;
   band: MasteryBand;
 };
-export type BacklogWeek = { week: string; added: number; known: number };
+// started: items released into review that week (f17; was items added).
+export type BacklogWeek = { week: string; started: number; known: number };
 export type CalendarLevel = 0 | 1 | 2 | 3 | 4;
 export type CalendarDay = { day: string; count: number; level: CalendarLevel };
 
@@ -127,16 +137,18 @@ export function buildDash(
     .map((e) => ({ ...e, ms: Date.parse(e.reviewed_at), day: day(e.reviewed_at) }))
     .sort((a, b) => a.ms - b.ms);
 
+  const released = vocab.filter((v) => v.released_at !== null);
+
   return {
     today,
     known: {
-      count: vocab.filter(isKnown).length,
-      history: bandHistory(vocab, timeline, today, day),
+      count: released.filter(isKnown).length,
+      history: bandHistory(released, timeline, today, day),
     },
-    forecast: forecast(vocab, nowMs, today, day),
+    forecast: forecast(released, nowMs, today, day),
     recall: recall(timeline, windowStartMs),
     trouble: trouble(byId, timeline, windowStartMs),
-    backlog: backlog(vocab, timeline, today, day),
+    backlog: backlog(released, timeline, today, day),
     calendar: calendar(timeline, today),
   };
 }
@@ -161,7 +173,8 @@ function daysBetween(from: string, to: string): number {
 }
 
 // J1: items per band on each day, replayed from events. Today's point is the current schedule, so
-// it always matches the headline even after a step correction (which records no event).
+// it always matches the headline even after a step correction (which records no event). Takes
+// released items only; each counts from its released_at day.
 function bandHistory(
   vocab: readonly DashVocab[],
   timeline: readonly TimedEvent[],
@@ -181,7 +194,7 @@ function bandHistory(
 
   const points = days.map((d) => ({ day: d, bands: emptyBands() }));
   for (const v of vocab) {
-    const addedDay = day(v.added_at);
+    const addedDay = day(v.released_at as string);
     const own = eventsOf.get(v.id) ?? [];
     const current = masteryBand(v);
     const firstEvent = own[0];
@@ -205,7 +218,8 @@ function bandHistory(
   return points;
 }
 
-// J2: overdue (due now or earlier), new (never reviewed), then today and the next 13 days.
+// J2: overdue (due now or earlier), new (released, never reviewed), then today and the next 13
+// days. Takes released items only.
 function forecast(
   vocab: readonly DashVocab[],
   nowMs: number,
@@ -280,7 +294,8 @@ function trouble(
     }));
 }
 
-// J5: items in New, Learning or Basic now; per week, items added and items reaching Known.
+// J5: released items in New, Learning or Basic now; per week, items started (released) and items
+// reaching Known.
 function backlog(
   vocab: readonly DashVocab[],
   timeline: readonly TimedEvent[],
@@ -299,13 +314,13 @@ function backlog(
   const current = weekStart(today);
   const weeks = Array.from({ length: BACKLOG_WEEKS }, (_, i) => ({
     week: addDays(current, -7 * (BACKLOG_WEEKS - 1 - i)),
-    added: 0,
+    started: 0,
     known: 0,
   }));
   const index = new Map(weeks.map((w, i) => [w.week, i]));
   for (const v of vocab) {
-    const i = index.get(weekOf(day(v.added_at)));
-    if (i !== undefined) (weeks[i] as BacklogWeek).added += 1;
+    const i = index.get(weekOf(day(v.released_at as string)));
+    if (i !== undefined) (weeks[i] as BacklogWeek).started += 1;
   }
   const crossed = new Set<string>();
   for (const e of timeline) {

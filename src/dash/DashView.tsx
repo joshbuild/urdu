@@ -232,7 +232,7 @@ export function BacklogCard({ dash }: { dash: DashResponse }) {
   const slot = w / weeks.length;
   // Pairs nearly fill their week so two-digit value labels clear each other.
   const bar = slot * 0.38;
-  const max = Math.max(1, ...weeks.flatMap((wk) => [wk.added, wk.known]));
+  const max = Math.max(1, ...weeks.flatMap((wk) => [wk.started, wk.known]));
   const first = weeks[0];
   return (
     <section className="panel dash-card" aria-labelledby="dash-backlog">
@@ -247,13 +247,13 @@ export function BacklogCard({ dash }: { dash: DashResponse }) {
         className="dash-chart"
         viewBox={`0 0 ${w} ${h + top + 2}`}
         role="img"
-        aria-label={`Per week, items added: ${weeks.map((wk) => wk.added).join(", ")}; items reaching Known: ${weeks.map((wk) => wk.known).join(", ")}`}
+        aria-label={`Per week, items started: ${weeks.map((wk) => wk.started).join(", ")}; items reaching Known: ${weeks.map((wk) => wk.known).join(", ")}`}
       >
         <line className="dash-baseline" x1={0} x2={w} y1={top + h} y2={top + h} />
         {weeks.map((wk, i) => {
           const x = i * slot + slot * 0.08;
           const pairs = [
-            { key: "added", value: wk.added, x, cls: "dash-bar dash-bar--added" },
+            { key: "started", value: wk.started, x, cls: "dash-bar dash-bar--added" },
             {
               key: "known",
               value: wk.known,
@@ -297,14 +297,14 @@ export function BacklogCard({ dash }: { dash: DashResponse }) {
       <ul className="dash-legend">
         <li>
           <span className="dash-swatch dash-bar--added" />
-          Added
+          Started
         </li>
         <li>
           <span className="dash-swatch dash-bar--known" />
           Reached Known
         </li>
       </ul>
-      <p className="hint">If you add faster than words reach Known, the backlog grows.</p>
+      <p className="hint">If you start words faster than they reach Known, the backlog grows.</p>
     </section>
   );
 }

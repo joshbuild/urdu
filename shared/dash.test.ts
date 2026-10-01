@@ -19,13 +19,16 @@ const TODAY = "2026-10-01";
 
 let seq = 0;
 
+// Released when added unless overridden (f17); released_at null is a queued item.
 function item(overrides: Partial<DashVocab> = {}): DashVocab {
   seq += 1;
+  const added_at = overrides.added_at ?? "2026-09-01T19:00:00.000Z";
   return {
     id: `v${seq}`,
     urdu: `لفظ${seq}`,
     english: `word ${seq}`,
-    added_at: "2026-09-01T19:00:00.000Z",
+    added_at,
+    released_at: added_at,
     interval_seconds: 3600,
     last_reviewed_at: null,
     due_at: null,
@@ -342,7 +345,7 @@ describe("learning backlog (J5)", () => {
     expect(dash(vocab).backlog.now).toBe(3);
   });
 
-  it("buckets additions by Monday-start home weeks over the last 8 weeks", () => {
+  it("buckets starts (released_at) by Monday-start home weeks over the last 8 weeks", () => {
     const vocab = [
       item({ added_at: noon("2026-09-28") }),
       item({ added_at: noon("2026-10-01") }),
@@ -362,7 +365,7 @@ describe("learning backlog (J5)", () => {
       "2026-09-21",
       "2026-09-28",
     ]);
-    expect(weeks.map((w) => w.added)).toEqual([1, 0, 0, 0, 0, 0, 1, 2]);
+    expect(weeks.map((w) => w.started)).toEqual([1, 0, 0, 0, 0, 0, 1, 2]);
   });
 
   it("counts distinct items whose interval crossed 14 days in the week", () => {
@@ -438,5 +441,36 @@ describe("empty vault", () => {
     expect(d.backlog.weeks).toHaveLength(8);
     expect(d.calendar).toHaveLength(84);
     expect(d.calendar.every((c) => c.count === 0)).toBe(true);
+  });
+});
+
+describe("queued items (f17)", () => {
+  const queued = (overrides: Partial<DashVocab> = {}) => item({ released_at: null, ...overrides });
+
+  it("are left out of the new count (J2) and the backlog now (J5)", () => {
+    const d = dash([item(), queued(), queued()]);
+    expect(d.forecast.new).toBe(1);
+    expect(d.backlog.now).toBe(1);
+  });
+
+  it("are left out of band history; a released item counts from its released_at day (J1)", () => {
+    const early = reviewed(DAY, { added_at: noon("2026-09-20"), released_at: noon("2026-09-20") });
+    const late = item({ added_at: noon("2026-09-20"), released_at: noon("2026-09-28") });
+    const events = [ev(early.id, { reviewed_at: noon("2026-09-25") })];
+    const history = dash([early, late, queued({ added_at: noon("2026-09-20") })], events).known
+      .history;
+    const total = (day: string) =>
+      (history.find((p) => p.day === day)?.bands ?? []).reduce((a, b) => a + b, 0);
+    expect(total("2026-09-25")).toBe(1);
+    expect(total("2026-09-28")).toBe(2);
+    expect(total(TODAY)).toBe(2);
+  });
+
+  it("J5 counts a start in the week of release, not of adding; a queued item not at all", () => {
+    const weeks = dash([
+      item({ added_at: noon("2026-08-12"), released_at: noon("2026-09-29") }),
+      queued({ added_at: noon("2026-09-29") }),
+    ]).backlog.weeks;
+    expect(weeks.map((w) => w.started)).toEqual([0, 0, 0, 0, 0, 0, 0, 1]);
   });
 });

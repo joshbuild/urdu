@@ -9,7 +9,8 @@ import { activeLadderId } from "./settings";
 export async function readDash(db: D1Database, now: Date, timeZone: string): Promise<DashResponse> {
   const [vocab, events] = await db.batch([
     db.prepare(
-      `SELECT id, urdu, english, added_at, interval_seconds, last_reviewed_at, due_at FROM vocab`,
+      `SELECT id, urdu, english, added_at, released_at, interval_seconds, last_reviewed_at, due_at
+         FROM vocab`,
     ),
     db.prepare(
       `SELECT vocab_id, reviewed_at, grade, direction, prompt_support, interval_before, due_before,
