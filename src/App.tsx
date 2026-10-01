@@ -2,6 +2,7 @@ import { type FormEvent, useCallback, useEffect, useState } from "react";
 import type { StatusResponse } from "../shared/api";
 import "./app.css";
 import { useVoice } from "./reader/useVoice";
+import { DashScreen } from "./screens/DashScreen";
 import { ReaderScreen } from "./screens/ReaderScreen";
 import { ReviewScreen } from "./screens/ReviewScreen";
 import { SettingsScreen } from "./screens/SettingsScreen";
@@ -54,7 +55,7 @@ export function App() {
     storeTab(next);
   }
 
-  // The reader's duplicate link opens that item on the Vocab tab.
+  // The reader's duplicate link and the Dash's trouble items open that item on the Vocab tab.
   function openVocab(id: string) {
     setOpenVocabId(id);
     selectTab("vocab");
@@ -150,6 +151,7 @@ export function App() {
             {tab === "review" && (
               <ReviewScreen status={status} voice={voiceState.voice} onChanged={refreshStatus} />
             )}
+            {tab === "dash" && <DashScreen onOpenVocab={openVocab} onLocked={refreshStatus} />}
             {tab === "voice" && <VoiceScreen onLocked={refreshStatus} />}
             {tab === "settings" && (
               <SettingsScreen

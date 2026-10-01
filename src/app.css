@@ -5,6 +5,29 @@
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
+
+  /* f16 Dash chart tokens. The band ramp follows the mastery pills, New (rose) to Permanent. */
+  --chart-band-0: #e3b9b2;
+  --chart-band-1: #eac39c;
+  --chart-band-2: #e3d18f;
+  --chart-band-3: #c7d59a;
+  --chart-band-4: #a6d2b4;
+  --chart-band-5: #6fb3ae;
+  --chart-band-6: #054e51;
+  --chart-bar: #6fa29c;
+  --chart-bar-today: #054e51;
+  --chart-added: #e0a86f;
+  --chart-known: #054e51;
+  --chart-baseline: #b7cdc5;
+  --chart-text: #526967;
+  --chart-track: #e8f0ec;
+  --chart-target: #a6d2b4;
+  --chart-mark: #173e40;
+  --chart-heat-0: #ebeee8;
+  --chart-heat-1: #c6e0d8;
+  --chart-heat-2: #8cc4bc;
+  --chart-heat-3: #3f8f8a;
+  --chart-heat-4: #054e51;
 }
 
 * {
@@ -205,9 +228,12 @@ input[type="range"] {
   --btn-bg: transparent;
   --btn-bg-hover: #e8f0ec;
   border: 1px solid transparent;
+  min-width: 0;
+  /* f16: six tabs must fit a 360 px phone, so the button's default side padding goes. */
+  padding: 8px 0;
   border-radius: 12px;
   color: #526967;
-  font-size: 0.9rem;
+  font-size: 0.8rem;
   font-weight: 600;
 }
 
@@ -888,4 +914,200 @@ button.link {
 /* f14: the known words start a second list under the copy button. */
 .eyebrow.find-known {
   margin-top: 20px;
+}
+
+/* f16: the Dash. One panel per element; charts scale to the panel width, and labels that must
+   stay legible at phone width are HTML beside the SVG rather than SVG text. */
+.dash-card + .dash-card {
+  margin-top: 16px;
+}
+
+.dash-card .eyebrow {
+  color: #526967;
+}
+
+.dash-headline strong {
+  font-size: 2rem;
+  line-height: 1.2;
+}
+
+.dash-chart {
+  display: block;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+}
+
+.dash-axis {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  margin: 6px 0 0;
+  color: var(--chart-text);
+  font-size: 0.8rem;
+}
+
+.dash-axis--end {
+  justify-content: flex-end;
+  align-items: center;
+  gap: 4px;
+}
+
+.dash-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+  margin: 12px 0 0;
+  padding: 0;
+  list-style: none;
+  color: var(--chart-text);
+  font-size: 0.8rem;
+}
+
+.dash-legend > * {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.dash-swatch {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  border-radius: 3px;
+  background: var(--swatch);
+}
+
+.dash-band {
+  fill: var(--swatch);
+}
+
+.dash-band--0 {
+  --swatch: var(--chart-band-0);
+}
+.dash-band--1 {
+  --swatch: var(--chart-band-1);
+}
+.dash-band--2 {
+  --swatch: var(--chart-band-2);
+}
+.dash-band--3 {
+  --swatch: var(--chart-band-3);
+}
+.dash-band--4 {
+  --swatch: var(--chart-band-4);
+}
+.dash-band--5 {
+  --swatch: var(--chart-band-5);
+}
+.dash-band--6 {
+  --swatch: var(--chart-band-6);
+}
+
+.dash-bar {
+  --swatch: var(--chart-bar);
+  fill: var(--swatch);
+}
+
+.dash-bar--today {
+  --swatch: var(--chart-bar-today);
+}
+.dash-bar--added {
+  --swatch: var(--chart-added);
+}
+.dash-bar--known {
+  --swatch: var(--chart-known);
+}
+
+.dash-baseline {
+  stroke: var(--chart-baseline);
+  stroke-width: 1;
+}
+
+.dash-value,
+.dash-tick {
+  fill: var(--chart-text);
+  font-size: 11px;
+  text-anchor: middle;
+}
+
+.dash-value {
+  font-weight: 600;
+}
+
+.dash-tick--start {
+  text-anchor: start;
+}
+
+.dash-counts {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin: 0 0 16px;
+}
+
+.dash-counts dt {
+  color: var(--chart-text);
+  font-size: 0.875rem;
+}
+
+.dash-counts dd {
+  margin: 4px 0 0;
+  font-size: 2rem;
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+.dash-recall + .dash-recall {
+  margin-top: 16px;
+}
+
+.dash-recall-label {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 0 8px;
+  margin: 0 0 6px;
+  font-size: 0.9rem;
+}
+
+.dash-meter {
+  display: block;
+  width: 100%;
+  height: 12px;
+}
+
+.dash-meter-track {
+  fill: var(--chart-track);
+}
+.dash-meter-target {
+  fill: var(--chart-target);
+}
+.dash-meter-mark {
+  fill: var(--chart-mark);
+}
+
+.dash-hint {
+  margin: 16px 0 0;
+  font-weight: 600;
+}
+
+.dash-heat {
+  fill: var(--swatch);
+}
+
+.dash-heat--0 {
+  --swatch: var(--chart-heat-0);
+}
+.dash-heat--1 {
+  --swatch: var(--chart-heat-1);
+}
+.dash-heat--2 {
+  --swatch: var(--chart-heat-2);
+}
+.dash-heat--3 {
+  --swatch: var(--chart-heat-3);
+}
+.dash-heat--4 {
+  --swatch: var(--chart-heat-4);
 }

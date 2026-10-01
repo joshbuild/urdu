@@ -2,13 +2,15 @@
 // the shell and none of them are deep-linked, so there is nothing for routes to buy yet (f03 doc,
 // s01 open question). The selected tab is kept in localStorage so a phone reload lands where it left.
 
-export const TABS = ["read", "vocab", "review", "voice", "settings"] as const;
+// f16 adds Dash after Review; Read stays the default.
+export const TABS = ["read", "vocab", "review", "dash", "voice", "settings"] as const;
 export type Tab = (typeof TABS)[number];
 
 export const TAB_LABELS: Record<Tab, string> = {
   read: "Read",
   vocab: "Vocab",
   review: "Review",
+  dash: "Dash",
   voice: "Voice",
   settings: "Settings",
 };

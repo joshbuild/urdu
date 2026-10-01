@@ -258,6 +258,11 @@ describe("recall rate (J3)", () => {
     [27, 3, "on_target"],
     [24, 6, "on_target"],
     [23, 7, "low"],
+    // Banded on the whole percent the card shows: 90.3% reads 90%, 79.7% reads 80%.
+    [271, 29, "on_target"],
+    [239, 61, "on_target"],
+    [272, 28, "high"],
+    [238, 62, "low"],
   ] as const)("%i recalled, %i missed is %s", (hits, misses, band) => {
     const events = [...many(hits), ...many(misses, { grade: "wrong" })];
     expect(dash([a], events).recall.band).toBe(band);

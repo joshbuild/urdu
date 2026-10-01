@@ -85,9 +85,10 @@ export function calendarLevel(count: number): CalendarLevel {
 
 export function recallBand(recognition: RecallRate): RecallBand {
   if (recognition.n < MIN_RECALL_SAMPLE) return "insufficient";
-  const rate = recognition.recalled / recognition.n;
-  if (rate > RECALL_TARGET.high) return "high";
-  if (rate < RECALL_TARGET.low) return "low";
+  // Banded on the whole percent the Dash shows, so the hint never contradicts the number.
+  const pct = Math.round((100 * recognition.recalled) / recognition.n);
+  if (pct > RECALL_TARGET.high * 100) return "high";
+  if (pct < RECALL_TARGET.low * 100) return "low";
   return "on_target";
 }
 
