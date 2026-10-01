@@ -3,7 +3,7 @@
 
 **File Purpose**: The **thin hub** — a cross-front map of where things stand *right now*. Not a journal, not a sessions log. Verbose per-front narration lives in each front's `*-journal.md`; what-happened one-liners live in `SESSIONS.md`. Keep this file scannable.
 
-*As of: 2026-09-29*
+*As of: 2026-10-01*
 
 ## Open Workfronts
 *Work items actively in flight. One line each → its doc/journal. Closed fronts drop off (rosters keep the full list).*
@@ -15,6 +15,7 @@
 - f14 `new-word-finder` — 🟡 IN PROGRESS, s01–s03 built 2026-09-28; s04 phone next (deploy only, re-paste the Project instructions, smoke-test-14) → `features/f14-new-word-finder.md`
 - mp03 `review-ahead-hours` — 🟡 IN PROGRESS, s01–s03 built 2026-09-27; s04 phone next (smoke-test-mp03, rides the f12 deploy; no migration) → `mini-plans/mp03-review-ahead-hours.md`
 - f15 `review-correction` — 🟡 IN PROGRESS, s01–s02 built and `pnpm check` green; s03 phone next (no migration) → `features/f15-review-correction.md`
+- f16 `dash` — 🟡 IN PROGRESS, opened 2026-10-01; s01 metrics + `GET /api/dash` next → `features/f16-dash.md`
 
 ## Next Session Pointers
 *The 1–3 concrete next actions for a cold start.*

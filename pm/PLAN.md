@@ -36,6 +36,7 @@
 - f08 `vocab-enrich` (planned, added 2026-09-17): an LLM drafts every field of a new vocab item from the Add form (reader and FR-D3), the sponsor reviews before save. Server-side through Urdu Core, capped spend, same OpenAI key as f07. Manual entry stays as the fallback. Handle is f08 because f06/f07 were already taken. Sponsor capture 2026-09-22 sharpens the entry point: a **Complete empty fields** button on the Add-vocab screen, enabled only when at least one of the English, transliteration or Urdu term fields is non-blank, which sends what is there and fills the rest. **On hold 2026-09-18** (DECISIONS 260918f) in favour of the ChatGPT paste path.
 - f09 `srs-ladder` (🟢 shipped 2026-09-22): the SRS redesign from `research/urdu-vocabulary-srs-research-and-design.md` (DECISIONS 260918c/d/e). Versioned geometric ladders, timestamp scheduling, richer review events; migration 0002 applied to production before its deploy.
 - f12 `day-anchored-ladders` (🟡 in progress, opened 2026-09-27): five new ladder versions built around an exact 1-day rung (floor about 1–2 h), renamed Very dense / Dense / Balanced / Wide / Very wide, new words start one rung below a day; migration 0005 maps the setting.
+- f16 `dash` (🟡 in progress, opened 2026-10-01, DECISIONS 261001a): a sixth tab of progress metrics that each point at a next action: Known (interval ≥ 14 d) and bands over time, 14-day due forecast, recall rate by direction, trouble items, learning backlog, 12-week review calendar without streaks (FR-J).
 - **Exit:** Sponsor uses the app for reading and review on the phone for several consecutive days without needing Airtable.
 
 ### Phase 3 — Coach connection
@@ -49,7 +50,7 @@
 
 ### Phase 4 — v1 (coarse)
 **Goal:** Broaden without changing the core.
-- Windows Chrome parity (right-click menu, desktop layout), saved passages and recent texts, tag and favourite UI, review statistics, CSV export, hosted TTS as an option, the FR-G Option 1 Custom GPT if still wanted, fuzzy duplicate suggestions, Coach session history with transcript expiry (260922a).
+- Windows Chrome parity (right-click menu, desktop layout), saved passages and recent texts, tag and favourite UI, CSV export, hosted TTS as an option, the FR-G Option 1 Custom GPT if still wanted, fuzzy duplicate suggestions, Coach session history with transcript expiry (260922a).
 
 ## Features Index
 *The roster of every feature (`f##`). Each row → its doc in `pm/features/`. Numbers are assigned by roster order, monotonic, never reused (archived items included). See `pm-glossary.md` §1. Spikes are mini-plans (`mp##`) and live in `pm/mini-plans.md` once `/pm-open` stands it up.*
@@ -71,3 +72,4 @@
 | f13 | `features/f13-check-modes.md` | 🟡 in progress (s01–s04 built, s05 phone next) | Copy check prompt opens a dialog: correctness, completeness or both, fields, count, only unchecked; completeness replaces the fill-in pair (FR-F9, retires FR-F7). |
 | f14 | `features/f14-new-word-finder.md` | 🟡 in progress (s01–s03 built, s04 phone next) | Paste a ChatGPT word list, see which words are new, copy only those back for `vocab-json`; ⓘ help beside each CHATGPT button row (FR-F10). |
 | f15 | `features/f15-review-correction.md` | 🟡 in progress (s01–s02 built, s03 phone next) | Back to the previous review card, replace an accidental grade, and tap Urdu to speak. |
+| f16 | `features/f16-dash.md` | 🟡 in progress (s01 next) | Dash tab: Known count, due forecast, recall rate, trouble items, learning backlog, review calendar (FR-J). |

@@ -25,7 +25,7 @@ The sponsor already learns Urdu with (a) a ChatGPT "Urdu Coach" project used mai
 - Any LLM call for Define (Define is vault lookup + external dictionary links). *Amended 2026-09-17:* LLM enrichment of a new vocab item is **in** v0 as planned feature f08 `vocab-enrich` (Phase 2, after f05): Urdu Core drafts Roman, English, notes and example for a new term, the sponsor reviews and saves. Until f08 ships, Add to vocab is the manual FR-C6 form.
 - Hosted TTS (only if the speech spike fails; behind the same `speak()` interface).
 - Saved Coach session history beyond the most recent transcript, and a transcript expiry setting (v1; DECISIONS 260922a).
-- Saved reading passages, reading history, tag management UI, favourites UI, statistics, undo of a review grade, mixed-direction review, fuzzy duplicate suggestions, approval queue for Coach proposals.
+- Saved reading passages, reading history, tag management UI, favourites UI, undo of a review grade, mixed-direction review, fuzzy duplicate suggestions, approval queue for Coach proposals.
 - Everything in `VISION.md` §16 (multi-user, accounts, offline-first, dictionary, curriculum, custom voice tutor built from scratch, analytics, billing). The §16 line on a custom voice tutor is amended: in-app voice using OpenAI's GPT-Live-1 API is permitted because it is the same model family as ChatGPT Voice and allows vault tool calls mid-conversation.
 
 ### 2.3 Assumptions
@@ -91,7 +91,7 @@ The sponsor already learns Urdu with (a) a ChatGPT "Urdu Coach" project used mai
 - **FR-E1** Session start: choose direction (Urdu to English default, English to Urdu) and see the due count; queue per FR-A7 capped at a per-session limit (default 20, adjustable in Settings). Optional **review ahead** also queues items with `due_at` up to now + a chosen span; grades still count from now (added 2026-09-18, sponsor request during smoke-test-05). The span is a slider that snaps through fixed stops from Now (default) to 1 year (1, 2, 3, 5, 8, 12, 16, 20 hours; 1, 2, 3, 5 days; 1, 2 weeks; 1, 3, 6 months; 1 year), shown beside it with how many more items it adds; the Worker takes it as `ahead_seconds` (0 to one year) and lists upcoming due times for the count (mp03, 2026-09-27).
 - **FR-E2** Card front shows the prompt side; tapping displayed Urdu speaks it. Reveal shows Urdu, Roman, English, notes, example. There is no separate Speak button on the review card.
 - **FR-E3** Five grade buttons in ladder order (Wrong, Partially correct, Hesitantly correct, Correct, Confidently correct); tapping records via FR-A4 and advances. Skip advances without recording. Back returns to the previous card, including from the end tally. A recorded grade can be replaced: the Worker recalculates from the event's original pre-review schedule and updates that event and item atomically. Correction is refused after an item change or later review. Returning to a skipped card allows it to be graded; keeping a recorded grade advances without another write.
-- **FR-E4** End of session shows counts graded and skipped. No streaks or statistics.
+- **FR-E4** End of session shows counts graded and skipped. No streaks; progress statistics live on the Dash tab (FR-J, amended 2026-10-01, DECISIONS 261001a).
 
 ### FR-F Coach tool contract and handoff
 - **FR-F1** `GET /coach/vocab` returns due items by default (or all, tag filter, limit) with id, urdu, roman, english, mastery band, due_at.
@@ -118,6 +118,15 @@ The sponsor already learns Urdu with (a) a ChatGPT "Urdu Coach" project used mai
 
 ### FR-I Settings
 - **FR-I1** Voice picker for speech; review session limit; lock this device (deletes the session); voice spend display and caps (FR-G Option 2).
+
+### FR-J Dash *(f16, planned 2026-10-01, DECISIONS 261001a)*
+A sixth tab, **Dash**, read-only. Every element measures knowledge rather than activity and points at a next action. Metrics are derived in `shared/` from `vocab` and `review_events` and served by one Worker read; viewing the Dash changes nothing. Days are HOME_TZ calendar days.
+- **FR-J1** **Known**: the count of items whose current interval is 14 days or more, with a chart of item counts per mastery band (FR-A2) over time.
+- **FR-J2** **Due forecast**: items falling due on each of the next 14 days, preceded by the count overdue now.
+- **FR-J3** **Recall rate**: the share of tracked reviews of previously reviewed items, without prompt support, graded Hesitantly correct or better, over the last 30 days, split recognition (`ur_en`) vs production (`en_ur`, `oral`). It shows a target band and a one-line ladder hint, and shows the sample size and "not enough reviews yet" below a minimum sample.
+- **FR-J4** **Trouble items**: up to 8 items with the most Wrong or Partially correct grades in the last 30 days; each opens on the Vocab tab.
+- **FR-J5** **Learning backlog**: items in New, Learning or Basic now, with items added and items reaching Known per week.
+- **FR-J6** **Review calendar**: 12 weeks of days shaded by tracked reviews. No streak count.
 
 ## 6. Non-Functional Requirements
 - **Latency**: tap-to-speech start under 300 ms on the phone; API round trips under 500 ms p95 from Vancouver.
