@@ -2,7 +2,8 @@
 
 Paste everything below the line into the ChatGPT Project's custom instructions. Then, after
 the chat gives you a vocab list, type `vocab-json`; copy the reply and use **Paste new vocab**
-at the top of the app's Vocab tab.
+in a harvest on the app's Harvest tab (f17; it was at the top of the Vocab tab). **Copy harvest
+request** there writes the `vocab-list` line for a source for you.
 
 To skip words you already have (f14): type `vocab-list` first, paste the list into **Find new
 words**, tap **Copy new words for ChatGPT** and paste that into the chat. It starts with

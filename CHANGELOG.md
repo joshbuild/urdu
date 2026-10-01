@@ -4,6 +4,11 @@
 
 ### Changed
 
+- New words now come after due ones in a review session, so stopping early on a heavy day leaves new words for later instead of overdue ones.
+- The app opens on Review. The Read tab is parked (its code is kept for a decision on 2026-10-31); **Harvest** takes its place in the tab bar.
+- The new-vocab round trip (Copy new-vocab prompt, Paste new vocab, Find new words) moved from the Vocab tab into a harvest on the Harvest tab. The Vocab tab keeps the check buttons.
+- The Dash's New count and learning backlog leave out queued words, and the backlog counts words **started** each week instead of words added.
+
 - Review cards now speak when you tap the Urdu word, with no separate Speak button.
 - Review ahead is a slider instead of a days box: it snaps from Now through 1, 2, 3, 5, 8, 12, 16 and 20 hours, days, weeks and months to 1 year, and says how many more items each step adds.
 - The ChatGPT buttons on the Vocab tab read as matching pairs: **Copy new-vocab prompt** (was Copy prompt) and **Paste check reply** (was Paste corrections).
@@ -11,6 +16,10 @@
 - The ChatGPT buttons sit at the top of the Vocab tab instead of below the list, and saving fill-ins updates the count of items still missing fields.
 
 ### Added
+
+- **Vocab intake.** Pasted harvests go into a queue instead of straight into review. Each day the app tops up your new words to the daily batch (10 by default, set as **New words per day** in Settings), oldest first; **Intake** on the Review start screen pulls in another batch when you have time. Queued words are in your vault — searchable, editable, checkable — with a **Queued** badge, a **Queued only** filter and **Release now**.
+- **Harvest** tab: keep a list of sources (stories or pages, with URL and notes), see which you have harvested, and record each harvest's filter (such as "CEFR A2+") and date, with counts of words queued and started. **Copy harvest request** asks your ChatGPT Project for a word list from the source at that level, and **Start now** skips the queue for a paste.
+- A tank meter on the Harvest tab and the Review start screen shows how many days of new words are queued, and turns amber below three days, when it's time to harvest again.
 
 - A **Dash** tab after Review shows what you know and what to do next: how many items are Known (an interval of 14 days or more) and the band mix over time; reviews due over the next two weeks, with overdue and never-reviewed counts; your 30-day recall against an 80–90% target, with a hint about the review spacing; the items you keep missing, each a tap away from its entry; the learning backlog against weekly additions; and a 12-week review calendar, one row per week (Monday to Sunday), showing each day's review count. Viewing it changes nothing.
 - A Back button in reviews lets you revisit the previous card and correct an accidental grade, including after the last card.

@@ -74,4 +74,4 @@
 | f14 | `features/f14-new-word-finder.md` | 🟡 in progress (s01–s03 built, s04 phone next) | Paste a ChatGPT word list, see which words are new, copy only those back for `vocab-json`; ⓘ help beside each CHATGPT button row (FR-F10). |
 | f15 | `features/f15-review-correction.md` | 🟡 in progress (s01–s02 built, s03 phone next) | Back to the previous review card, replace an accidental grade, and tap Urdu to speak. |
 | f16 | `features/f16-dash.md` | 🟡 in progress (s01–s04 built; phone next) | Dash tab: Known count, due forecast, recall rate, trouble items, learning backlog, review calendar (FR-J). |
-| f17 | `features/f17-vocab-intake.md` | 🟡 in progress (stress-tested; s01 next) | Queue harvested words and release a batch a day; Harvest tab with sources and harvests; Intake button and tank meter; Read parked (FR-K). |
+| f17 | `features/f17-vocab-intake.md` | 🟡 in progress (s01–s06 built 2026-10-01; deploy and smoke-test-17 next) | Queue harvested words and release a batch a day; Harvest tab with sources and harvests; Intake button and tank meter; Read parked (FR-K). |

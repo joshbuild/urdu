@@ -1,6 +1,6 @@
 # Feature Plan — Vocab Intake
 
-**Status**: 🟡 IN PROGRESS — *opened 2026-10-01; stress-tested the same day; s01 next*
+**Status**: 🟡 IN PROGRESS — *opened 2026-10-01; s01–s06 built and the s07 doc ripple written the same day; sponsor deploy and smoke-test-17 next*
 **Handle**: `f17`
 **Created**: *2026-10-01* · **Updated**: *2026-10-01*
 
@@ -281,13 +281,15 @@ the sponsor can see which stories have been harvested and how far each harvest h
 
 ### Recently Completed
 
+- 2026-10-01: Built s01–s06 in one orchestrated run and wrote the s07 doc ripple. `pnpm check` is green at 739 tests. Commits: s01 `2d4e8ce`, s02 `db17166`, s03 `528f72d`, s04 `92e620f`, s05 `6b3eb04`, s06 `472891e`. Migration 0007 is applied locally only; on the local copy (38 rows) every row was released at its `added_at` and none was queued. Headless 360 px checks covered the Harvest overview, source, harvest, paste sheet and tank states, and the Review start screen with the tank ok, low and empty: nothing clipped, and six tabs fit.
 - 2026-10-01: Options memo and two rounds of sponsor answers (`research/vocab-intake.md`). The
   doc was drafted, opened and stress-tested the same day: the sponsor settled four forks, and the
   rest were resolved in this doc (§Decisions).
 
 ### Next Steps
 
-- s01.
+- **Owed, sponsor:** `scripts/smoke.ts` against `pnpm dev` (Done When 2's second half). The agent couldn't read the secret from `.dev.vars`; the local 0007 apply half is done.
+- **Owed, sponsor (s07):** back up, apply migrations remotely (0005–0007, whichever are pending), deploy, and run `smoke-tests/smoke-test-17.md` on the phone, over two days for the top-up. Then `/pm-close f17`.
 
 ### Open Questions
 
