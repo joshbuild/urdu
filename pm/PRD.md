@@ -119,8 +119,8 @@ The sponsor already learns Urdu with (a) a ChatGPT "Urdu Coach" project used mai
 ### FR-I Settings
 - **FR-I1** Voice picker for speech; review session limit; lock this device (deletes the session); voice spend display and caps (FR-G Option 2).
 
-### FR-J Dash *(f16, planned 2026-10-01, DECISIONS 261001a)*
-A sixth tab, **Dash**, read-only. Every element measures knowledge rather than activity and points at a next action. Metrics are derived in `shared/` from `vocab` and `review_events` and served by one Worker read; viewing the Dash changes nothing. Days are HOME_TZ calendar days.
+### FR-J Dash *(f16, built 2026-10-01, phone pending; DECISIONS 261001a)*
+A sixth tab, **Dash**, read-only. Every element measures knowledge rather than activity and points at a next action. Metrics are derived in `shared/` from `vocab` and `review_events` and served by one Worker read; viewing the Dash changes nothing. Days are HOME_TZ calendar days. As built, `GET /api/dash` runs `shared/dash.ts` (`KNOWN_MIN_SECONDS` in `shared/mastery.ts`); the recall minimum sample is 30 recognition reviews and the target band 80–90%. The f16 doc holds the exact metric definitions.
 - **FR-J1** **Known**: the count of items whose current interval is 14 days or more, with a chart of item counts per mastery band (FR-A2) over time.
 - **FR-J2** **Due forecast**: items falling due today and on each of the next 13 days, preceded by the count overdue now and, separately, the count never reviewed.
 - **FR-J3** **Recall rate**: the share of tracked reviews of previously reviewed items, without prompt support, graded Hesitantly correct or better, over the last 30 days, split recognition (`ur_en`) vs production (`en_ur`, `oral`). It shows a target band and a one-line ladder hint, and shows the sample size and "not enough reviews yet" below a minimum sample.

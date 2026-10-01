@@ -12,6 +12,7 @@
 
 ### Added
 
+- A **Dash** tab after Review shows what you know and what to do next: how many items are Known (an interval of 14 days or more) and the band mix over time; reviews due over the next two weeks, with overdue and never-reviewed counts; your 30-day recall against an 80–90% target, with a hint about the review spacing; the items you keep missing, each a tap away from its entry; the learning backlog against weekly additions; and a 12-week review calendar. Viewing it changes nothing.
 - A Back button in reviews lets you revisit the previous card and correct an accidental grade, including after the last card.
 - **Find new words** on the Vocab tab: paste a word list from ChatGPT to see which words you already have, then copy only the new ones back to the chat for `vocab-json`. The ChatGPT Project instructions gain a `vocab-list` command that gives that list in Urdu script, one word per line.
 - An ⓘ beside each ChatGPT button row on the Vocab tab shows that round trip's steps.
