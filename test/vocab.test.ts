@@ -471,6 +471,7 @@ describe("GET /api/status", () => {
       due: 2,
       today,
       active_ladder_id: 8,
+      intake: { queued: 0, new: 1, batch_size: 10 },
     });
   });
 
@@ -480,6 +481,7 @@ describe("GET /api/status", () => {
       due: 0,
       today,
       active_ladder_id: 8,
+      intake: { queued: 0, new: 0, batch_size: 10 },
     });
   });
 });

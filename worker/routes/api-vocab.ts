@@ -15,6 +15,7 @@ import {
 } from "../../shared/api";
 import { todayIn } from "../../shared/dates";
 import { addSeconds } from "../../shared/ladders";
+import { intakeCounts, safeTopUp } from "../domain/intake";
 import { activeLadderId } from "../domain/settings";
 import {
   createVocab,
@@ -106,11 +107,14 @@ const isError = (v: unknown): v is InputError => typeof v === "object" && v !== 
 export const vocabRoutes = new Hono<AppEnv>();
 
 vocabRoutes.get("/api/status", async (c) => {
-  const counts = await vocabCounts(c.env.DB, new Date().toISOString());
+  const now = new Date();
+  await safeTopUp(c.env.DB, now, c.env.HOME_TZ);
+  const counts = await vocabCounts(c.env.DB, now.toISOString());
   const body: StatusResponse = {
     ...counts,
     today: today(c),
     active_ladder_id: await activeLadderId(c.env.DB),
+    intake: await intakeCounts(c.env.DB),
   };
   return c.json(body);
 });
@@ -173,7 +177,9 @@ vocabRoutes.get("/api/vocab/due", async (c) => {
   // Review ahead (f05, by the second since mp03): also take items falling due within that span.
   const ahead = intParam(c, "ahead_seconds", 0, 0, MAX_AHEAD_SECONDS);
   if (isError(ahead)) return invalid(c, ahead);
-  const cutoff = addSeconds(new Date().toISOString(), ahead);
+  const now = new Date();
+  await safeTopUp(c.env.DB, now, c.env.HOME_TZ);
+  const cutoff = addSeconds(now.toISOString(), ahead);
   const body: DueResponse = {
     items: await dueVocab(c.env.DB, cutoff, limit, tagParam(c)),
     today: today(c),

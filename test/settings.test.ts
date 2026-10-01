@@ -29,6 +29,7 @@ describe("GET/PATCH /api/settings", () => {
       active_ladder_id: 8,
       voice_soft_cap_usd: 0.5,
       voice_hard_cap_usd: 1,
+      intake_batch_size: 10,
     });
   });
 

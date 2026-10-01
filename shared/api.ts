@@ -80,12 +80,17 @@ export type VocabListResponse = { items: VocabItem[]; total: number };
 export type DueResponse = { items: VocabItem[]; today: string };
 // mp03: due times of items not yet due, ascending, with the Worker's clock to count them against.
 export type UpcomingResponse = { now: string; due_at: string[] };
+// f17 (FR-K): queued items, the new pile (released, never reviewed), and the batch size.
+export type IntakeCounts = { queued: number; new: number; batch_size: number };
+export type IntakeReleaseResponse = { released: number; queued: number };
+
 export type StatusResponse = {
   total: number;
   due: number;
   today: string;
   // The ladder new schedules are made on (f09); items on older ladders move at their next review.
   active_ladder_id: number;
+  intake: IntakeCounts;
 };
 
 export type SettingsResponse = {
@@ -93,6 +98,8 @@ export type SettingsResponse = {
   // Daily voice spend caps in dollars (f07 s04).
   voice_soft_cap_usd: number;
   voice_hard_cap_usd: number;
+  // f17: new words per day (the top-up target) and the size of Intake, 1–50.
+  intake_batch_size: number;
 };
 export type UpdateSettingsRequest = Partial<SettingsResponse>;
 
@@ -160,6 +167,36 @@ export type Harvest = {
   filter: string | null;
   created_at: string;
 };
+
+export const MAX_SOURCE_NAME_LENGTH = 200;
+export const MAX_SOURCE_URL_LENGTH = 2000;
+export const MAX_HARVEST_FILTER_LENGTH = 100;
+
+// POST /api/sources; PATCH takes any subset. url and notes accept null (or "") to clear.
+export type SourceRequest = { name: string; url?: string | null; notes?: string | null };
+export type HarvestRequest = { filter?: string | null };
+// 409 on a URL another source already has; the client opens that source.
+export type SourceConflictResponse = { error: "duplicate_source"; existing_id: string };
+
+// Item counts for one harvest. started = reviewed at least once.
+export type HarvestCounts = { total: number; queued: number; started: number };
+export type HarvestSummary = Harvest & HarvestCounts;
+
+export type SourceStatus = "to_harvest" | "harvested";
+export type SourceSummary = Source & {
+  status: SourceStatus;
+  harvest_count: number;
+  // The newest harvest, if any.
+  latest: { filter: string | null; created_at: string } | null;
+};
+
+// GET /api/harvest: the tank, then to-harvest sources (newest first), then harvested sources by
+// latest harvest, newest first.
+export type HarvestOverview = { intake: IntakeCounts; sources: SourceSummary[] };
+// GET /api/sources/:id: harvests newest first; words = items linked through any of them.
+export type SourceDetail = { source: Source; harvests: HarvestSummary[]; words: number };
+// GET /api/harvests/:id.
+export type HarvestDetail = { harvest: HarvestSummary; source: Source };
 
 // The whole vault except sessions (PRD §6 Portability).
 export type ExportResponse = {
