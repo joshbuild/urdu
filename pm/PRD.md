@@ -62,7 +62,7 @@ The sponsor already learns Urdu with (a) a ChatGPT "Urdu Coach" project used mai
 - **FR-A4** Recording a tracked review: if the item is on another ladder, map it to the active ladder's log-nearest rung (ties shorter; a zero interval to rung 0); apply the delta for the review's direction (recognition `ur_en`: −2/−1/0/+1/+2; production `en_ur` and `oral`: −1/0/0/+1/+2; DECISIONS 260918b/d) in rungs, clamp to the ladder, set `last_reviewed_at` to now and `due_at` to now + the rung's interval, insert a `review_events` row with grade, direction, source, optional handoff id, prompt support, applied delta, and ladder/step/interval/due before and after. Atomic.
 - **FR-A5** Urdu normalization (Appendix B) produces `urdu_key`; an insert whose key matches an existing row is rejected with the existing id. Applies to PWA adds, Coach proposals, and import.
 - **FR-A6** Vocab CRUD: create, read, list (search by Urdu/Roman/English substring, filter by tag, due-only, sort), update any editable field including the review rung, delete.
-- **FR-A7** Due selection: items with `due_at <= now` or never reviewed, ordered `due_at asc` (nulls first), `added_at asc`, with limit and optional tag filter.
+- **FR-A7** Due selection: items with `due_at <= now` or never reviewed, ordered `due_at asc` (nulls first), `added_at asc`, with limit and optional tag filter. *(Planned, f17, DECISIONS 261001b: queued items (FR-K) are excluded, and never-reviewed items come after due ones: `due_at asc` nulls last.)*
 - **FR-A8** Viewing, speaking, defining, or skipping never changes an item's schedule.
 
 ### FR-B Auth and sessions
@@ -72,7 +72,7 @@ The sponsor already learns Urdu with (a) a ChatGPT "Urdu Coach" project used mai
 - **FR-B4** The secret and tokens never appear in frontend JS, the repo, URLs, or readable browser storage.
 - **FR-B5** In-app voice (FR-G Option 2) is brokered by the Worker: the browser sends its WebRTC SDP offer to a session-cookie-protected Worker route, which creates the GPT-Live-1 session (`POST /v1/live/sessions`) with the server-side Coach config and returns the SDP answer. No OpenAI credential of any kind reaches the browser; the OpenAI API key lives only in Worker secrets. *(Amended 2026-09-14: GPT-Live-1 has no browser client-secret flow; see DECISIONS 260914b.)*
 
-### FR-C Reader (PWA)
+### FR-C Reader (PWA) *(parked by f17: removed from the tab bar, code kept, review on 2026-10-31, DECISIONS 261001b)*
 - **FR-C1** Paste area accepting arbitrary Urdu text; pasted newlines become paragraphs; RTL layout.
 - **FR-C2** Rendered in self-hosted Noto Nastaliq Urdu with large size and about 2.2 line height; no dependency on device fonts.
 - **FR-C3** Text is tokenized on whitespace and punctuation, keeping ZWNJ-joined compounds as one token; each token is a tappable element. Native browser text selection across tokens must still work.
@@ -127,6 +127,12 @@ A sixth tab, **Dash**, read-only. Every element measures knowledge rather than a
 - **FR-J4** **Trouble items**: up to 8 items with two or more Wrong or Partially correct grades in the last 30 days, most first; each opens on the Vocab tab.
 - **FR-J5** **Learning backlog**: items in New, Learning or Basic now, with items added and items reaching Known per week.
 - **FR-J6** **Review calendar**: 12 weeks of days shaded by tracked reviews. No streak count.
+
+### FR-K Vocab intake *(planned, f17, DECISIONS 261001b)*
+- **FR-K1** A pasted harvest creates **queued** vault items: searchable and editable, but not due. Manual, voice and Airtable adds start immediately. No item is re-queued.
+- **FR-K2** Once per HOME_TZ day, Urdu Core tops up the **new pile** (released, never-reviewed items) to the batch size ("New words per day", 1–50, default 10) by releasing queued items oldest first. **Intake** on the Review start screen releases another batch on demand. A queued item can also be released by hand, and a tracked review releases it.
+- **FR-K3** **Sources** (name, optional unique URL, notes; *to harvest* or *harvested*) and their **harvests** (filter text such as "CEFR A2+", date, counts total/queued/started) live on a **Harvest** tab, which replaces Read and hosts the new-vocab round trip. A paste goes into a harvest and is queued unless marked to start now.
+- **FR-K4** A **tank meter** on the Harvest tab and the Review start screen shows the queued count and the days of supply at the batch size. It is low below 3 days and reads full at 14 days.
 
 ## 6. Non-Functional Requirements
 - **Latency**: tap-to-speech start under 300 ms on the phone; API round trips under 500 ms p95 from Vancouver.

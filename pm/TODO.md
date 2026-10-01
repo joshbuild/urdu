@@ -14,6 +14,8 @@
 ## Tasks
 *Bullets, each tagged.*
 
+- Review the parked Read tab on 2026-10-31: the vocab-intake feature hides it from the tab bar to make room for Harvest. The code is kept, and the sponsor reads with ChatGPT for now. Decide whether to restore it, fold parts into another screen (tap-to-speak, Add to vocab), or delete it. #sponsor-decide
+
 - f07 spend check (Done When): after today's voice sessions, compare Settings › today's voice spend with the OpenAI dashboard (it showed $0.15 on 2026-09-23 for under 5 minutes). Within a cent or two passes; the app lower suggests lost seconds or a missed final usage report. Mind the dashboard's UTC day and lag. #sponsor-respond
 - On the phone, next time fill-ins are saved: the "Fill-in prompt copied" note is replaced by a fresh count (f06 polish, `48786f6`). The CHATGPT section above the Vocab list was confirmed 2026-09-23. #sponsor-respond
 

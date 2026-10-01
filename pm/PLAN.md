@@ -37,6 +37,7 @@
 - f09 `srs-ladder` (🟢 shipped 2026-09-22): the SRS redesign from `research/urdu-vocabulary-srs-research-and-design.md` (DECISIONS 260918c/d/e). Versioned geometric ladders, timestamp scheduling, richer review events; migration 0002 applied to production before its deploy.
 - f12 `day-anchored-ladders` (🟡 in progress, opened 2026-09-27): five new ladder versions built around an exact 1-day rung (floor about 1–2 h), renamed Very dense / Dense / Balanced / Wide / Very wide, new words start one rung below a day; migration 0005 maps the setting.
 - f16 `dash` (🟡 in progress, opened 2026-10-01, DECISIONS 261001a): a sixth tab of progress metrics that each point at a next action: Known (interval ≥ 14 d) and bands over time, 14-day due forecast, recall rate by direction, trouble items, learning backlog, 12-week review calendar without streaks (FR-J).
+- f17 `vocab-intake` (🟡 in progress, opened 2026-10-01, DECISIONS 261001b): harvested words wait in a queue and enter review about 10 a day (the new pile tops up to the batch size; **Intake** pulls more). A Harvest tab in the parked Read tab's place records sources and harvests (URL, filter, date) and hosts the new-vocab round trip. A tank meter shows the days of queue left. New words come after due ones.
 - **Exit:** Sponsor uses the app for reading and review on the phone for several consecutive days without needing Airtable.
 
 ### Phase 3 — Coach connection
@@ -73,3 +74,4 @@
 | f14 | `features/f14-new-word-finder.md` | 🟡 in progress (s01–s03 built, s04 phone next) | Paste a ChatGPT word list, see which words are new, copy only those back for `vocab-json`; ⓘ help beside each CHATGPT button row (FR-F10). |
 | f15 | `features/f15-review-correction.md` | 🟡 in progress (s01–s02 built, s03 phone next) | Back to the previous review card, replace an accidental grade, and tap Urdu to speak. |
 | f16 | `features/f16-dash.md` | 🟡 in progress (s01–s04 built; phone next) | Dash tab: Known count, due forecast, recall rate, trouble items, learning backlog, review calendar (FR-J). |
+| f17 | `features/f17-vocab-intake.md` | 🟡 in progress (stress-tested; s01 next) | Queue harvested words and release a batch a day; Harvest tab with sources and harvests; Intake button and tank meter; Read parked (FR-K). |
