@@ -2,12 +2,13 @@
 // the shell and none of them are deep-linked, so there is nothing for routes to buy yet (f03 doc,
 // s01 open question). The selected tab is kept in localStorage so a phone reload lands where it left.
 
-// f16 adds Dash after Review; Read stays the default.
-export const TABS = ["read", "vocab", "review", "dash", "voice", "settings"] as const;
+// f16 adds Dash after Review. f17: Harvest takes Read's place (Read is parked, its code kept, review
+// 2026-10-31) and the app opens on Review; a stored "read" is no longer a tab, so it falls back.
+export const TABS = ["harvest", "vocab", "review", "dash", "voice", "settings"] as const;
 export type Tab = (typeof TABS)[number];
 
 export const TAB_LABELS: Record<Tab, string> = {
-  read: "Read",
+  harvest: "Harvest",
   vocab: "Vocab",
   review: "Review",
   dash: "Dash",
@@ -15,7 +16,7 @@ export const TAB_LABELS: Record<Tab, string> = {
   settings: "Settings",
 };
 
-export const DEFAULT_TAB: Tab = "read";
+export const DEFAULT_TAB: Tab = "review";
 
 const STORAGE_KEY = "urdu.tab";
 

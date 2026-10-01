@@ -3,7 +3,7 @@ import type { StatusResponse } from "../shared/api";
 import "./app.css";
 import { useVoice } from "./reader/useVoice";
 import { DashScreen } from "./screens/DashScreen";
-import { ReaderScreen } from "./screens/ReaderScreen";
+import { HarvestScreen } from "./screens/HarvestScreen";
 import { ReviewScreen } from "./screens/ReviewScreen";
 import { SettingsScreen } from "./screens/SettingsScreen";
 import { readStoredTab, storeTab, TAB_LABELS, TABS, type Tab } from "./screens/tabs";
@@ -55,7 +55,7 @@ export function App() {
     storeTab(next);
   }
 
-  // The reader's duplicate link and the Dash's trouble items open that item on the Vocab tab.
+  // The Dash's trouble items and a harvest's paste results open that item on the Vocab tab.
   function openVocab(id: string) {
     setOpenVocabId(id);
     selectTab("vocab");
@@ -138,7 +138,14 @@ export function App() {
 
         {ready && status ? (
           <>
-            {tab === "read" && <ReaderScreen voiceState={voiceState} onOpenVocab={openVocab} />}
+            {/* f17: Read is parked (ReaderScreen and its tests are kept); Harvest takes its tab. */}
+            {tab === "harvest" && (
+              <HarvestScreen
+                onOpenVocab={openVocab}
+                onLocked={refreshStatus}
+                onChanged={refreshStatus}
+              />
+            )}
             {tab === "vocab" && (
               <VocabScreen
                 status={status}
