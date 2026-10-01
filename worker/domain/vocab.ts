@@ -28,15 +28,18 @@ export function toItem(row: VocabRow): VocabItem {
   };
 }
 
-// Items never reviewed (null) are due now. Instants are all toISOString() output, so text order
-// is time order.
-const DUE = "(due_at IS NULL OR due_at <= ?)";
+// Queued items (f17, released_at null) are never due. Released items never reviewed (null due_at,
+// the new pile) are due now. Instants are all toISOString() output, so text order is time order.
+const DUE = "(released_at IS NOT NULL AND (due_at IS NULL OR due_at <= ?))";
 const HAS_TAG = "EXISTS (SELECT 1 FROM json_each(vocab.tags) WHERE json_each.value = ?)";
-const DUE_ORDER = "due_at ASC NULLS FIRST, added_at ASC, id ASC";
+// FR-A7 (f17): due items by due time, then the new pile first in, first out, so stopping early
+// on a heavy day leaves new words unseen rather than overdue ones.
+const DUE_ORDER = "due_at ASC NULLS LAST, added_at ASC, id ASC";
 
 const SORT_ORDER: Readonly<Record<VocabSort, string>> = {
   added: "added_at DESC, id DESC",
-  next_review: DUE_ORDER,
+  // Queued items after everything else, in queue order.
+  next_review: `released_at IS NULL, ${DUE_ORDER}`,
   // Never-reviewed items first: their entry rung is not an interval they have earned (f12).
   mastery: "last_reviewed_at IS NOT NULL, interval_seconds ASC, added_at ASC, id ASC",
 };
@@ -93,13 +96,18 @@ export async function getVocab(db: D1Database, id: string): Promise<VocabItem | 
   return row ? toItem(row) : null;
 }
 
+// f17: a harvest paste creates queued items (released_at null) linked to its harvest; every other
+// path releases the item when it is created.
+export type CreateOptions = { queued?: boolean; harvestId?: string | null };
+
 // New items start on the active ladder's entry rung (the rung below one day, f12), never
-// reviewed, so due now.
+// reviewed, so due now once released.
 export async function createVocab(
   db: D1Database,
   input: CreateInput,
   now: Date,
   activeLadderId: number,
+  options: CreateOptions = {},
 ): Promise<WriteResult> {
   const key = urduKey(input.urdu);
   if (key === "") return { ok: false, error: "empty_key" };
@@ -133,6 +141,8 @@ export async function createVocab(
     airtable_id: null,
     checked_at: null,
     filled_at: null,
+    harvest_id: options.harvestId ?? null,
+    released_at: options.queued ? null : at,
     created_at: at,
     updated_at: at,
   };
@@ -144,8 +154,9 @@ export async function createVocab(
         .prepare(
           `INSERT INTO vocab (id, urdu, urdu_key, kind, roman, english, notes, example_urdu,
              example_english, tags, favourite, ladder_id, ladder_step, interval_seconds,
-             added_at, last_reviewed_at, due_at, source, airtable_id, created_at, updated_at)
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+             added_at, last_reviewed_at, due_at, source, airtable_id, harvest_id, released_at,
+             created_at, updated_at)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         )
         .bind(
           item.id,
@@ -167,6 +178,8 @@ export async function createVocab(
           item.due_at,
           item.source,
           item.airtable_id,
+          item.harvest_id,
+          item.released_at,
           item.created_at,
           item.updated_at,
         ),

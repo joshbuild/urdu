@@ -225,7 +225,8 @@ describe("GET /api/vocab", () => {
 
     expect(await order("")).toEqual([c.id, b.id, a.id]);
     expect(await order("sort=added")).toEqual([c.id, b.id, a.id]);
-    expect(await order("sort=next_review")).toEqual([b.id, c.id, a.id]);
+    // f17 (FR-A7): due times first, then never-reviewed items.
+    expect(await order("sort=next_review")).toEqual([c.id, a.id, b.id]);
     expect(await order("sort=mastery")).toEqual([b.id, c.id, a.id]);
     expect(await order("limit=2")).toEqual([c.id, b.id]);
     expect(await order("limit=2&offset=2")).toEqual([a.id]);
@@ -372,7 +373,7 @@ describe("DELETE /api/vocab/:id", () => {
 });
 
 describe("GET /api/vocab/due", () => {
-  it("returns never-reviewed and past-due items in due order, excluding future ones", async () => {
+  it("returns past-due then never-reviewed items in due order, excluding future ones", async () => {
     const neverOld = await create({ urdu: KITAB });
     const neverNew = await create({ urdu: PANI });
     const dueToday = await create({ urdu: GHAR });
@@ -389,11 +390,12 @@ describe("GET /api/vocab/due", () => {
       await api("GET", "/api/vocab/due"),
     );
     expect(body.today).toBe(today);
+    // f17 (FR-A7): due items by due time, then the new pile first in, first out.
     expect(body.items.map((i) => i.id)).toEqual([
-      neverOld.id,
-      neverNew.id,
       overdue.id,
       dueToday.id,
+      neverOld.id,
+      neverNew.id,
     ]);
   });
 

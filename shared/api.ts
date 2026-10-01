@@ -41,6 +41,11 @@ export type VocabItem = {
   // UTC instant this item was last in an applied completeness check (f13); null means never.
   // Written like checked_at: only by the check apply, and without touching updated_at.
   filled_at: string | null;
+  // f17 (FR-K): the harvest whose paste created this item, if any.
+  harvest_id: string | null;
+  // UTC instant the item entered review; null means queued (in the vault, never due). Release is
+  // not an edit, so it leaves updated_at alone.
+  released_at: string | null;
   created_at: string;
   updated_at: string;
 };
@@ -138,6 +143,24 @@ export type Handoff = {
   outcome: unknown;
 };
 
+// f17 (FR-K): a story or page to harvest. The URL, when set, is its identity.
+export type Source = {
+  id: string;
+  name: string;
+  url: string | null;
+  notes: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+// f17 (FR-K): one pass over a source at a filter such as "CEFR A2+"; collects one or more pastes.
+export type Harvest = {
+  id: string;
+  source_id: string;
+  filter: string | null;
+  created_at: string;
+};
+
 // The whole vault except sessions (PRD §6 Portability).
 export type ExportResponse = {
   exported_at: string;
@@ -148,6 +171,8 @@ export type ExportResponse = {
   review_events: ReviewEvent[];
   tags: Tag[];
   handoffs: Handoff[];
+  sources: Source[];
+  harvests: Harvest[];
 };
 
 // f16 (FR-J): the Dash's six blocks, derived by shared/dash.ts. The active ladder lets the client

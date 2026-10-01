@@ -99,11 +99,12 @@ describe("POST /api/admin/import", () => {
     expect(item.kind).toBe("phrase");
   });
 
-  it("leaves a never-reviewed row due now", async () => {
+  it("leaves a never-reviewed row due now, released at its added_at (f17)", async () => {
     await one({ last_reviewed_on: null, mastery: 0 });
     const item = await onlyRow();
     expect(item.last_reviewed_at).toBeNull();
     expect(item.due_at).toBeNull();
+    expect(item.released_at).toBe(item.added_at);
     expect(item).toMatchObject({ ladder_id: 1, ladder_step: 0, interval_seconds: 0 });
   });
 

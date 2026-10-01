@@ -151,10 +151,12 @@ async function importOne(
         .prepare(
           `INSERT INTO vocab (id, urdu, urdu_key, kind, roman, english, notes, example_urdu,
              example_english, tags, favourite, ladder_id, ladder_step, interval_seconds,
-             added_at, last_reviewed_at, due_at, source, airtable_id, created_at, updated_at)
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'airtable', ?, ?, ?)`,
+             added_at, last_reviewed_at, due_at, source, airtable_id, released_at, created_at,
+             updated_at)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'airtable', ?, ?, ?, ?)`,
         )
-        .bind(id, ...columns, record.airtable_id, at, at);
+        // f17: an imported item was in review from when it was added, like the 0007 backfill.
+        .bind(id, ...columns, record.airtable_id, record.added_at, at, at);
 
   await db.batch([...tagStatements(db, tags, []), write]);
 

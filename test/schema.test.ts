@@ -74,9 +74,11 @@ describe("migrations", () => {
     ).all<{ name: string }>();
     expect(results.map((r) => r.name)).toEqual([
       "handoffs",
+      "harvests",
       "review_events",
       "sessions",
       "settings",
+      "sources",
       "tags",
       "vocab",
       "voice_sessions",

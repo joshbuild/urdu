@@ -10,6 +10,8 @@ let ipCounter = 0;
 export const TABLES = [
   "review_events",
   "vocab",
+  "harvests",
+  "sources",
   "handoffs",
   "tags",
   "sessions",

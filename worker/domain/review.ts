@@ -179,6 +179,9 @@ export async function applyReview(
     interval_seconds: next.interval_seconds,
     last_reviewed_at: next.last_reviewed_at,
     due_at: next.due_at,
+    // f17: a tracked review releases a queued item, which would otherwise be scheduled but
+    // never due. A released item keeps its release instant.
+    released_at: current.released_at ?? at,
     updated_at: at,
   };
   const event: ReviewEvent = {
@@ -236,7 +239,8 @@ export async function applyReview(
     db
       .prepare(
         `UPDATE vocab SET ladder_id = ?, ladder_step = ?, interval_seconds = ?,
-           last_reviewed_at = ?, due_at = ?, updated_at = ?
+           last_reviewed_at = ?, due_at = ?, released_at = coalesce(released_at, ?),
+           updated_at = ?
          WHERE ${unchanged}`,
       )
       .bind(
@@ -245,6 +249,7 @@ export async function applyReview(
         item.interval_seconds,
         item.last_reviewed_at,
         item.due_at,
+        at,
         item.updated_at,
         ...guard,
       ),

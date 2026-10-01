@@ -4,6 +4,8 @@
 // 0004 → 0005 (f12): the setting moves to its day-anchored successor and untouched new items to
 // its entry rung; nothing else changes.
 // 0005 → 0006 (f13): filled_at arrives null on every row, the rows otherwise untouched.
+// 0006 → 0007 (f17): every existing row is released at its added_at and unlinked; nothing is
+// queued.
 import { env } from "cloudflare:workers";
 import { beforeEach, describe, expect, it } from "vitest";
 
@@ -27,6 +29,8 @@ beforeEach(async () => {
     "review_events",
     "review_events_new",
     "vocab",
+    "harvests",
+    "sources",
     "vocab_new",
     "handoffs",
     "tags",
@@ -303,5 +307,65 @@ describe("migration 0006_vocab_fill", () => {
       .prepare("SELECT sql FROM sqlite_master WHERE type = 'index' AND name = 'vocab_fill'")
       .first<{ sql: string }>();
     expect(index?.sql).toContain("(filled_at, added_at)");
+  });
+});
+
+describe("migration 0007_vocab_intake", () => {
+  it("releases every existing row at its added_at, links none, and adds the tables", async () => {
+    for (const prefix of ["0002", "0003", "0004", "0005", "0006"]) await apply(prefix);
+    const added = ["2026-08-01T09:00:00.000Z", "2026-09-01T09:00:00.000Z"];
+    await db.batch(
+      ["01J00000000000000000000001", "01J00000000000000000000002"].map((id, i) =>
+        db
+          .prepare(
+            `INSERT INTO vocab (id, urdu, urdu_key, kind, ladder_id, ladder_step,
+               interval_seconds, added_at, last_reviewed_at, due_at, source, created_at, updated_at)
+             VALUES (?, ?, ?, 'word', 8, 2, 36327, ?, ?, ?, 'manual', ?, ?)`,
+          )
+          .bind(
+            id,
+            `w${i}`,
+            `w${i}`,
+            added[i],
+            i === 0 ? NOW : null,
+            i === 0 ? NOW : null,
+            NOW,
+            NOW,
+          ),
+      ),
+    );
+    const before = (await db.prepare("SELECT * FROM vocab ORDER BY id").all()).results;
+
+    await apply("0007");
+
+    const after = (await db.prepare("SELECT * FROM vocab ORDER BY id").all()).results;
+    expect(after).toEqual(
+      before.map((row, i) => ({ ...row, harvest_id: null, released_at: added[i] })),
+    );
+    const queued = await db
+      .prepare("SELECT count(*) AS n FROM vocab WHERE released_at IS NULL")
+      .first<{ n: number }>();
+    expect(queued?.n).toBe(0);
+    const names = (
+      await db
+        .prepare(
+          "SELECT name FROM sqlite_master WHERE name IN ('sources', 'harvests', 'sources_url', 'vocab_queue') ORDER BY name",
+        )
+        .all<{ name: string }>()
+    ).results.map((r) => r.name);
+    expect(names).toEqual(["harvests", "sources", "sources_url", "vocab_queue"]);
+  });
+
+  it("refuses a second source with the same URL", async () => {
+    for (const prefix of ["0002", "0003", "0004", "0005", "0006", "0007"]) await apply(prefix);
+    const insert = (id: string) =>
+      db
+        .prepare(
+          "INSERT INTO sources (id, name, url, created_at, updated_at) VALUES (?, 'a', 'https://x.test/s', ?, ?)",
+        )
+        .bind(id, NOW, NOW)
+        .run();
+    await insert("01J00000000000000000000001");
+    await expect(insert("01J00000000000000000000002")).rejects.toThrow(/UNIQUE/);
   });
 });
