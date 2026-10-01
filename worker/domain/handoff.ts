@@ -7,7 +7,7 @@ import type {
   HandoffStatus,
   ProposalResult,
 } from "../../shared/api";
-import { createVocab } from "./vocab";
+import { type CreateOptions, createVocab } from "./vocab";
 
 // A handoff_id already used by the other kind of paste is a conflict, not a repeat.
 export const ID_CONFLICT = "id_conflict";
@@ -44,12 +44,14 @@ export function recordHandoff(
 
 // FR-F2: each proposal is created on the active ladder's entry rung with source coach, or
 // reported as a duplicate. A proposal duplicating an earlier one in the same payload meets the
-// item that one just created.
+// item that one just created. f17: a paste into a harvest links what it creates and queues it
+// unless started now; a duplicate keeps whatever harvest it already has.
 export async function importHandoff(
   db: D1Database,
   request: HandoffRequest,
   now: Date,
   activeLadderId: number,
+  options: CreateOptions = {},
 ): Promise<HandoffResponse | typeof ID_CONFLICT> {
   const stored = await storedOutcome<ProposalResult[]>(db, request.handoff_id, "applied");
   if (stored === ID_CONFLICT) return stored;
@@ -58,7 +60,13 @@ export async function importHandoff(
   const results: ProposalResult[] = [];
   for (const [index, proposal] of request.proposals.entries()) {
     const urdu = proposal.urdu;
-    const result = await createVocab(db, { ...proposal, source: "coach" }, now, activeLadderId);
+    const result = await createVocab(
+      db,
+      { ...proposal, source: "coach" },
+      now,
+      activeLadderId,
+      options,
+    );
     if (result.ok) {
       results.push({ index, urdu, outcome: "created", id: result.item.id });
     } else if (result.error === "duplicate") {
