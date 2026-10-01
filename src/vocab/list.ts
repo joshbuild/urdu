@@ -9,10 +9,18 @@ export interface ListFilters {
   q: string;
   tag: string;
   due: boolean;
+  // f17: queued items only.
+  queued: boolean;
   sort: VocabSort;
 }
 
-export const DEFAULT_FILTERS: ListFilters = { q: "", tag: "", due: false, sort: "added" };
+export const DEFAULT_FILTERS: ListFilters = {
+  q: "",
+  tag: "",
+  due: false,
+  queued: false,
+  sort: "added",
+};
 
 export const SORT_LABELS: Record<VocabSort, string> = {
   added: "Added",
@@ -27,6 +35,7 @@ export function listQuery(filters: ListFilters, offset = 0, limit = PAGE_SIZE): 
   if (q) params.set("q", q);
   if (filters.tag) params.set("tag", filters.tag);
   if (filters.due) params.set("due", "true");
+  if (filters.queued) params.set("queued", "true");
   if (filters.sort !== DEFAULT_FILTERS.sort) params.set("sort", filters.sort);
   if (offset > 0) params.set("offset", String(offset));
   if (limit !== PAGE_SIZE) params.set("limit", String(limit));
@@ -34,13 +43,23 @@ export function listQuery(filters: ListFilters, offset = 0, limit = PAGE_SIZE): 
   return query ? `/api/vocab?${query}` : "/api/vocab";
 }
 
+// f17: a queued item (released_at null) waits in the vault and is never due. An absent
+// released_at reads as released, for callers that only know the schedule.
+type Scheduled = Pick<VocabItem, "due_at"> & { released_at?: string | null };
+
+export function isQueued(item: { released_at?: string | null }): boolean {
+  return item.released_at === null;
+}
+
 // Never-reviewed and overdue items are both simply "due" to the reader of the list (FR-A3).
 // `now` is an ISO instant; due times are exact (f09), so an item can fall due mid-afternoon.
-export function isDue(item: Pick<VocabItem, "due_at">, now: string): boolean {
+export function isDue(item: Scheduled, now: string): boolean {
+  if (isQueued(item)) return false;
   return item.due_at === null || item.due_at <= now;
 }
 
-export function reviewLabel(item: Pick<VocabItem, "due_at">, now: string): string {
+export function reviewLabel(item: Scheduled, now: string): string {
+  if (isQueued(item)) return "Queued";
   if (item.due_at === null || isDue(item, now)) return "Due now";
   return `Due in ${formatInterval((Date.parse(item.due_at) - Date.parse(now)) / 1000)}`;
 }

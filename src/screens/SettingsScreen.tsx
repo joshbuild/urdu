@@ -9,6 +9,7 @@ import { LADDERS } from "../../shared/ladders";
 import { formatUsd, isCapUsd, MAX_CAP_USD } from "../../shared/voice-cost";
 import { isUrdu, speak } from "../reader/speech";
 import type { VoiceState } from "../reader/useVoice";
+import { MAX_BATCH, MIN_BATCH, parseBatchSize } from "../settings/batchSize";
 import {
   MAX_SESSION_LIMIT,
   MIN_SESSION_LIMIT,
@@ -25,12 +26,15 @@ export function SettingsScreen({
   busy,
   voiceState,
   activeLadderId,
+  batchSize,
   onChanged,
 }: {
   onLock: () => void;
   busy: boolean;
   voiceState: VoiceState;
   activeLadderId: number;
+  // f17: new words per day, from status.
+  batchSize: number;
   // Settings on the server changed; App refreshes status, which carries the active ladder.
   onChanged: () => void;
 }) {
@@ -40,6 +44,8 @@ export function SettingsScreen({
   const [spacingError, setSpacingError] = useState("");
   const [spend, setSpend] = useState<VoiceSpendResponse | null>(null);
   const [capError, setCapError] = useState("");
+  const [batchText, setBatchText] = useState(() => String(batchSize));
+  const [batchError, setBatchError] = useState("");
 
   // Today's voice spend, read once when Settings opens.
   useEffect(() => {
@@ -86,6 +92,31 @@ export function SettingsScreen({
       if (fresh.ok) setSpend((await fresh.json()) as VoiceSpendResponse);
     } catch {
       setCapError("Could not connect. Check your connection and try again.");
+    }
+  }
+
+  // f17: saved when the field is left; the Worker validates 1–50.
+  async function saveBatch() {
+    const n = parseBatchSize(batchText);
+    if (n === null) {
+      setBatchError(`A whole number from ${MIN_BATCH} to ${MAX_BATCH}.`);
+      return;
+    }
+    setBatchError("");
+    setBatchText(String(n));
+    if (n === batchSize) return;
+    try {
+      const response = await fetch("/api/settings", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ intake_batch_size: n }),
+      });
+      if (response.ok) onChanged();
+      else if (response.status === 401)
+        setBatchError("This device is locked. Unlock it and try again.");
+      else setBatchError("Could not save. Please try again.");
+    } catch {
+      setBatchError("Could not connect. Check your connection and try again.");
     }
   }
 
@@ -183,6 +214,27 @@ export function SettingsScreen({
         A whole number from {MIN_SESSION_LIMIT} to {MAX_SESSION_LIMIT}. Due items beyond it wait for
         the next session.
       </p>
+
+      <label htmlFor="batch-size">New words per day</label>
+      <input
+        id="batch-size"
+        type="number"
+        inputMode="numeric"
+        min={MIN_BATCH}
+        max={MAX_BATCH}
+        value={batchText}
+        onChange={(event) => setBatchText(event.target.value)}
+        onBlur={() => void saveBatch()}
+        aria-describedby="batch-size-hint"
+      />
+      <p id="batch-size-hint" className="hint">
+        Released each day when the new pile is below it; also the size of Intake.
+      </p>
+      {batchError && (
+        <p className="error" role="alert">
+          {batchError}
+        </p>
+      )}
 
       <fieldset className="direction" disabled={spacingBusy}>
         <legend>Review spacing</legend>

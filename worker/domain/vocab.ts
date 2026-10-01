@@ -265,6 +265,8 @@ export type ListQuery = {
   q?: string;
   tag?: string;
   due?: boolean;
+  // f17: queued items only.
+  queued?: boolean;
   sort: VocabSort;
   limit: number;
   offset: number;
@@ -304,6 +306,7 @@ export async function listVocab(
     where.push(DUE);
     params.push(now);
   }
+  if (query.queued) where.push("released_at IS NULL");
 
   const whereSql = where.length > 0 ? `WHERE ${where.join(" AND ")}` : "";
   const [rows, count] = await db.batch([

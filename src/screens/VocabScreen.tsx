@@ -87,6 +87,7 @@ export function VocabScreen({
             onChanged();
             toList();
           }}
+          onReleased={onChanged}
         />
       )}
 

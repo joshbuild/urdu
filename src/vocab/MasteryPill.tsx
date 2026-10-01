@@ -22,3 +22,8 @@ export function MasteryPill({ item }: { item: Scheduled }) {
     </span>
   );
 }
+
+// f17: a queued item has no mastery yet; it shows this instead of a pill.
+export function QueuedBadge() {
+  return <span className="mastery-pill mastery-pill--queued">Queued</span>;
+}

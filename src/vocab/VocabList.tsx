@@ -2,8 +2,8 @@
 
 import { useEffect, useState } from "react";
 import type { TagsResponse, VocabItem, VocabListResponse, VocabSort } from "../../shared/api";
-import { type ListFilters, listQuery, reviewLabel, SORT_LABELS } from "./list";
-import { MasteryPill } from "./MasteryPill";
+import { isQueued, type ListFilters, listQuery, reviewLabel, SORT_LABELS } from "./list";
+import { MasteryPill, QueuedBadge } from "./MasteryPill";
 
 const SEARCH_DELAY_MS = 250;
 
@@ -127,9 +127,18 @@ export function VocabList({
         <input
           type="checkbox"
           checked={filters.due}
-          onChange={(event) => onFilters({ ...filters, due: event.target.checked })}
+          onChange={(event) => onFilters({ ...filters, due: event.target.checked, queued: false })}
         />
         Due only
+      </label>
+      {/* f17: the two narrow to disjoint sets, so ticking one clears the other. */}
+      <label className="check">
+        <input
+          type="checkbox"
+          checked={filters.queued}
+          onChange={(event) => onFilters({ ...filters, queued: event.target.checked, due: false })}
+        />
+        Queued only
       </label>
 
       <p className="hint" role="status">
@@ -150,7 +159,8 @@ export function VocabList({
               </span>
               <span className="vocab-row-gloss">{item.english || "—"}</span>
               <span className="vocab-row-meta">
-                <MasteryPill item={item} /> {reviewLabel(item, now)}
+                {isQueued(item) ? <QueuedBadge /> : <MasteryPill item={item} />}{" "}
+                {isQueued(item) ? "Waiting to start" : reviewLabel(item, now)}
               </span>
             </button>
           </li>

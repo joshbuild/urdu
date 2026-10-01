@@ -19,7 +19,7 @@ export function App() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [openVocabId, setOpenVocabId] = useState<string | null>(null);
-  // One voice for the whole app: the reader speaks with what Settings chose (FR-C4, FR-I1).
+  // One voice for the whole app: everything speaks with what Settings chose (FR-C4, FR-I1).
   const voiceState = useVoice();
 
   const loadStatus = useCallback(async (signal?: AbortSignal) => {
@@ -166,6 +166,7 @@ export function App() {
                 busy={busy}
                 voiceState={voiceState}
                 activeLadderId={status.active_ladder_id}
+                batchSize={status.intake.batch_size}
                 onChanged={refreshStatus}
               />
             )}

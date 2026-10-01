@@ -156,6 +156,8 @@ vocabRoutes.get("/api/vocab", async (c) => {
   if (isError(offset)) return invalid(c, offset);
   const due = boolParam(c, "due");
   if (isError(due)) return invalid(c, due);
+  const queued = boolParam(c, "queued");
+  if (isError(queued)) return invalid(c, queued);
   const sort = c.req.query("sort") ?? "added";
   if (!(VOCAB_SORTS as readonly string[]).includes(sort)) {
     return invalid(c, { field: "sort", message: `must be one of ${VOCAB_SORTS.join(", ")}` });
@@ -163,7 +165,15 @@ vocabRoutes.get("/api/vocab", async (c) => {
 
   const result = await listVocab(
     c.env.DB,
-    { q: c.req.query("q"), tag: tagParam(c), due, sort: sort as VocabSort, limit, offset },
+    {
+      q: c.req.query("q"),
+      tag: tagParam(c),
+      due,
+      queued,
+      sort: sort as VocabSort,
+      limit,
+      offset,
+    },
     new Date().toISOString(),
   );
   const body: VocabListResponse = result;

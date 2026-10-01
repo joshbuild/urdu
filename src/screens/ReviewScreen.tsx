@@ -13,7 +13,9 @@ import type {
 } from "../../shared/api";
 import { ladder } from "../../shared/ladders";
 import { GRADE_LABELS, GRADES, type Grade } from "../../shared/mastery";
+import { TankMeter } from "../harvest/TankMeter";
 import { speak } from "../reader/speech";
+import { intakeOffer, startCounts } from "../review/intake";
 import {
   AHEAD_STOPS,
   type AheadStop,
@@ -59,6 +61,13 @@ export function ReviewScreen({
   const [upcoming, setUpcoming] = useState<UpcomingResponse | null>(null);
   const [loading, setLoading] = useState(false);
   const [startError, setStartError] = useState("");
+  const [intaking, setIntaking] = useState(false);
+  // A fresh status (new intake counts) ends an Intake in flight.
+  const intakeCounts = status.intake;
+  useEffect(() => {
+    void intakeCounts;
+    setIntaking(false);
+  }, [intakeCounts]);
 
   const loadUpcoming = useCallback((signal?: AbortSignal) => {
     fetch("/api/vocab/upcoming", { cache: "no-store", signal })
@@ -86,6 +95,28 @@ export function ReviewScreen({
   function refresh() {
     loadUpcoming();
     onChanged();
+  }
+
+  // f17: Intake releases the next batch at once, then the counts refetch. No confirm step: it
+  // only moves words from the queue into the new pile.
+  // The button stays disabled until the refreshed status arrives (the effect below), so a second
+  // tap can't release a second batch against the old offer.
+  async function intake(count: number) {
+    setIntaking(true);
+    setStartError("");
+    try {
+      const response = await fetch("/api/intake/release", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ count }),
+      });
+      if (!response.ok && response.status !== 401) throw new Error("intake failed");
+    } catch {
+      setStartError("Could not take in more words. Check your connection and try again.");
+      setIntaking(false);
+    } finally {
+      onChanged();
+    }
   }
 
   async function start() {
@@ -157,17 +188,30 @@ export function ReviewScreen({
   }
 
   if (state.phase === "start") {
+    const offer = intakeOffer(status.intake);
     return (
       <section className="panel">
         <p className="eyebrow">REVIEW</p>
         <div className="due-row">
-          <h2>
-            {status.due.toLocaleString()} {status.due === 1 ? "item is" : "items are"} due.
-          </h2>
+          <h2>{startCounts(status.due, status.intake.new)}</h2>
           <button type="button" className="secondary inline" onClick={refresh}>
             Refresh
           </button>
         </div>
+        <p className="hint review-new-hint">
+          New words come after due ones, so stopping early leaves new words for later.
+        </p>
+        <TankMeter intake={status.intake} compact />
+        {offer && (
+          <button
+            type="button"
+            className="secondary intake"
+            onClick={() => void intake(offer.count)}
+            disabled={intaking}
+          >
+            {intaking ? "Taking in…" : offer.label}
+          </button>
+        )}
         <fieldset className="direction">
           <legend>Direction</legend>
           {(Object.keys(DIRECTION_LABELS) as (keyof typeof DIRECTION_LABELS)[]).map((key) => (

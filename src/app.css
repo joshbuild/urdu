@@ -736,6 +736,13 @@ button.grade--hesitant {
   color: #0f5553;
 }
 
+/* f17: a queued item has no band yet; dashed, so it reads as waiting rather than a level. */
+.mastery-pill--queued {
+  border: 1px dashed #829b97;
+  background: #f6f4ed;
+  color: #33504d;
+}
+
 .mastery-pill--6 {
   border-color: #054e51;
   background: #054e51;

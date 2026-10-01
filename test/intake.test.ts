@@ -416,3 +416,16 @@ describe("intake_batch_size setting", () => {
     expect(await releasedIds()).toHaveLength(1);
   });
 });
+
+describe("GET /api/vocab?queued=true", () => {
+  it("lists only queued items, in queue order, and rejects a bad value", async () => {
+    const ids = await queue(3);
+    await make(0);
+    const body = await json<{ items: VocabItem[]; total: number }>(
+      await api("GET", "/api/vocab?queued=true&sort=next_review"),
+    );
+    expect(body.total).toBe(3);
+    expect(body.items.map((i) => i.id)).toEqual(ids);
+    expect((await api("GET", "/api/vocab?queued=maybe")).status).toBe(400);
+  });
+});

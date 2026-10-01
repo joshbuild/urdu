@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { DEFAULT_FILTERS, isDue, listQuery, parseSort, reviewLabel } from "./list";
+import { DEFAULT_FILTERS, isDue, isQueued, listQuery, parseSort, reviewLabel } from "./list";
 
 describe("listQuery", () => {
   it("is the bare route for default filters", () => {
@@ -7,7 +7,10 @@ describe("listQuery", () => {
   });
 
   it("sends only what was chosen, with the search trimmed", () => {
-    const url = listQuery({ q: "  book ", tag: "nouns", due: true, sort: "mastery" }, 50);
+    const url = listQuery(
+      { q: "  book ", tag: "nouns", due: true, queued: false, sort: "mastery" },
+      50,
+    );
     const params = new URL(url, "http://x").searchParams;
     expect(Object.fromEntries(params)).toEqual({
       q: "book",
@@ -21,6 +24,10 @@ describe("listQuery", () => {
   it("encodes Urdu search text", () => {
     const url = listQuery({ ...DEFAULT_FILTERS, q: "کتاب" });
     expect(new URL(url, "http://x").searchParams.get("q")).toBe("کتاب");
+  });
+
+  it("asks for queued items only (f17)", () => {
+    expect(listQuery({ ...DEFAULT_FILTERS, queued: true })).toBe("/api/vocab?queued=true");
   });
 
   it("drops a whitespace-only search", () => {
@@ -49,6 +56,18 @@ describe("isDue / reviewLabel", () => {
     // Reviewed a minute ago onto the one-day rung: "1 d", not "24 h" (f12).
     const almostDay = new Date(Date.parse(now) + 86_340_000).toISOString();
     expect(reviewLabel({ due_at: almostDay }, now)).toBe("Due in 1 d");
+  });
+});
+
+describe("queued items (f17)", () => {
+  const now = "2026-09-18T20:00:00.000Z";
+
+  it("are never due, and say Queued instead of a due time", () => {
+    expect(isQueued({ released_at: null })).toBe(true);
+    expect(isQueued({ released_at: now })).toBe(false);
+    expect(isDue({ due_at: null, released_at: null }, now)).toBe(false);
+    expect(reviewLabel({ due_at: null, released_at: null }, now)).toBe("Queued");
+    expect(reviewLabel({ due_at: null, released_at: now }, now)).toBe("Due now");
   });
 });
 
