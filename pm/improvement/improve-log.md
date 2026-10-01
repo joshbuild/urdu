@@ -38,3 +38,6 @@ One line per observation, semantic-line-break friendly, greppable by `[area]` fo
 ## Log
 
 *(Append newest-last. Empty at birth — capture fires from `/pm-stress-test` and `/pm-wrap --improve`; consolidation from `/pm-clean`'s deep sweep.)*
+- 2026-10-01 · [verify] · Headless Edge at --window-size=360 lays the page out wider and crops the screenshot, so the first 360 px check showed false clipping and hid the real six-tab overflow; framing the page in a 360 px iframe gave a true viewport. Watch: phone-width headless checks need an iframe (or device emulation), not just a window size. **Ev:** f16 journal 261001b; commit 0501e1f. **St:** open
+- 2026-10-01 · [review] · A derived metric was banded on the raw ratio while the UI showed a rounded percent, so 90.4% displayed "90%" beside "Recall is high"; the independent review caught it. Watch: when a threshold drives wording next to a rounded number, compare the rounded value. **Ev:** shared/dash.ts recallBand; commit 0501e1f. **St:** open
+- 2026-10-01 · [review] · An Intl.DateTimeFormat per instant made a whole-history derivation 63–111 ms on 5,000 events; review flagged it against the Workers CPU limit, and memoising per 15-minute slot fixed it. Watch: any per-event timezone bucketing in the Worker should reuse one formatter and memoise. **Ev:** shared/dates.ts dateIn; commit 7eb3514 (Decisions). **St:** open

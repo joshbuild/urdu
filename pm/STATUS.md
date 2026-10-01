@@ -15,12 +15,12 @@
 - f14 `new-word-finder` — 🟡 IN PROGRESS, s01–s03 built 2026-09-28; s04 phone next (deploy only, re-paste the Project instructions, smoke-test-14) → `features/f14-new-word-finder.md`
 - mp03 `review-ahead-hours` — 🟡 IN PROGRESS, s01–s03 built 2026-09-27; s04 phone next (smoke-test-mp03, rides the f12 deploy; no migration) → `mini-plans/mp03-review-ahead-hours.md`
 - f15 `review-correction` — 🟡 IN PROGRESS, s01–s02 built and `pnpm check` green; s03 phone next (no migration) → `features/f15-review-correction.md`
-- f16 `dash` — 🟡 IN PROGRESS, opened and stress-tested 2026-10-01; s01 `shared/dash.ts` next → `features/f16-dash.md`
+- f16 `dash` — 🟡 IN PROGRESS, s01–s04 built 2026-10-01; s04 phone next (deploy only, smoke-test-16) → `features/f16-dash.md`
 
 ## Next Session Pointers
 *The 1–3 concrete next actions for a cold start.*
 
-1. **f16 `dash`**: build s01, `KNOWN_MIN_SECONDS` and `shared/dash.ts` with `shared/dash.test.ts`, per the stress-tested plan; then s02 the route. No migration.
+1. **f16 `dash`**: rides any deploy (no migration). The sponsor runs `smoke-tests/smoke-test-16.md` on the phone; step 2 also checks the route stays inside the Workers CPU limit. Then `/pm-close f16`.
 
 2. **f15 `review-correction`**: after the next deploy, run `smoke-tests/smoke-test-15.md` on the installed phone; then `/pm-close f15` if green.
 

@@ -2,7 +2,11 @@
 
 ## Current state
 
-Opened and stress-tested 2026-10-01; no code yet. s01 (`shared/dash.ts` and tests) next.
+s01–s04 built 2026-10-01 (`0b58aa6`, `7eb3514`, `0501e1f`, `4625e56`); `pnpm check` green at 645. Done When 1–3 hold; 4 is the sponsor's phone run of `smoke-tests/smoke-test-16.md` after deploy (no migration), then `/pm-close f16`.
+
+## 261001b
+
+Orchestrated run, s01–s04. s01: `KNOWN_MIN_SECONDS`/`isKnown` in `shared/mastery.ts`, `dateIn`/`weekdayOf` in `shared/dates.ts`, `buildDash` in `shared/dash.ts`; tests written first against a stub (35 assertion reds, e.g. `expected -1 to be 2`), then green. Review found no logic bugs but two test gaps (J5's exact-14 d crossing and per-week distinctness, J4's 30-day edge), now pinned, and an Intl-per-call cost: 800 items × 5,000 events took 63–111 ms; memoising the home day per 15-minute slot and week starts per day brought it to 21–30 ms warm, about 60 ms cold. A Workers free-plan 10 ms CPU cap, if it applies, is the open risk; smoke-test-16 step 2 checks it. s02: `DashResponse`, `worker/domain/dash.ts`, `GET /api/dash` (no-store); red `expected 404 to be 200`, then green. s03: `src/dash/` (view helpers test-first, 7 reds; DashView with SVG charts; fixtures run through the real `buildDash`), `DashScreen`, tab after Review, `--chart-*` tokens. Headless 360 px: the first shots were cropped because headless Edge lays out wider than 360, so the pages were framed in a 360 px iframe; that showed six tabs overflowing, fixed by dropping tab side padding and 0.8rem labels. Review found the recall percent could contradict the hint (90.4% shown as 90% but banded high); the band now uses the displayed whole percent (red at 271/300). It also found backlog value labels colliding at two digits (pairs widened, checked at 2×), and missing tests for card order and ladder-end wiring, now added. s04: smoke-test-16, CHANGELOG, PRD FR-J marked built with the phone check pending, AGENTS Project state.
 
 ## 261001a
 

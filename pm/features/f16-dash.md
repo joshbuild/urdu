@@ -1,6 +1,6 @@
 # Feature Plan — Dash
 
-**Status**: 🟡 IN PROGRESS — opened and stress-tested 2026-10-01; s01 next
+**Status**: 🟡 IN PROGRESS — s01–s04 built 2026-10-01; sponsor phone smoke (smoke-test-16) next
 **Handle**: `f16`
 **Created**: *2026-10-01* · **Updated**: *2026-10-01*
 
@@ -92,11 +92,12 @@ All six are pure functions in `shared/` (new `shared/dash.ts`) over the full `vo
 
 ### Recently Completed
 
+- 2026-10-01 — s01–s04 built: `shared/dash.ts`, `GET /api/dash`, the Dash tab, smoke-test-16 and doc ripple; `pnpm check` green at 645; headless 360 px screenshots of the three fixtures are clean (Done When 1–3).
 - 2026-10-01 — Proposal agreed with the sponsor; DECISIONS 261001a, PRD FR-J, PLAN and STATUS updated; f16 opened. Stress-tested the same day: metric definitions pinned, the first slice split into derivations (s01) and route (s02), Done When made checkable.
 
 ### Next Steps
 
-- s01: `KNOWN_MIN_SECONDS` and `shared/dash.ts` with `shared/dash.test.ts`.
+- Sponsor deploys (no migration) and runs `smoke-tests/smoke-test-16.md` on the phone; then `/pm-close f16`.
 
 ### Open Questions
 
@@ -115,4 +116,5 @@ All six are pure functions in `shared/` (new `shared/dash.ts`) over the full `vo
 - 2026-10-01 (s01) — The band history's today point uses each item's current band, not the replayed one, so it always matches the Known headline and the Vocab tab after a step correction or check reset (neither records an event). A jump between yesterday and today is the honest picture.
 - 2026-10-01 (s01) — Beyond 90 days the history is a point every 7 days counting back from today, not Monday-aligned: the last point is always today. The Monday week applies to the backlog and calendar.
 - 2026-10-01 (s01) — Trouble ties on lapses and latest lapse sort by `urdu` code point, not a locale collation: deterministic in Node and workerd alike.
+- 2026-10-01 (s03) — The recall band is computed on the whole percent the card shows (`Math.round`), so a displayed 90% is always On target and never contradicts the hint.
 - 2026-10-01 (s02) — Cost: `buildDash` on 800 items × 5,000 events runs 21–30 ms warm and about 60 ms cold in Node, inside the plan's 100 ms trigger, after memoising the home day per 15-minute slot. The Workers free plan's 10 ms CPU cap is the open risk; the phone smoke checks that the route loads. SQL aggregates are the fallback.

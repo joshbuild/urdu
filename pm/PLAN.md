@@ -72,4 +72,4 @@
 | f13 | `features/f13-check-modes.md` | 🟡 in progress (s01–s04 built, s05 phone next) | Copy check prompt opens a dialog: correctness, completeness or both, fields, count, only unchecked; completeness replaces the fill-in pair (FR-F9, retires FR-F7). |
 | f14 | `features/f14-new-word-finder.md` | 🟡 in progress (s01–s03 built, s04 phone next) | Paste a ChatGPT word list, see which words are new, copy only those back for `vocab-json`; ⓘ help beside each CHATGPT button row (FR-F10). |
 | f15 | `features/f15-review-correction.md` | 🟡 in progress (s01–s02 built, s03 phone next) | Back to the previous review card, replace an accidental grade, and tap Urdu to speak. |
-| f16 | `features/f16-dash.md` | 🟡 in progress (s01 next) | Dash tab: Known count, due forecast, recall rate, trouble items, learning backlog, review calendar (FR-J). |
+| f16 | `features/f16-dash.md` | 🟡 in progress (s01–s04 built; phone next) | Dash tab: Known count, due forecast, recall rate, trouble items, learning backlog, review calendar (FR-J). |

@@ -7,6 +7,7 @@
 
 ## Log
 *Newest at top.*
+- 261001b · f16 dash · orchestrated s01–s04: `shared/dash.ts` derivations, `GET /api/dash`, the Dash tab with SVG charts, smoke-test-16; reviews caught a percent/hint contradiction, label collisions and test gaps; `pnpm check` green at 645; phone smoke next → `features/f16-dash-journal.md`
 - 261001a · f16 dash · sponsor asked for a motivating, useful dashboard; proposed six elements and a cut list; sponsor set Known at 14 d, kept the calendar without streaks, chose a sixth tab (DECISIONS 261001a, PRD FR-J). Opened and stress-tested (14 resolved, 2 escalated: no mock gate, tab after Review); no code yet → `features/f16-dash-journal.md`
 - 260929a · f15 review-correction · built guarded regrading, Back on review cards and end tally, and tap-to-speak Urdu; `pnpm check` green (589 tests); phone smoke next → `features/f15-review-correction-journal.md`
 - 260928b · f14 new-word-finder · sponsor wanted ChatGPT to write entries only for words not already in the vault; chose option 2 of three (a bare word list checked by `urdu_key`, exact matches only) plus an ⓘ per CHATGPT button row. Planned, stress-tested (9 resolved, none escalated), opened; built s01 `POST /api/vocab/match` (read-only, chunks of 90 keys), s02 `extractWords`, the Find new words sheet, the ⓘ rows and a `vocab-list` Project command (Urdu script even from Devanagari), s03 PRD FR-F10, CHANGELOG, smoke-test-14; `pnpm check` green at 583; seen in headless Edge at phone width → `features/f14-new-word-finder-journal.md`
