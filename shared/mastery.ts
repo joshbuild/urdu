@@ -82,6 +82,17 @@ export function masteryBand(item: {
   return item.last_reviewed_at === null ? 0 : bandForInterval(item.interval_seconds);
 }
 
+// f16 (FR-J1): an item is Known once its scheduled interval reaches 14 days. The sponsor's bar,
+// a threshold of its own rather than a band edge.
+export const KNOWN_MIN_SECONDS = 14 * DAY;
+
+export function isKnown(item: {
+  interval_seconds: number;
+  last_reviewed_at: string | null;
+}): boolean {
+  return item.last_reviewed_at !== null && item.interval_seconds >= KNOWN_MIN_SECONDS;
+}
+
 export function bandName(band: MasteryBand): string {
   return MASTERY_BANDS[band].name;
 }

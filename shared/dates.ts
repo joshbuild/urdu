@@ -20,15 +20,29 @@ export function isIsoDate(value: unknown): value is string {
 }
 
 export function todayIn(timeZone: string, instant: Date = new Date()): string {
-  const parts = new Intl.DateTimeFormat("en-US", {
+  return dateIn(timeZone)(instant);
+}
+
+// The same rule as todayIn for many instants: one formatter, reused (f16 buckets every event).
+export function dateIn(timeZone: string): (instant: Date) => string {
+  const format = new Intl.DateTimeFormat("en-US", {
     timeZone,
     year: "numeric",
     month: "2-digit",
     day: "2-digit",
-  }).formatToParts(instant);
-  const part = (type: Intl.DateTimeFormatPartTypes) =>
-    parts.find((p) => p.type === type)?.value ?? "";
-  return `${part("year")}-${part("month")}-${part("day")}`;
+  });
+  return (instant) => {
+    const parts = format.formatToParts(instant);
+    const part = (type: Intl.DateTimeFormatPartTypes) =>
+      parts.find((p) => p.type === type)?.value ?? "";
+    return `${part("year")}-${part("month")}-${part("day")}`;
+  };
+}
+
+// Monday = 0 … Sunday = 6, for a calendar date.
+export function weekdayOf(date: string): number {
+  if (!isIsoDate(date)) throw new RangeError(`Not a YYYY-MM-DD date: ${date}`);
+  return (new Date(`${date}T00:00:00Z`).getUTCDay() + 6) % 7;
 }
 
 export function addDays(date: string, days: number): string {
