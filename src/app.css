@@ -6,14 +6,16 @@
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
 
-  /* f16 Dash chart tokens. The band ramp follows the mastery pills, New (rose) to Permanent. */
+  /* f16 Dash chart tokens. The band ramp follows the mastery pills, New (rose) to Permanent,
+     and borrows the grade buttons' hues: Wrong red, Partly rust, Hesitant olive, Correct teal,
+     Confident dark green at the top. */
   --chart-band-0: #e3b9b2;
   --chart-band-1: #eac39c;
-  --chart-band-2: #e3d18f;
+  --chart-band-2: #d9d6a0;
   --chart-band-3: #c7d59a;
   --chart-band-4: #a6d2b4;
   --chart-band-5: #6fb3ae;
-  --chart-band-6: #054e51;
+  --chart-band-6: #1d4a24;
   --chart-bar: #6fa29c;
   --chart-bar-today: #054e51;
   --chart-added: #e0a86f;
@@ -767,6 +769,13 @@ button.grade--hesitant {
   border-color: #6b6a3a;
 }
 
+/* Correct keeps the default teal; Confident goes a step past it, into very dark green. */
+button.grade--confident {
+  --btn-bg: #1d4a24;
+  --btn-bg-hover: #143619;
+  border-color: #1d4a24;
+}
+
 /* Mastery pill: a warm-to-cool ramp up the ladder, New (rose) to Permanent (deep teal).
    Light fills with dark text keep every level readable at 0.8rem. */
 .mastery-pill {
@@ -793,9 +802,9 @@ button.grade--hesitant {
 }
 
 .mastery-pill--2 {
-  border-color: #e3d18f;
-  background: #fbf5da;
-  color: #6a5508;
+  border-color: #d9d6a0;
+  background: #f5f4e1;
+  color: #4f4e24;
 }
 
 .mastery-pill--3 {
@@ -824,8 +833,8 @@ button.grade--hesitant {
 }
 
 .mastery-pill--6 {
-  border-color: #054e51;
-  background: #054e51;
+  border-color: #1d4a24;
+  background: #1d4a24;
   color: #fffef9;
 }
 
