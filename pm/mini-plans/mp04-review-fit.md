@@ -1,6 +1,6 @@
 # Mini-plan — Review card fits one screen
 
-**Status**: 🟡 IN PROGRESS — planned, stress-tested and opened 2026-10-02; s01 build next
+**Status**: 🟡 IN PROGRESS — planned, opened, s01–s02 built 2026-10-02; s03 phone next (no migration, smoke-test-mp04)
 **Handle**: `mp04`
 **Created**: 2026-10-02 · **Updated**: 2026-10-02
 
