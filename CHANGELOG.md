@@ -4,6 +4,7 @@
 
 ### Changed
 
+- A revealed review card fits on one screen: the header is a single slim row, and the grades sit at the foot of the card in two rows (**Wrong**, **Partly** on top; **Hesitant**, **Correct**, **Confident** below), where Reveal was. **Skip**, **Keep grade** and **End** (was End session) moved to the card's top row.
 - New words now come after due ones in a review session, so stopping early on a heavy day leaves new words for later instead of overdue ones.
 - The app opens on Review. The Read tab is parked (its code is kept for a decision on 2026-10-31); **Harvest** takes its place in the tab bar.
 - The new-vocab round trip (Copy new-vocab prompt, Paste new vocab, Find new words) moved from the Vocab tab into a harvest on the Harvest tab. The Vocab tab keeps the check buttons.
