@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   bandName,
   GRADE_DELTAS,
+  GRADE_SHORT_LABELS,
   GRADES,
   gradeDeltas,
   isGrade,
@@ -16,6 +17,12 @@ describe("grades", () => {
   it("are in ladder order with recognition deltas -2..+2", () => {
     expect(GRADES).toEqual(["wrong", "partial", "hesitant", "correct", "confident"]);
     expect(GRADES.map((g) => GRADE_DELTAS[g])).toEqual([-2, -1, 0, 1, 2]);
+  });
+
+  it("have a short label each, distinct, for the review grid", () => {
+    const short = GRADES.map((g) => GRADE_SHORT_LABELS[g]);
+    expect(short).toEqual(["Wrong", "Partly", "Hesitant", "Correct", "Confident"]);
+    expect(new Set(short).size).toBe(GRADES.length);
   });
 
   it("guards grade values", () => {

@@ -12,7 +12,7 @@ import type {
   VocabItem,
 } from "../../shared/api";
 import { ladder } from "../../shared/ladders";
-import { GRADE_LABELS, GRADES, type Grade } from "../../shared/mastery";
+import { GRADE_LABELS, GRADE_SHORT_LABELS, GRADES, type Grade } from "../../shared/mastery";
 import { TankMeter } from "../harvest/TankMeter";
 import { speak } from "../reader/speech";
 import { intakeOffer, startCounts } from "../review/intake";
@@ -326,13 +326,33 @@ export function ReviewScreen({
               Back
             </button>
           )}
+          {/* mp04: Skip and Keep grade live up here so the grade grid fits one screen. */}
+          {completed?.kind === "graded" ? (
+            <button
+              type="button"
+              className="back"
+              onClick={() => dispatch({ type: "next" })}
+              disabled={state.pending}
+            >
+              Keep grade
+            </button>
+          ) : (
+            <button
+              type="button"
+              className="back"
+              onClick={() => dispatch({ type: "skip" })}
+              disabled={state.pending}
+            >
+              Skip
+            </button>
+          )}
           <button
             type="button"
             className="back"
             onClick={() => dispatch({ type: "end" })}
             disabled={state.pending}
           >
-            End session
+            End
           </button>
         </div>
       </div>
@@ -394,31 +414,12 @@ export function ReviewScreen({
               onClick={() => grade(item, value)}
               disabled={state.pending}
             >
-              {GRADE_LABELS[value]}
+              {GRADE_SHORT_LABELS[value]}
             </button>
           ))
         ) : (
-          <button type="button" onClick={() => dispatch({ type: "reveal" })}>
+          <button type="button" className="reveal" onClick={() => dispatch({ type: "reveal" })}>
             Reveal
-          </button>
-        )}
-        {completed?.kind === "graded" ? (
-          <button
-            type="button"
-            className="secondary"
-            onClick={() => dispatch({ type: "next" })}
-            disabled={state.pending}
-          >
-            Keep grade
-          </button>
-        ) : (
-          <button
-            type="button"
-            className="secondary"
-            onClick={() => dispatch({ type: "skip" })}
-            disabled={state.pending}
-          >
-            Skip
           </button>
         )}
       </div>

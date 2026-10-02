@@ -41,6 +41,16 @@ export const GRADE_LABELS: Readonly<Record<Grade, string>> = {
   confident: "Confidently correct",
 };
 
+// mp04: the review card's grade grid puts three buttons in a row, where the full labels don't fit
+// a 360 px phone. Everywhere else (the Recorded hint, the Dash) keeps GRADE_LABELS.
+export const GRADE_SHORT_LABELS: Readonly<Record<Grade, string>> = {
+  wrong: "Wrong",
+  partial: "Partly",
+  hesitant: "Hesitant",
+  correct: "Correct",
+  confident: "Confident",
+};
+
 export function isGrade(value: unknown): value is Grade {
   return typeof value === "string" && (GRADES as readonly string[]).includes(value);
 }

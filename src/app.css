@@ -35,6 +35,14 @@
   --tank-full: #054e51;
   --tank-low: #d8913f;
   --tank-empty: #c96f62;
+
+  /* mp04: the unlocked shell's vertical chrome, one place each, so the review card can fill
+     exactly the space between the header and the tab bar. The tab bar is 8 + 56 + 8 px plus its
+     1 px top border and the bottom inset; the header is a 32 px row and 12 px below it. */
+  --tabbar-h: calc(73px + env(safe-area-inset-bottom));
+  --shell-top: max(12px, env(safe-area-inset-top));
+  --shell-bottom: calc(var(--tabbar-h) + 12px);
+  --brand-block: 44px;
 }
 
 * {
@@ -213,7 +221,30 @@ input[type="range"] {
 /* f03 s01: bottom tab bar. Fixed to the viewport so it stays reachable one-handed;
    the shell reserves room for it so the last panel is never covered. */
 .shell--tabbed {
-  padding-bottom: calc(76px + max(32px, env(safe-area-inset-bottom)));
+  padding-top: var(--shell-top);
+  padding-bottom: var(--shell-bottom);
+}
+
+/* mp04: once unlocked, the header thins to one 32 px row so the screens below get the height.
+   The unlock and loading screens keep the full header. */
+.shell--tabbed .brand {
+  gap: 10px;
+  height: 32px;
+  margin: 0 0 12px;
+}
+
+.shell--tabbed .brand img {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+}
+
+.shell--tabbed .brand .eyebrow {
+  display: none;
+}
+
+.shell--tabbed .brand h1 {
+  font-size: 1.25rem;
 }
 
 .tabs {
@@ -555,7 +586,7 @@ button.danger {
 }
 
 /* f05: review session. Grades sit in a fixed order at the bottom of the card so the thumb
-   learns them; the ladder runs worst to best, top to bottom. */
+   learns them; since mp04 they are a two-row grid, worst to best, the misses on top. */
 .direction {
   margin: 20px 0;
   border: 0;
@@ -653,20 +684,69 @@ button.review-speak-word:focus-visible {
   width: auto;
 }
 
+/* mp04: the card fills the space between the header and the tab bar, so the grade bar sits at
+   its foot and Reveal and the grades share one thumb spot. */
+.panel.review-card {
+  display: flex;
+  flex-direction: column;
+  min-height: calc(100dvh - var(--shell-top) - var(--brand-block) - var(--shell-bottom));
+  padding: 4px 16px 12px;
+}
+
+.review-card .review-top .eyebrow {
+  margin: 0;
+}
+
+.review-card .review-top-actions {
+  gap: 16px;
+}
+
+.review-card .review-top .back {
+  min-height: 40px;
+  margin: 0;
+  padding: 8px 0;
+}
+
+.review-card .entry {
+  margin: 0;
+}
+
+.review-card .entry dt {
+  margin-top: 6px;
+}
+
 .review-prompt {
   margin: 16px 0;
   font-size: 1.5rem;
   font-weight: 600;
 }
 
+/* mp04: two rows of grades, the misses on top (Wrong, Partly), then Hesitant, Correct and
+   Confident, on a six-column grid. Pinned above the tab bar if a long card overflows, with the
+   panel's fill so the text scrolls beneath it. */
 .grade-bar {
+  position: sticky;
+  bottom: var(--tabbar-h);
   display: grid;
+  grid-template-columns: repeat(6, 1fr);
   gap: 8px;
-  margin-top: 24px;
+  margin-top: auto;
+  padding: 12px 0 0;
+  background: #fffef9;
 }
 
-.grade-bar button.secondary {
-  margin-top: 4px;
+.grade-bar button {
+  grid-column: span 2;
+  padding: 8px 4px;
+}
+
+.grade-bar button.grade--wrong,
+.grade-bar button.grade--partial {
+  grid-column: span 3;
+}
+
+.grade-bar button.reveal {
+  grid-column: 1 / -1;
 }
 
 button.grade--wrong {
