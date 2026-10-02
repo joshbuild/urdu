@@ -1,7 +1,7 @@
 // f06: the ChatGPT round trip's prompts (FR-F6; f11/f13 FR-F9) and paste parsing. Pure, so the node
 // project tests them. Each prompt carries a fresh handoff_id for the chat to echo, which makes a
 // pasted reply idempotent: pasting it twice is a no-op in Urdu Core. The standing ChatGPT
-// Project version of newVocabPrompt is chatgpt-project-instructions.md; keep the two in step.
+// Project version of newVocabPrompt is prompts/urdu-coach-project-instructions.md; keep the two in step.
 
 import {
   type CheckOptions,

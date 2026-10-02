@@ -45,7 +45,7 @@ export function tooManyWords(list: WordList): boolean {
 }
 
 // The chat's vocab-json merges its latest list with words typed after the command, so the copied
-// text says to use only these (chatgpt-project-instructions.md names the override).
+// text says to use only these (prompts/urdu-coach-project-instructions.md names the override).
 export const ONLY_THESE = "vocab-json — only these words, none from earlier in the chat:";
 
 export function chatText(words: readonly string[]): string {
