@@ -8,7 +8,7 @@
 ## Inbox
 *Untriaged captures. Drain via `/pm-triage`.*
 
-- (nil)
+- 2026-10-02 Review-ahead slider sometimes reads a nonzero stop the sponsor didn't choose (noticed since f17). Code never sets it, so a touch lands on it. Lead: f17's Intake button above it appears or vanishes when the post-mount status refresh runs the top-up, moving the slider about 56px under a tap meant for Start review. Second, weaker lead: the taller start screen puts the slider in the scroll and thumb zone. Candidate fix: keep the Intake slot's space when there is no offer (visibility hidden), and maybe move review-ahead below Start. Sponsor is observing whether it follows a tap on Start/Intake or a scroll. #sponsor-respond
 
 
 ## Tasks
