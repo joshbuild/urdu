@@ -18,7 +18,7 @@
 - f16 `dash` — 🟡 IN PROGRESS, s01–s04 built 2026-10-01; s04 phone next (deploy only, smoke-test-16) → `features/f16-dash.md`
 - f17 `vocab-intake` — 🟡 IN PROGRESS, s01–s06 built and s07 docs written 2026-10-01; sponsor deploy (0007 + any pending 0005/0006) and smoke-test-17 next → `features/f17-vocab-intake.md`
 - mp04 `review-fit` — 🟡 IN PROGRESS, s01–s02 built 2026-10-02; s03 phone next (deploy only, smoke-test-mp04) → `mini-plans/mp04-review-fit.md`
-- mp05 `voice-vocab-bucket` — 🟡 IN PROGRESS, opened 2026-10-02; s01 `find_vocab` build next (no migration) → `mini-plans/mp05-voice-vocab-bucket.md`
+- mp05 `voice-vocab-bucket` — 🟡 IN PROGRESS, opened and stress-tested 2026-10-02 (s01–s07; Voice words held from top-up, DECISIONS 261002a); s01 `find_vocab` build next (no migration) → `mini-plans/mp05-voice-vocab-bucket.md`
 
 ## Next Session Pointers
 *The 1–3 concrete next actions for a cold start.*
