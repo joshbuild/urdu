@@ -1,7 +1,12 @@
 # Journal — mp03 Review Ahead by Hours
 
-**Current state:** s01–s03 built and committed 2026-09-27 (`d1dbab6`); s04 phone next —
-smoke-test-mp03, riding the f12 deploy (no migration).
+**Current state:** 🟢 closed 2026-10-02; archived.
+
+## 2026-10-02 — closed
+
+- Deployed with the f17 build. The sponsor uses the slider in daily reviews and reports it
+  working, so smoke-test-mp03 was waived and mp03 closed. The stray-stop observation stays in
+  TODO (2026-10-02) as its own item.
 
 ## 2026-09-27 — planned, stress-tested, opened, built s01–s03 (260927d)
 

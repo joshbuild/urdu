@@ -1,5 +1,7 @@
 # Smoke test 11 — f11 vocab check (ChatGPT accuracy check)
 
+> **Closed 2026-10-02.** A1–C2 and C4 were ticked on the phone. The sponsor then reported using the check round trip daily with no trouble, so the unticked steps (C3, C5–E2) are waived on that report; the Worker tests cover repeat paste, partial ticks and the guarded reset.
+
 A checklist for the sponsor to run; it is the phone gate for f11 (s04). The batch route, the
 corrections preview and apply, the prompt and the tick model are tested, and `pnpm check` is
 green. **Nothing has been seen on the phone yet, and no real ChatGPT check reply has been

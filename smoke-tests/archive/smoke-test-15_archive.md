@@ -9,3 +9,7 @@ Run after the sponsor deploys the build. No migration is needed. Use real due it
 5. Start an English → Urdu review. Reveal and tap the Urdu answer to hear it. Skip a card, tap **Back**, then reveal and grade it. Confirm the tally counts it as graded, not skipped.
 
 Pass when all five steps work on the phone. Record any failure here before closing f15.
+
+## Closed 2026-10-02
+
+The sponsor reported the flow working in daily use on the deployed build, so f15 closed on that report and the unticked steps were waived.

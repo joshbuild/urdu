@@ -1,6 +1,10 @@
 # f17 vocab-intake — journal
 
-**Current state (2026-10-01):** s01–s06 built, s07 doc ripple written; `pnpm check` green at 739. Migration 0007 is local only. Owed to the sponsor: `scripts/smoke.ts` against `pnpm dev`, then back up, apply 0005–0007 remotely, deploy, and run smoke-test-17 over two days.
+**Current state (2026-10-02):** 🟢 closed. s01–s07 built 2026-10-01; 0005–0007 applied remotely and deployed by the sponsor; confirmed in daily use.
+
+## 261002 — close
+
+The sponsor reported days of normal use: words found, added through the ChatGPT loop and queued, reviews daily. On 2026-10-02 Review showed new words without Intake being tapped, so the daily top-up runs in production. smoke-test-17 was closed on that report and its other steps waived (AGENTS "Smoke tests": daily use counts as evidence). Done When 2's `scripts/smoke.ts` run against `pnpm dev` was never done; production use covers it. One follow-up stays in TODO: the review-ahead slider sometimes takes a stray stop, probably because the Intake button appears or vanishes above it.
 
 ## 261001e
 

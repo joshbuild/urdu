@@ -7,7 +7,7 @@
 **Owner docs it serves**:
 - `pm/PRD.md` FR-G (voice Coach tools), FR-K (queue, sources and harvests), FR-F9 (check/fill)
 - `pm/features/f07-coach-client.md` (voice tools, Coach prompt)
-- `pm/features/f17-vocab-intake.md` (queued items, harvests; its "voice adds are released" rule changes here)
+- `pm/features/archive/f17-vocab-intake-archive.md` (queued items, harvests; its "voice adds are released" rule changes here)
 - `pm/DECISIONS.md` 261002a (Voice harvest words are held from automatic release)
 
 **Companions**: f10 `coach-followups` (planned: vocab-edit voice tool). This mini-plan is

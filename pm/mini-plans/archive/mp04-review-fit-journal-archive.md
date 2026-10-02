@@ -1,7 +1,11 @@
 # Journal — mp04 Review Card Fits One Screen
 
-**Current state:** s01–s02 built and committed 2026-10-02 (`e983075`, `c67a7b3`); s03 phone
-next — smoke-test-mp04, riding any deploy (no migration).
+**Current state:** 🟢 closed 2026-10-02; archived.
+
+## 2026-10-02 — closed
+
+- The sponsor deployed the build and confirms all five grades show without scrolling after
+  Reveal, so the rest of smoke-test-mp04 was waived and mp04 closed.
 
 ## 2026-10-02 — planned, stress-tested, opened, built s01–s02 (261002a)
 

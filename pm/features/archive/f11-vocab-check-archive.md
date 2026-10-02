@@ -1,8 +1,8 @@
 # Feature Plan — Vocab Check
 
-**Status**: 🟡 IN PROGRESS — *opened 2026-09-23; s00 planning done 2026-09-24 (questions settled, stress-tested); s01 rotation, s02 corrections and s03 client built 2026-09-24; s04 phone next (sponsor applies 0004 remotely, deploys, runs smoke-test-11).*
+**Status**: 🟢 SHIPPED — *closed 2026-10-02. s01–s03 built 2026-09-24; s04 phone: 0004 applied remotely and deployed, smoke-test-11 A1–C2 and C4 ticked, the rest met by the sponsor's daily use of the check round trip (reported 2026-10-02).*
 **Handle**: `f11`
-**Created**: *2026-09-23* · **Updated**: *2026-09-24*
+**Created**: *2026-09-23* · **Updated**: *2026-10-02*
 
 **Owner docs it serves**:
 - `pm/PRD.md` — FR-F9 (new, planned), beside FR-F7 fill-ins and FR-D2 edit rules
@@ -10,6 +10,8 @@
 - Code it extends: `worker/domain/handoff.ts` (`reviseVocab`), `worker/domain/handoff-input.ts`, `worker/routes/api-handoff.ts`, `shared/api.ts` (`HANDOFF_STATUSES`, `VocabItem`), `shared/ladders.ts` (`correctStep`), `worker/domain/review.ts` (its optimistic schedule guard is the pattern for the reset), `src/handoff/prompts.ts`, `src/handoff/HandoffPanel.tsx`
 
 > **One-line:** A ChatGPT copy–paste round trip that checks existing vocab entries for accuracy and, after a per-field old → new preview the sponsor accepts, overwrites the wrong fields.
+
+> **As shipped (2026-10-02).** **Copy check prompt** and **Paste check reply** in the Vocab tab's CHATGPT section: the Worker records each batch as a `check_issued` handoff (least recently checked first, `vocab.checked_at`, migration 0004), the reply previews per field as old → new with ticks, and Apply overwrites only the ticked fields that still hold the value shown, with an optional guarded reset to the first rung; a repeated reply is a no-op. f13 later wrapped Copy check prompt in a Check options dialog. Live truth: PRD FR-F9 and Appendix A `checked_at`; DECISIONS 260918g, 260922a; `worker/domain/check.ts`, `worker/routes/api-handoff.ts`, `src/handoff/check.ts`, `src/handoff/prompts.ts`, tests `test/check.test.ts` and `test/corrections.test.ts`. Evidence: `smoke-tests/archive/smoke-test-11_archive.md`. The execution record below is historical.
 
 ## Intent
 
@@ -164,11 +166,12 @@ subscription, and the AI only proposes (VISION invariant): Urdu Core validates a
 
 ### Done When
 
-- `pnpm check` is green with the s01–s03 tests above (Worker, migration, input and client).
-- Migration 0004 applied to local D1 (s01) and, by the sponsor, to remote **before** the deploy
+- ✅ `pnpm check` is green with the s01–s03 tests above (Worker, migration, input and client).
+- ✅ Migration 0004 applied to local D1 (s01) and, by the sponsor, to remote **before** the deploy
   that carries it (s04).
-- smoke-test-11 is green on the installed phone app.
-- Ripples: PRD FR-F9 and Appendix A `checked_at` lose their *planned* marker; AGENTS Project state
+- ✅ smoke-test-11 is green on the installed phone app: A1–C2 and C4 ticked; the rest met by daily use
+  2026-10-02 (the Worker tests cover repeat paste, partial ticks and the reset).
+- ✅ at close 2026-10-02. Ripples: PRD FR-F9 and Appendix A `checked_at` lose their *planned* marker; AGENTS Project state
   and PLAN roster updated; the f11 journal records the build.
 
 ### Roadmap
@@ -183,7 +186,7 @@ subscription, and the AI only proposes (VISION invariant): Urdu Core validates a
 3. **s03 client:** ✅ 2026-09-24. `checkPrompt`; Copy check prompt and Paste corrections in the CHATGPT section;
    preview with per-field ticks and reset ticks; Apply / Mark checked; result screen with flags
    and Open links; client tests; write `smoke-tests/smoke-test-11.md`.
-4. **s04 phone:** sponsor applies migration 0004 remotely **before** deploying, then deploys and
+4. **s04 phone:** ✅ 2026-10-02 (daily use). Sponsor applies migration 0004 remotely **before** deploying, then deploys and
    runs smoke-test-11; ripple and close.
 
 Each slice needs the one before it. s01–s03 are fully testable locally with `pnpm dev`; no OpenAI
@@ -206,10 +209,12 @@ key involved.
   check prompt / Paste corrections with the preview and result sheets, 9 client tests,
   `smoke-tests/smoke-test-11.md`. `pnpm check` green at 502.
 
+- 2026-10-02: closed. 0004 remote and deploy done in s04; the sponsor reported the check round
+  trip working in daily use, which met the rest of smoke-test-11.
+
 ### Next Steps
 
-- s04 phone: the sponsor applies migration 0004 remotely, deploys, and runs smoke-test-11;
-  then ripple (PRD FR-F9 and Appendix A lose *planned*, AGENTS Project state, PLAN) and close.
+- None; closed 2026-10-02.
 
 ### Open Questions
 

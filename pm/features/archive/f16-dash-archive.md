@@ -1,12 +1,14 @@
 # Feature Plan — Dash
 
-**Status**: 🟡 IN PROGRESS — s01–s04 built 2026-10-01; sponsor phone smoke (smoke-test-16) next
+**Status**: 🟢 SHIPPED — *closed 2026-10-02. s01–s04 built 2026-10-01; deployed with f17, and the sponsor confirmed on the phone that the Dash opens with all six cards and no error (smoke-test-16 closed on that daily-use report).*
 **Handle**: `f16`
-**Created**: *2026-10-01* · **Updated**: *2026-10-01*
+**Created**: *2026-10-01* · **Updated**: *2026-10-02*
 
 **Owner docs it serves**: `pm/PRD.md` FR-J (and FR-E4); `pm/DECISIONS.md` 261001a; `shared/mastery.ts`.
 
 > **One-line:** A sixth tab that shows what I know, what's coming, how well it sticks, and what to fix.
+
+> **As shipped (2026-10-02).** A Dash tab after Review with six cards: Known (interval ≥ 14 d) with bands over time, a 14-day due forecast, recall rate by direction, trouble items that open on Vocab, the learning backlog, and a review calendar in weekly rows headed by their Monday. Read-only `GET /api/dash`. f17 later left queued items out of the Dash and relabelled the backlog legend Started. Live truth: `shared/dash.ts`, `KNOWN_MIN_SECONDS` in `shared/mastery.ts`, `worker/domain/dash.ts`, `src/dash/`, with tests `shared/dash.test.ts` and `src/dash/*.test.ts`; PRD FR-J; DECISIONS 261001a and §Decisions below. Evidence: `smoke-tests/archive/smoke-test-16_archive.md`. The execution record below is historical.
 
 ## Intent
 
@@ -79,7 +81,7 @@ All six are pure functions in `shared/` (new `shared/dash.ts`) over the full `vo
 1. `shared/dash.test.ts`, the worker test and the client tests pass, then `pnpm check` is green. *(s01–s03)*
 2. Headless 360 px screenshots of the empty, sparse and full fixtures show no overlapping or clipped text, axes or bars. *(s03; agent eyeball, owed)*
 3. AGENTS Project state, CHANGELOG and `smoke-tests/smoke-test-16.md` are written; PRD FR-J is marked built. *(s04)*
-4. Sponsor runs smoke-test-16 on the installed phone after deploy (no migration): six tabs fit; each element reads sensibly; Known and the backlog are plausible against the Vocab tab; grading one due item then reopening Dash moves today's calendar cell and the forecast; a trouble item opens on Vocab. *(s04; sponsor eyeball, owed)*
+4. Sponsor runs smoke-test-16 on the installed phone after deploy (no migration): six tabs fit; each element reads sensibly; Known and the backlog are plausible against the Vocab tab; grading one due item then reopening Dash moves today's calendar cell and the forecast; a trouble item opens on Vocab. *(s04; sponsor eyeball. Met 2026-10-02 in part: the sponsor reported the Dash opens with all six cards and no error, so it stays inside the Workers CPU limit. The other steps were waived on that daily-use report.)*
 
 ### Roadmap
 
@@ -92,12 +94,13 @@ All six are pure functions in `shared/` (new `shared/dash.ts`) over the full `vo
 
 ### Recently Completed
 
+- 2026-10-02 — Closed. Deployed with f17 (0005–0007 applied remotely); the sponsor confirmed the Dash loads with six cards and no error. smoke-test-16 archived.
 - 2026-10-01 — s01–s04 built: `shared/dash.ts`, `GET /api/dash`, the Dash tab, smoke-test-16 and doc ripple; `pnpm check` green at 645; headless 360 px screenshots of the three fixtures are clean (Done When 1–3).
 - 2026-10-01 — Proposal agreed with the sponsor; DECISIONS 261001a, PRD FR-J, PLAN and STATUS updated; f16 opened. Stress-tested the same day: metric definitions pinned, the first slice split into derivations (s01) and route (s02), Done When made checkable.
 
 ### Next Steps
 
-- Sponsor deploys (no migration) and runs `smoke-tests/smoke-test-16.md` on the phone; then `/pm-close f16`.
+- None. Closed 2026-10-02.
 
 ### Open Questions
 

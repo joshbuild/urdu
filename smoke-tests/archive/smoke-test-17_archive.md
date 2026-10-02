@@ -48,4 +48,8 @@ Pass when A1–A2 and all thirteen steps hold. Record any failure below before `
 
 ## Results
 
-*(sponsor, after deploy)*
+Closed 2026-10-02 on the sponsor's daily-use report.
+
+- Confirmed: the sponsor applied 0005–0007 remotely and deployed; the app has been in daily use since, so the migration left the vault readable (A1–A2 not recorded separately). The Harvest tab replaced Read (1). Harvests are pasted into and their words queued (3–5). Existing items review as before (2). On 2026-10-02, Review showed new words without Intake being tapped: the daily top-up runs in production (12).
+- Steps 6–11 and 13 were not run step by step; waived on that report, since the Worker and client tests cover them.
+- Seen in use, tracked in TODO rather than here: the review-ahead slider sometimes takes a stray stop, probably because the Intake button appears or vanishes above it.

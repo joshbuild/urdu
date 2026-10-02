@@ -1,8 +1,8 @@
 # Feature Plan — Vocab Intake
 
-**Status**: 🟡 IN PROGRESS — *opened 2026-10-01; s01–s06 built and the s07 doc ripple written the same day; sponsor deploy and smoke-test-17 next*
+**Status**: 🟢 SHIPPED — *closed 2026-10-02. s01–s07 built 2026-10-01; the sponsor applied 0005–0007 remotely and deployed, and confirmed in daily use that harvests queue words and the daily top-up releases them (smoke-test-17 closed on that report).*
 **Handle**: `f17`
-**Created**: *2026-10-01* · **Updated**: *2026-10-01*
+**Created**: *2026-10-01* · **Updated**: *2026-10-02*
 
 **Owner docs it serves**:
 - `pm/PRD.md`: new FR-K (this feature); amends FR-A7 (due order), FR-E1 (start screen), FR-I1 (setting), FR-J2/J5 (Dash counts), Appendix A; parks FR-C (Reader)
@@ -11,6 +11,8 @@
 - Code it extends: `worker/domain/vocab.ts`, `worker/domain/review.ts`, `worker/domain/handoff.ts`, `worker/domain/export.ts`, `worker/domain/settings.ts`, `shared/api.ts`, `shared/dash.ts`, `src/screens/tabs.ts`, `src/screens/ReviewScreen.tsx`, `src/handoff/HandoffPanel.tsx`, `src/vocab/*`, `src/screens/SettingsScreen.tsx`
 
 > **One-line:** Harvested words wait in a queue and enter review a batch at a time. A Harvest tab, which replaces the parked Read tab, keeps a record of sources and harvests, and a tank meter shows how many days of new words are left.
+
+> **As shipped (2026-10-02).** New words can be queued: a queued item (`released_at` null) is never due. Each day the new pile tops up to the batch size (**New words per day**, default 10); **Intake** pulls another batch and **Release now** starts one word. Due order is due items first, then the never-reviewed new pile first in, first out. A Harvest tab in the parked Read tab's place records sources and harvests (URL, filter, date), hosts the new-vocab round trip with **Copy harvest request** and **Start now**, and shows a tank meter of days of queue left; Review and Vocab show the queue too, and the Dash leaves queued items out. Live truth: migration `0007_vocab_intake.sql`; `worker/domain/intake.ts`, `worker/domain/harvest.ts`, `DUE`/`DUE_ORDER` in `worker/domain/vocab.ts`; `src/harvest/`; PRD FR-K and amended FR-A7, FR-E1, FR-I1, FR-J2/J5, Appendix A (FR-C parked); AGENTS Invariants (due order and the queue); DECISIONS 261001b and §Decisions below. Evidence: `smoke-tests/archive/smoke-test-17_archive.md`. The parked Read tab's review is a TODO for 2026-10-31. The execution record below is historical.
 
 ## Intent
 
@@ -229,7 +231,7 @@ the sponsor can see which stories have been harvested and how far each harvest h
 1. Every test in §Testing passes, then `pnpm check` is green. *(s01–s06)*
 2. A local run of `pnpm wrangler d1 migrations apply urdu --local` on a copy of the current
    schema leaves every existing row released, and `scripts/smoke.ts` passes against `pnpm dev`.
-   *(s01)*
+   *(s01. The local apply half met 2026-10-01; the `scripts/smoke.ts` half was waived 2026-10-02: production use after the deploy covers it.)*
 3. The headless 360 px screenshots in §Testing show no clipped or overlapping text, and the six
    tabs fit. *(s05–s06; agent eyeball, owed)*
 4. The doc ripple is written: PRD FR-K, FR-A7, FR-C (parked), FR-E1, FR-I1, FR-J2/J5 and
@@ -245,7 +247,7 @@ the sponsor can see which stories have been harvested and how far each harvest h
    - existing items are untouched;
    - the Read tab is gone and the app opens on Review.
 
-   *(s07; sponsor eyeball, owed)*
+   *(s07; sponsor eyeball. Met 2026-10-02 on the sponsor's daily-use report: migrations 0005–0007 applied remotely and deployed; harvests are pasted into and their words queued; existing items behave as before; on 2026-10-02 Review showed new words without Intake being tapped, so the top-up runs in production. The remaining steps were waived on that report.)*
 
 ### Roadmap
 
@@ -281,6 +283,7 @@ the sponsor can see which stories have been harvested and how far each harvest h
 
 ### Recently Completed
 
+- 2026-10-02: Closed. The sponsor backed up, applied 0005–0007 remotely and deployed, then used the Harvest tab, queue and review daily; the top-up released new words on the next day. smoke-test-17 archived.
 - 2026-10-01: Built s01–s06 in one orchestrated run and wrote the s07 doc ripple. `pnpm check` is green at 739 tests. Commits: s01 `2d4e8ce`, s02 `db17166`, s03 `528f72d`, s04 `92e620f`, s05 `6b3eb04`, s06 `472891e`. Migration 0007 is applied locally only; on the local copy (38 rows) every row was released at its `added_at` and none was queued. Headless 360 px checks covered the Harvest overview, source, harvest, paste sheet and tank states, and the Review start screen with the tank ok, low and empty: nothing clipped, and six tabs fit.
 - 2026-10-01: Options memo and two rounds of sponsor answers (`research/vocab-intake.md`). The
   doc was drafted, opened and stress-tested the same day: the sponsor settled four forks, and the
@@ -288,8 +291,7 @@ the sponsor can see which stories have been harvested and how far each harvest h
 
 ### Next Steps
 
-- **Owed, sponsor:** `scripts/smoke.ts` against `pnpm dev` (Done When 2's second half). The agent couldn't read the secret from `.dev.vars`; the local 0007 apply half is done.
-- **Owed, sponsor (s07):** back up, apply migrations remotely (0005–0007, whichever are pending), deploy, and run `smoke-tests/smoke-test-17.md` on the phone, over two days for the top-up. Then `/pm-close f17`.
+- None. Closed 2026-10-02. Follow-ups live in TODO: the Read tab review (2026-10-31) and the review-ahead slider shift that the Intake button may cause.
 
 ### Open Questions
 

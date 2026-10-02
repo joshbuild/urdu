@@ -1,5 +1,13 @@
 # Journal — f12 Day-Anchored Ladders
 
+**Current state:** 🟢 shipped 2026-10-02; archived.
+
+## 2026-10-02 — closed
+
+- Migration 0005 went out with the f17 deploy (0005–0007 in one `migrations apply`). The sponsor
+  has reviewed daily on the new ladders since and reports it working, so the rest of
+  smoke-test-12 was waived and f12 closed. The before/after count queries (A3) were not recorded.
+
 ## 2026-09-27 — investigated, planned, stress-tested, built s01–s04
 
 - Sponsor asked whether the 3 h bottom rung could come down to 1–2 h, and whether a new word

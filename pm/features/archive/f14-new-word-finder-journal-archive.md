@@ -1,6 +1,12 @@
 # Journal — f14 New Word Finder
 
+**Current state:** 🟢 shipped, closed 2026-10-02. s04 phone met by the sponsor's daily use of Find new words.
+
 Newest first.
+
+## 2026-10-02 — closed
+
+The f14 build is in production, and the sponsor reported days of finding new words and adding them through the ChatGPT loop with no trouble. smoke-test-14's steps are waived on that report; the word-list parser and match route have tests. Badge flipped to shipped, tombstone written, smoke archived.
 
 ## 2026-09-28 — planned, stress-tested, opened; s01–s03 built
 

@@ -1,8 +1,8 @@
 # Mini-plan — Review ahead by hours
 
-**Status**: 🟡 IN PROGRESS — planned, stress-tested, opened and s01–s03 built 2026-09-27; s04 phone next
+**Status**: 🟢 CLOSED — *closed 2026-10-02. s01–s03 built 2026-09-27; s04 phone met by daily use (the sponsor uses the slider).*
 **Handle**: `mp03`
-**Created**: 2026-09-27 · **Updated**: 2026-09-27
+**Created**: 2026-09-27 · **Updated**: 2026-10-02
 
 **Owner docs it serves**:
 - `pm/PRD.md` FR-E1 (review ahead: whole days today, becomes a duration)
@@ -14,6 +14,8 @@ hour-sized look-ahead now matters).
 > **One-line:** replace the whole-days "Review ahead" number box with a slider that snaps
 > through fixed stops from Now to 1 year (1 h, 2 h, 3 h … 1 d … 1 y), show the chosen duration
 > and how many more items it adds, and have the Worker take the look-ahead in seconds.
+
+> **As shipped (2026-10-02).** Review ahead is a stop slider (Now, 1–20 h, days, weeks, months, 1 y) with a live count of the extra items; the Worker takes `ahead_seconds` and `GET /api/vocab/upcoming` serves the count. Live truth: PRD FR-E1, the review start screen and its tests. Evidence: `smoke-tests/archive/smoke-test-mp03_archive.md` (closed on the sponsor's report of daily use). The slider sometimes landing on a stop the sponsor didn't pick is tracked in TODO (2026-10-02, likely the f17 Intake button shifting the layout) and doesn't block the close.
 
 Sponsor request 2026-09-27: the days-only box is too coarse; they want 2–3 hours. They picked the
 stop slider over chips.
@@ -81,6 +83,7 @@ stop slider over chips.
 - PRD FR-E1 describes the stop slider and `ahead_seconds`.
 - smoke-test-mp03 ticked on the phone: the slider snaps through the stops, the label and count
   change, and a 3 h session queues only what the count promised (up to the session limit).
+  *Met by daily use 2026-10-02; the scripted steps were waived.*
 
 ---
 

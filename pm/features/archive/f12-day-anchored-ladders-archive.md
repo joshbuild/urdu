@@ -1,8 +1,8 @@
 # Feature Plan — Day-Anchored Ladders
 
-**Status**: 🟡 IN PROGRESS — *s01–s04 built 2026-09-27, `pnpm check` green at 522; s05 phone (smoke-test-12) next.*
+**Status**: 🟢 SHIPPED — *closed 2026-10-02. s01–s04 built 2026-09-27; migration 0005 applied remotely with the f17 deploy; s05 phone met by daily use (sponsor reviews daily on the new ladders).*
 **Handle**: `f12`
-**Created**: *2026-09-27* · **Updated**: *2026-09-27*
+**Created**: *2026-09-27* · **Updated**: *2026-10-02*
 
 **Owner docs it serves**:
 - `shared/ladders.ts`, `shared/mastery.ts` and their tests — the as-built ladder rules
@@ -11,6 +11,8 @@
 - `pm/DECISIONS.md` — supersedes the 3-hour base of 260918c/e
 
 > **One-line:** Five new ladder versions built outwards from an exact 1-day rung (down to about 1–2 h, up to 10 y), renamed Very dense / Dense / Balanced / Wide / Very wide; a new word starts one rung below a day so a plain Correct lands on 1 day; no decimals in the Settings picker or the pill.
+
+> **As shipped (2026-10-02).** Ladder ids 7–11 (Very dense, Dense, Balanced, Wide, Very wide) anchored on an exact 1-day rung, floor ≥ 1 h, cap 10 y; Dense (id 8) the default; new words start on the entry rung below a day (`entryStep`); ids 2–6 retired, never edited. Migration 0005 moved the active setting to its successor (old id + 5) and put untouched new words on the entry rung. Live truth: `shared/ladders.ts`, `shared/mastery.ts` and their tests, `migrations/0005_day_anchored_ladders.sql`; PRD FR-A2 and Appendix A; AGENTS invariants; DECISIONS 260927a. Evidence: `smoke-tests/archive/smoke-test-12_archive.md` (closed on the sponsor's report of daily use; its unticked steps were waived). The execution record below is historical.
 
 
 ## Intent
@@ -118,10 +120,12 @@ deltas.
 
 1. `pnpm check` green, including every test above.
 2. Migration 0005 applied remotely; `active_ladder_id` is the old value + 5; vocab and event counts
-   unchanged.
+   unchanged. *Applied with the f17 deploy (0005–0007 in one run); the app loads and reviews on
+   it. The before/after counts were not recorded.*
 3. smoke-test-12 green on the phone: the picker lists Very dense / Dense / Balanced / Wide / Very
    wide with no decimals; a new word graded Correct shows "Learning • 1 d"; a new word graded Wrong
-   shows "Learning • 2 h".
+   shows "Learning • 2 h". *Met by daily use 2026-10-02: the sponsor reviews daily on the new
+   ladders; the scripted steps were waived.*
 4. PRD, VISION, AGENTS and DECISIONS carry the new ladders.
 
 ### Roadmap

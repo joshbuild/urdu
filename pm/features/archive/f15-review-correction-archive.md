@@ -1,12 +1,14 @@
 # Feature Plan — Review correction
 
-**Status**: 🟡 IN PROGRESS — implementation built; phone verification pending
+**Status**: 🟢 SHIPPED — *closed 2026-10-02. s01–s02 built 2026-09-29; s03 phone met by daily use (the sponsor has used Back to fix a grade).*
 **Handle**: `f15`
-**Created**: *2026-09-29* · **Updated**: *2026-09-29*
+**Created**: *2026-09-29* · **Updated**: *2026-10-02*
 
 **Owner docs it serves**: `pm/PRD.md` FR-E2/E3; `shared/api.ts`; `AGENTS.md` review invariants.
 
 > **One-line:** Return to the previous review card to fix a mistaken grade, and tap displayed Urdu to hear it.
+
+> **As shipped (2026-10-02).** Back from a review card or the end tally reopens the previous card; a graded card shows its recorded grade and can be regraded or kept (Keep grade moved to the card's top row in mp04). A correction rewrites the original PWA review event and recomputes the schedule from its before-state, refused if the item changed or another review landed since. Tapping the Urdu term speaks it; the Speak button is gone. Live truth: `worker/domain/review.ts`, `worker/routes/api-review.ts`, `src/review/session.ts`, `src/screens/ReviewScreen.tsx`, tests `test/review.test.ts` and `src/review/session.test.ts`; PRD FR-E2/E3. Evidence: `smoke-tests/archive/smoke-test-15_archive.md` (closed on the sponsor's report of daily use). The plan below is historical.
 
 ## Intent
 
@@ -46,7 +48,7 @@ A stray tap during a review should be fixable in the same session, including on 
 ### Done When
 
 1. Focused tests and `pnpm check` pass.
-2. Sponsor verifies `smoke-tests/smoke-test-15.md` on the installed phone after deployment.
+2. Sponsor verifies `smoke-tests/smoke-test-15.md` on the installed phone after deployment. *Met by daily use 2026-10-02: the sponsor has used Back to correct a grade; the scripted steps were waived.*
 
 ### Roadmap
 

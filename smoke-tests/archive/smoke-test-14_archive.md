@@ -1,5 +1,7 @@
 # Smoke test 14 — f14 new word finder (Find new words, ⓘ rows, vocab-list)
 
+> **Closed 2026-10-02.** The sponsor reported finding new words and adding them through the ChatGPT loop daily with no trouble, so the steps below are waived on that report; the word-list parser and match route have tests.
+
 A checklist for the sponsor to run; it's the phone gate for f14 (s04). The match route, its
 validation and the word-list parser have tests, and `pnpm check` is green. The ⓘ rows and the
 sheet were rendered in headless Edge at phone width against `pnpm dev`: the example list split

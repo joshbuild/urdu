@@ -8,12 +8,12 @@
 | Handle | Slug / doc | Status | Stage | One-line |
 |---|---|---|---|---|
 | mp05 | `mini-plans/mp05-voice-vocab-bucket.md` | 🟡 IN PROGRESS | Stage 1 build (s01 next; stress-tested, s01–s07) | Voice Coach: `find_vocab` looks up the whole vault; voice adds land queued and held in a per-day Voice harvest, listed, filled and released from the harvest detail. |
-| mp04 | `mini-plans/mp04-review-fit.md` | 🟡 IN PROGRESS | Stage 2 phone (s03; s01–s02 built) | Revealed review card fits one screen: thin header, two-row grade grid at the card's foot, Skip/Keep grade in the top row. |
-| mp03 | `mini-plans/mp03-review-ahead-hours.md` | 🟡 IN PROGRESS | Stage 2 phone (s04; s01–s03 built) | Review ahead by hours: stop slider (Now … 1 y) with a live count; Worker takes `ahead_seconds`. |
 
 ## Archived
 
 | Handle | Slug / doc | Closed | One-line |
 |---|---|---|---|
+| mp04 | `mini-plans/archive/mp04-review-fit-archive.md` | 2026-10-02 | Revealed review card fits one screen: thin header, two-row grade grid at the card's foot, Skip/Keep grade in the top row. |
+| mp03 | `mini-plans/archive/mp03-review-ahead-hours-archive.md` | 2026-10-02 | Review ahead by hours: stop slider (Now … 1 y) with a live count; Worker takes `ahead_seconds`. |
 | mp02 | `mini-plans/archive/mp02-gpt-live-spike-archive.md` | 2026-09-14 | GPT-Live spike: all four Appendix D criteria PASS → FR-G Option 2, in-app voice; ≈ $0.51/10 min, "pretty comparable" to ChatGPT Voice. |
 | mp01 | `mini-plans/archive/mp01-speech-spike-archive.md` | 2026-09-14 | Speech spike: verdict PASS — SpeechSynthesis ur_PK on Android Chrome, 60 ms median, 3.5/5, works installed. |

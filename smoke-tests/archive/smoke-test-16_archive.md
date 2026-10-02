@@ -14,4 +14,7 @@ Pass when all seven steps hold on the phone. Record any failure here before clos
 
 ## Results
 
-*(sponsor, after deploy)*
+Closed 2026-10-02 on the sponsor's daily-use report. Deployed with f17 (0005–0007 applied remotely).
+
+- Confirmed: the Dash opens with all six cards and no error (step 2), so the route stays inside the Workers CPU limit. The six tabs are in daily use (step 1).
+- Steps 3–7 were not run step by step; waived on that report, since the derivations, route and view are covered by `shared/dash.test.ts`, the worker test and `src/dash/*.test.ts`.

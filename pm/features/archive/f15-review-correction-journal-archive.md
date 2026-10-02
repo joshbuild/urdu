@@ -2,7 +2,11 @@
 
 ## Current state
 
-s01–s02 built; phone verification pending.
+🟢 shipped 2026-10-02; archived.
+
+## 261002 — closed
+
+Deployed with the f17 build. The sponsor reports using Back to fix a grade in daily reviews, so the rest of smoke-test-15 was waived and f15 closed.
 
 ## 260929a
 

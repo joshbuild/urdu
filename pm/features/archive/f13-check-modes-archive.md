@@ -1,8 +1,8 @@
 # Feature Plan — Check Modes
 
-**Status**: 🟡 IN PROGRESS — *opened 2026-09-28; s01–s04 built the same day; s05 phone next (sponsor applies 0006 remotely, deploys, runs smoke-test-13).*
+**Status**: 🟢 SHIPPED — *closed 2026-10-02. s01–s04 built 2026-09-28; s05 phone: 0006 applied remotely and deployed with the f17 deploy, and the sponsor's daily use of the check through the options dialog (reported 2026-10-02) met smoke-test-13.*
 **Handle**: `f13`
-**Created**: *2026-09-28* · **Updated**: *2026-09-28*
+**Created**: *2026-09-28* · **Updated**: *2026-10-02*
 
 **Owner docs it serves**:
 - `pm/PRD.md` — FR-F9 (the check gains modes and options), FR-F7 (fill-ins, retired into FR-F9's completeness mode), Appendix A (`vocab.filled_at`)
@@ -10,6 +10,8 @@
 - Code it extends: `worker/domain/check.ts`, `worker/domain/handoff-input.ts`, `worker/routes/api-handoff.ts`, `shared/api.ts`, `src/handoff/prompts.ts`, `src/handoff/check.ts`, `src/handoff/HandoffPanel.tsx`; retires `reviseVocab` / `incompleteVocab` in `worker/domain/handoff.ts`
 
 > **One-line:** **Copy check prompt** opens a dialog (mode: correctness, completeness or both; which fields; how many; only unchecked), and completeness replaces the fill-in pair, so one ticked preview both fixes wrong fields and fills empty ones.
+
+> **As shipped (2026-10-02).** **Copy check prompt** opens a Check options sheet: mode (correctness, completeness or both), fields, how many (1–50, default 20) and only items not yet checked this way, remembered on the device. Correctness rotates on `checked_at`, completeness on `filled_at` (migration 0006); the Worker records mode and fields with the batch, ignores and reports any change they don't allow, and stamps per mode. The f06 fill-in pair and its routes are removed (FR-F7 superseded). Live truth: PRD FR-F9, FR-F7 (superseded) and Appendix A `filled_at`; DECISIONS 260918g; `worker/domain/check.ts`, `worker/domain/handoff-input.ts`, `src/handoff/checkOptions.ts`, `src/handoff/prompts.ts`, `src/handoff/HandoffPanel.tsx`, tests `test/check.test.ts`. Evidence: `smoke-tests/archive/smoke-test-13_archive.md`. The execution record below is historical.
 
 ## Intent
 
@@ -149,10 +151,11 @@ buttons to four.
 
 ### Done When
 
-- `pnpm check` green with the s01–s04 tests.
-- Migration 0006 applied locally (s01) and, by the sponsor, remotely before the deploy (s05).
-- smoke-test-13 green on the installed phone app.
-- Ripples: PRD FR-F9 rewritten for modes and options, FR-F7 marked superseded, Appendix A
+- ✅ `pnpm check` green with the s01–s04 tests.
+- ✅ Migration 0006 applied locally (s01) and, by the sponsor, remotely before the deploy (s05).
+- ✅ smoke-test-13 green on the installed phone app: met by daily use 2026-10-02 (steps waived on
+  the sponsor's report; the Worker tests cover scope rules, ignored fields and per-mode stamps).
+- ✅ at close 2026-10-02. Ripples: PRD FR-F9 rewritten for modes and options, FR-F7 marked superseded, Appendix A
   `filled_at`; AGENTS Project state; PLAN roster; journal.
 
 ### Roadmap
@@ -167,7 +170,7 @@ buttons to four.
 4. **s04 retire fill-ins:** ✅ 2026-09-28. remove the FR-F7 client and Worker code and tests; PRD ripple;
    write `smoke-tests/smoke-test-13.md`; reword smoke-test-11's remaining steps (C1, D2) for
    the dialog's defaults and the new copy note.
-5. **s05 phone:** sponsor applies 0005 (if not yet) and 0006 remotely, deploys, runs
+5. **s05 phone:** ✅ 2026-10-02 (daily use). Sponsor applies 0005 (if not yet) and 0006 remotely, deploys, runs
    smoke-test-13; close.
 
 In order: s02 needs s01's payload, s03 the options shape and responses, s04 the dialog that
@@ -178,15 +181,14 @@ the suite s04, the phone s05.
 
 ### Recently Completed
 
+- 2026-10-02: closed. 0006 applied remotely and deployed with f17; the sponsor reported the check working through the options dialog in daily use, which met smoke-test-13.
 - 2026-09-28: s01–s04 built (`90f588a`, `6e2d574`, `bd3b7ed`, `d6c9fa2`); migration 0006 applied locally; `pnpm check` green at 548. The dialog has not been seen in a browser.
 - 2026-09-28: stress-tested: 11 findings resolved by the agent, none escalated (see Decisions).
 - 2026-09-28: drafted from the sponsor's request; grill settled (below).
 
 ### Next Steps
 
-- s05 phone: the sponsor applies 0006 (and 0005 if pending) remotely, deploys, runs
-  `smoke-tests/smoke-test-13.md`; then ripple (PRD FR-F9 / Appendix A lose *planned*, AGENTS
-  Project state, PLAN) and `/pm-close f13`.
+- None; closed 2026-10-02.
 
 ### Open Questions
 

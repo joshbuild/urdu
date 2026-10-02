@@ -78,3 +78,7 @@ the end.
 
 **Note for f11's smoke-test-11 C9:** once this is deployed, a reset item comes back about
 **2 h** after its last review, not 3 h (the bottom rung of Dense). Read C9 that way.
+
+## Closed 2026-10-02
+
+The sponsor reported the flow working in daily use on the deployed build, so f12 closed on that report and the unticked steps were waived. Migration 0005 went out with the f17 deploy; the A3 before/after counts were not recorded.

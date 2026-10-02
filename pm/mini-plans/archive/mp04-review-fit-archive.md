@@ -1,6 +1,6 @@
 # Mini-plan — Review card fits one screen
 
-**Status**: 🟡 IN PROGRESS — planned, opened, s01–s02 built 2026-10-02; s03 phone next (no migration, smoke-test-mp04)
+**Status**: 🟢 CLOSED — *closed 2026-10-02. s01–s02 built and deployed 2026-10-02; s03 phone met: the sponsor confirms all five grades show without scrolling.*
 **Handle**: `mp04`
 **Created**: 2026-10-02 · **Updated**: 2026-10-02
 
@@ -11,6 +11,8 @@
 > **One-line:** after Reveal, the whole review card (word, answer and grades) fits on the phone
 > screen without scrolling: a thin app header, a tighter card, the grades in a two-row grid
 > anchored at the bottom of the card, and Skip / Keep grade moved to the card's top row.
+
+> **As shipped (2026-10-02).** A thin one-row header on every tab; the review card fills down to the tab bar with "1 OF n", Skip (Keep grade after Back) and End in its top row; after Reveal the grades sit in a two-row grid at the card's foot (Wrong, Partly / Hesitant, Correct, Confident), sticky when a card overflows. Live truth: `src/screens/ReviewScreen.tsx`, `GRADE_SHORT_LABELS` in `shared/mastery.ts` and its test, `src/app.css`; PRD FR-E2/E3. Evidence: `smoke-tests/archive/smoke-test-mp04_archive.md` (closed on the sponsor's phone report).
 
 Sponsor request 2026-10-02, with a phone screenshot: after Reveal, the grade buttons are below
 the fold (only Wrong and the top of Partially correct show), so every card needs a scroll.
@@ -94,7 +96,8 @@ Planned heights: header ~60, card chrome ~56, headword ~86, entry ~230, grid ~12
 - Headless screenshots at 412 × 830 and 360 × 740 show the revealed long-notes card with all five
   grades above the tab bar and no overlaps.
 - PRD FR-E3 updated.
-- smoke-test-mp04 ticked on the phone.
+- smoke-test-mp04 ticked on the phone. *Met 2026-10-02: the sponsor confirms all five grades show
+  without scrolling on the deployed build; the remaining steps were waived.*
 
 ---
 

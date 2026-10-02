@@ -2,7 +2,11 @@
 
 ## Current state
 
-s01–s04 built 2026-10-01 (`0b58aa6`, `7eb3514`, `0501e1f`, `4625e56`), calendar reworked in 261001c; `pnpm check` green at 646. Done When 1–3 hold; 4 is the sponsor's phone run of `smoke-tests/smoke-test-16.md` after deploy (no migration), then `/pm-close f16`.
+🟢 Closed 2026-10-02. s01–s04 built 2026-10-01 (`0b58aa6`, `7eb3514`, `0501e1f`, `4625e56`), calendar reworked in 261001c. Deployed with f17; the sponsor confirmed the Dash on the phone.
+
+## 261002 — close
+
+The sponsor reported days of normal use and confirmed that the Dash opens with all six cards and no error, which also settles the Workers CPU-limit risk from s01. The rest of smoke-test-16 was waived on that report (AGENTS "Smoke tests": daily use counts as evidence). Done When 4 met in part, waived for the rest; the doc, journal and smoke test were archived.
 
 ## 261001c
 

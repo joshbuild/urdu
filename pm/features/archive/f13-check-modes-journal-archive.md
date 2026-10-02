@@ -1,6 +1,12 @@
 # Journal — f13 Check Modes
 
+**Current state:** 🟢 shipped, closed 2026-10-02. s05 phone met by the sponsor's daily use of the check through the options dialog.
+
 Newest first.
+
+## 2026-10-02 — closed
+
+Migration 0006 reached production with the f17 deploy (0005–0007 in one apply), and the sponsor reported days of checking vocab with no trouble. smoke-test-13's steps are waived on that report; the Worker tests cover the scope rules, ignored fields and per-mode stamps. Badge flipped to shipped, tombstone written, smoke archived.
 
 ## 2026-09-28 — planned, stress-tested, opened; s01–s04 built
 

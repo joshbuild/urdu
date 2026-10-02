@@ -29,3 +29,7 @@ the mp03 commit carries it. Tick as you go. **If a step fails, stop and note wha
 ## Result
 
 - [ ] All ticked → the agent closes mp03 (`/pm-close mp03`).
+
+## Closed 2026-10-02
+
+The sponsor reported the flow working in daily use on the deployed build, so mp03 closed on that report and the unticked steps were waived. The stray-stop observation is tracked in TODO (2026-10-02).

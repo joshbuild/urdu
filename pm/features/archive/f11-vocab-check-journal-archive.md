@@ -2,7 +2,11 @@
 
 *Verbose per-front record. Hub: `pm/STATUS.md`; doc: `f11-vocab-check.md`.*
 
-**Current state:** 🟡 in progress; s01–s03 built 2026-09-24. s04 phone under way: 0004 applied remotely and deployed (smoke-test-11 A1–A2 ticked); the first round trip worked once the chat resent valid JSON. Next: deploy the strict-JSON prompt fix (`52259a6`), re-paste the ChatGPT Project instructions, and finish smoke-test-11 from B1.
+**Current state:** 🟢 shipped, closed 2026-10-02. s04 phone met by the sponsor's daily use of the check round trip.
+
+## 2026-10-02 — closed
+
+- The sponsor reported using the check round trip for days with no trouble. smoke-test-11 steps C3–E2 are waived on that report; the Worker tests cover repeat paste, partial ticks and the guarded reset. Badge flipped to shipped, tombstone written, smoke archived.
 
 ## 2026-09-27 — CHATGPT button names
 

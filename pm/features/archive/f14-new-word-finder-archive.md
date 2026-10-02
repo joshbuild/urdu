@@ -1,14 +1,16 @@
 # Feature Plan — New Word Finder
 
-**Status**: 🟡 IN PROGRESS — *opened 2026-09-28; s01–s03 built the same day; s04 phone next (sponsor deploys, re-pastes the Project instructions, runs smoke-test-14).*
+**Status**: 🟢 SHIPPED — *closed 2026-10-02. s01–s03 built 2026-09-28; s04 phone: deployed, and the sponsor's daily use of Find new words with the `vocab-list` / `vocab-json` loop (reported 2026-10-02) met smoke-test-14.*
 **Handle**: `f14`
-**Created**: *2026-09-28* · **Updated**: *2026-09-28*
+**Created**: *2026-09-28* · **Updated**: *2026-10-02*
 
 **Owner docs it serves**:
 - `pm/PRD.md` — FR-F4/F6 (the new-vocab paste it feeds), new FR-F10 (this feature), FR-A5 / Appendix B (`urdu_key` duplicate rule, reused unchanged)
 - Code it extends: `worker/routes/api-vocab.ts`, `worker/domain/vocab.ts`, `shared/api.ts`, `src/handoff/HandoffPanel.tsx`, `src/handoff/chatgpt-project-instructions.md`, `src/app.css`
 
 > **One-line:** paste a bare word list from ChatGPT into **Find new words**, and the app says which words are already in the vault and copies only the new ones back to the chat with `vocab-json`, so ChatGPT writes full entries only for words that will be created. Each CHATGPT button row gets an ⓘ that explains its round trip.
+
+> **As shipped (2026-10-02).** **Find new words** in the CHATGPT section takes a pasted word list, keeps the Urdu-script text, and matches each word by `urdu_key` through the read-only `POST /api/vocab/match` (up to 500 words, exact matches only); it lists new and known words, with Open on each known one, and copies the new ones back under a `vocab-json — only these words` line. Each CHATGPT button row has an ⓘ with its steps, and the ChatGPT Project instructions carry a `vocab-list` command (now `prompts/urdu-coach-project-instructions.md`). Live truth: PRD FR-F10, FR-A5 / Appendix B; `worker/domain/vocab.ts` (`matchVocab`), `worker/domain/vocab-input.ts` (`parseMatch`), `worker/routes/api-vocab.ts`, `src/handoff/wordList.ts`, `src/handoff/HandoffPanel.tsx`, tests `src/handoff/wordList.test.ts` and `test/vocab-match.test.ts`. Evidence: `smoke-tests/archive/smoke-test-14_archive.md`. The execution record below is historical.
 
 ## Intent
 
@@ -127,9 +129,10 @@ a reminder of the steps.
 
 ### Done When
 
-- `pnpm check` green with the s01–s02 tests.
-- smoke-test-14 green on the installed phone app.
-- Ripples: PRD FR-F10 (built); CHANGELOG `[Unreleased]`; AGENTS Project state; PLAN roster;
+- ✅ `pnpm check` green with the s01–s02 tests.
+- ✅ smoke-test-14 green on the installed phone app: met by daily use 2026-10-02 (steps waived on
+  the sponsor's report of finding and adding new words).
+- ✅ at close 2026-10-02. Ripples: PRD FR-F10 (built); CHANGELOG `[Unreleased]`; AGENTS Project state; PLAN roster;
   journal.
 
 ### Roadmap
@@ -141,7 +144,7 @@ a reminder of the steps.
 2. **s02 client:** ✅ 2026-09-28. `wordList.ts` + tests; `FindWordsSheet`; the three-row layout with ⓘ boxes;
    CSS; the Project instructions additions.
 3. **s03 docs:** ✅ 2026-09-28. PRD FR-F10; CHANGELOG; write `smoke-tests/smoke-test-14.md`.
-4. **s04 phone:** the sponsor deploys (no migration), re-pastes the Project instructions and runs
+4. **s04 phone:** ✅ 2026-10-02 (daily use). The sponsor deploys (no migration), re-pastes the Project instructions and runs
    smoke-test-14; close.
 
 In order: s02 posts to s01's route; s03 describes what s01–s02 built; s04 needs the deploy.
@@ -166,13 +169,14 @@ In order: s02 posts to s01's route; s03 describes what s01–s02 built; s04 need
 
 ### Recently Completed
 
+- 2026-10-02: closed. Deployed; the sponsor reported finding and adding new words in daily use, which met smoke-test-14.
 - 2026-09-28: s01–s03 built (`d58f956`, `61bac87`, docs commit); `pnpm check` green at 583. The rows and sheet were seen in headless Edge at phone width against `pnpm dev`.
 - 2026-09-28: stress-tested: 9 findings resolved by the agent, none escalated (see Decisions).
 - 2026-09-28: drafted from the sponsor's request (option 2 of three, chosen in conversation).
 
 ### Next Steps
 
-- s04 phone: the sponsor deploys (no migration), re-pastes `src/handoff/chatgpt-project-instructions.md` into the ChatGPT Project and runs `smoke-tests/smoke-test-14.md`; then AGENTS Project state, PLAN and `/pm-close f14`.
+- None; closed 2026-10-02.
 
 ### Open Questions
 

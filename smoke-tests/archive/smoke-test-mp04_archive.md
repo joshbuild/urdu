@@ -28,3 +28,7 @@ step fails, stop and note what you saw.**
 ## Result
 
 - [ ] All ticked → the agent closes mp04 (`/pm-close mp04`).
+
+## Closed 2026-10-02
+
+The sponsor reported the flow working in daily use on the deployed build, so mp04 closed on that report and the unticked steps were waived. The sponsor confirmed all five grades show without scrolling after Reveal.

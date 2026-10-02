@@ -1,5 +1,7 @@
 # Smoke test 13 — f13 check modes (check options dialog, completeness)
 
+> **Closed 2026-10-02.** Migration 0006 went to production with the f17 deploy. The sponsor reported checking vocab daily through the Check options sheet with no trouble, so the steps below are waived on that report; the Worker tests cover the scope rules, ignored fields and per-mode stamps.
+
 A checklist for the sponsor to run; it is the phone gate for f13 (s05). The options parser, the
 per-mode batch selection, the Worker's scope rules and stamps, the prompt and the options
 model are tested, and `pnpm check` is green. **Nothing has been seen on a screen yet: the
