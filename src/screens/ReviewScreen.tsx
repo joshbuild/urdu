@@ -26,6 +26,7 @@ import {
   initialSession,
   promptSide,
   sessionReducer,
+  shuffleSession,
 } from "../review/session";
 import { readSessionLimit } from "../settings/sessionLimit";
 
@@ -129,7 +130,7 @@ export function ReviewScreen({
       if (response.status === 401) return onChanged();
       if (!response.ok) throw new Error("due failed");
       const data: DueResponse = await response.json();
-      dispatch({ type: "start", items: data.items, direction });
+      dispatch({ type: "start", items: shuffleSession(data.items), direction });
     } catch {
       setStartError("Could not load your due items. Check your connection and try again.");
     } finally {

@@ -11,6 +11,7 @@ import {
   type SessionAction,
   type SessionState,
   sessionReducer,
+  shuffleSession,
 } from "./session";
 
 function item(id: string, english: string | null = "book"): VocabItem {
@@ -206,5 +207,35 @@ describe("review ahead", () => {
   it("adds ahead_seconds to the due query only when set", () => {
     expect(dueQuery(20, 0)).toBe("/api/vocab/due?limit=20");
     expect(dueQuery(20, 10_800)).toBe("/api/vocab/due?limit=20&ahead_seconds=10800");
+  });
+});
+
+describe("shuffleSession", () => {
+  const due = (id: string) => ({ ...item(id), due_at: "2026-09-02T00:00:00.000Z" });
+  const ids = (items: VocabItem[]) => items.map((v) => v.id);
+
+  it("keeps due cards before the new pile, and every card once", () => {
+    const items = [due("d1"), due("d2"), due("d3"), item("n1"), item("n2")];
+    for (let seed = 0; seed < 20; seed++) {
+      let x = seed;
+      const random = () => {
+        x = (x * 9301 + 49297) % 233280;
+        return x / 233280;
+      };
+      const out = ids(shuffleSession(items, random));
+      expect(out.slice(0, 3).sort()).toEqual(["d1", "d2", "d3"]);
+      expect(out.slice(3).sort()).toEqual(["n1", "n2"]);
+    }
+  });
+
+  it("reorders within a group", () => {
+    // random() = 0 always swaps with the first card: [a, b, c] becomes [b, c, a].
+    expect(ids(shuffleSession([due("a"), due("b"), due("c")], () => 0))).toEqual(["b", "c", "a"]);
+  });
+
+  it("leaves the input untouched", () => {
+    const items = [due("a"), due("b")];
+    shuffleSession(items, () => 0);
+    expect(ids(items)).toEqual(["a", "b"]);
   });
 });

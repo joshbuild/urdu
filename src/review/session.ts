@@ -151,6 +151,26 @@ export function currentItem(state: SessionState): VocabItem | null {
   return state.phase === "card" ? (state.queue[state.index] ?? null) : null;
 }
 
+// Session order (sponsor request 2026-10-02): the Worker picks the cards by FR-A7, then each group
+// is shuffled on its own, due cards before the new pile, so cards added together stop arriving
+// together and stopping early still leaves new words for later. `random` is injectable for tests.
+export function shuffleSession(
+  items: readonly VocabItem[],
+  random: () => number = Math.random,
+): VocabItem[] {
+  const shuffle = (group: VocabItem[]) => {
+    for (let i = group.length - 1; i > 0; i--) {
+      const j = Math.floor(random() * (i + 1));
+      [group[i], group[j]] = [group[j] as VocabItem, group[i] as VocabItem];
+    }
+    return group;
+  };
+  return [
+    ...shuffle(items.filter((v) => v.due_at !== null)),
+    ...shuffle(items.filter((v) => v.due_at === null)),
+  ];
+}
+
 // What the card shows before Reveal. English→Urdu falls back to the Urdu side when the item
 // has no English yet, rather than showing a blank card.
 export function promptSide(
