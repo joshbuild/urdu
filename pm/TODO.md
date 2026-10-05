@@ -8,11 +8,12 @@
 ## Inbox
 *Untriaged captures. Drain via `/pm-triage`.*
 
-- 2026-10-02 Review-ahead slider sometimes reads a nonzero stop the sponsor didn't choose (noticed since f17). Code never sets it, so a touch lands on it. Lead: f17's Intake button above it appears or vanishes when the post-mount status refresh runs the top-up, moving the slider about 56px under a tap meant for Start review. Second, weaker lead: the taller start screen puts the slider in the scroll and thumb zone. Candidate fix: keep the Intake slot's space when there is no offer (visibility hidden), and maybe move review-ahead below Start. Sponsor is observing whether it follows a tap on Start/Intake or a scroll. #sponsor-respond
 
 
 ## Tasks
 *Bullets, each tagged.*
+
+- On the phone after the next deploy: scrolling with a finger that starts on the Review ahead slider leaves it where it was; a tap or a sideways drag still sets it (`e13a2d0`; the cause was the scroll, sponsor 2026-10-05). Daily use counts. #sponsor-respond
 
 - Review the parked Read tab on 2026-10-31: the vocab-intake feature hides it from the tab bar to make room for Harvest. The code is kept, and the sponsor reads with ChatGPT for now. Decide whether to restore it, fold parts into another screen (tap-to-speak, Add to vocab), or delete it. #sponsor-decide
 
