@@ -1,7 +1,7 @@
 // f05: the Review tab — start (FR-E1), card and reveal (FR-E2), grade or skip (FR-E3), tally
 // (FR-E4). The Worker applies each grade (FR-A4); this screen only says which button was tapped.
 
-import { useCallback, useEffect, useReducer, useState } from "react";
+import { useCallback, useEffect, useReducer, useRef, useState } from "react";
 import type {
   DueResponse,
   ReviewDirection,
@@ -16,6 +16,11 @@ import { GRADE_LABELS, GRADE_SHORT_LABELS, GRADES, type Grade } from "../../shar
 import { TankMeter } from "../harvest/TankMeter";
 import { speak } from "../reader/speech";
 import { intakeOffer, startCounts } from "../review/intake";
+import {
+  type RangeGesture,
+  type RangeGestureEvent,
+  stepRangeGesture,
+} from "../review/rangeGesture";
 import {
   AHEAD_STOPS,
   type AheadStop,
@@ -57,6 +62,14 @@ export function ReviewScreen({
   const [direction, setDirection] = useState<ReviewDirection>("ur_en");
   const [stop, setStop] = useState(0);
   const ahead = aheadStop(stop);
+  // A touch on the slider holds its value until the gesture is a tap or a sideways drag, so a
+  // scroll that starts on it leaves the stop alone (rangeGesture.ts).
+  const gestureRef = useRef<RangeGesture>({ kind: "idle" });
+  function aheadGesture(event: RangeGestureEvent) {
+    const step = stepRangeGesture(gestureRef.current, event);
+    gestureRef.current = step.gesture;
+    if (step.apply !== null) setStop(step.apply);
+  }
   // Due times still to come, for the count under the slider. Refetched each time the start
   // screen shows, so a finished session's new due times count; null until loaded or on failure.
   const [upcoming, setUpcoming] = useState<UpcomingResponse | null>(null);
@@ -238,7 +251,17 @@ export function ReviewScreen({
           max={AHEAD_STOPS.length - 1}
           step={1}
           value={stop}
-          onChange={(event) => setStop(Number(event.target.value))}
+          onPointerDown={(event) => {
+            if (event.pointerType === "touch")
+              aheadGesture({ type: "down", x: event.clientX, y: event.clientY });
+          }}
+          onPointerMove={(event) => {
+            if (event.pointerType === "touch")
+              aheadGesture({ type: "move", x: event.clientX, y: event.clientY });
+          }}
+          onPointerUp={() => aheadGesture({ type: "up" })}
+          onPointerCancel={() => aheadGesture({ type: "cancel" })}
+          onChange={(event) => aheadGesture({ type: "change", value: Number(event.target.value) })}
           aria-valuetext={ahead.label}
           aria-describedby="review-ahead-hint"
         />

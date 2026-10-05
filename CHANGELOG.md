@@ -62,3 +62,7 @@
 ### Changed
 
 - Per-version preview URLs are no longer published for deployed versions.
+
+### Fixed
+
+- Scrolling the Review start screen with a finger that starts on the Review ahead slider no longer moves the slider. A tap or a sideways drag still sets it.

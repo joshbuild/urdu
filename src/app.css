@@ -192,6 +192,8 @@ input[type="range"] {
   border: 0;
   background: transparent;
   accent-color: #054e51;
+  /* A vertical swipe on the slider scrolls the page; ReviewScreen discards the value it set. */
+  touch-action: pan-y;
 }
 
 .counts {
