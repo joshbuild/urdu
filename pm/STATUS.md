@@ -3,12 +3,13 @@
 
 **File Purpose**: The **thin hub** — a cross-front map of where things stand *right now*. Not a journal, not a sessions log. Verbose per-front narration lives in each front's `*-journal.md`; what-happened one-liners live in `SESSIONS.md`. Keep this file scannable.
 
-*As of: 2026-10-02*
+*As of: 2026-10-06*
 
 ## Open Workfronts
 *Work items actively in flight. One line each → its doc/journal. Closed fronts drop off (rosters keep the full list).*
 
 - f07 `coach-client` — 🟡 IN PROGRESS, s01–s04 built (migration 0003 applied remotely and deployed 2026-09-23); s05 prompt tuning next → `features/f07-coach-client.md`
+- f18 `topic-coverage` — 🟡 IN PROGRESS, opened 2026-10-06 (DECISIONS 261006a); sponsor reviews the topic and quota table, then stress test and s01 → `features/f18-topic-coverage.md`
 - mp05 `voice-vocab-bucket` — 🟡 IN PROGRESS, opened and stress-tested 2026-10-02 (s01–s07; Voice words held from top-up, DECISIONS 261002a); s01 `find_vocab` build next (no migration) → `mini-plans/mp05-voice-vocab-bucket.md`
 
 ## Next Session Pointers

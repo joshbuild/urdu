@@ -38,6 +38,7 @@
 - f12 `day-anchored-ladders` (🟢 shipped 2026-10-02, opened 2026-09-27): five new ladder versions built around an exact 1-day rung (floor about 1–2 h), renamed Very dense / Dense / Balanced / Wide / Very wide, new words start one rung below a day; migration 0005 maps the setting.
 - f16 `dash` (🟢 shipped 2026-10-02, opened 2026-10-01, DECISIONS 261001a): a sixth tab of progress metrics that each point at a next action: Known (interval ≥ 14 d) and bands over time, 14-day due forecast, recall rate by direction, trouble items, learning backlog, 12-week review calendar without streaks (FR-J).
 - f17 `vocab-intake` (🟢 shipped 2026-10-02, opened 2026-10-01, DECISIONS 261001b): harvested words wait in a queue and enter review about 10 a day (the new pile tops up to the batch size; **Intake** pulls more). A Harvest tab in the parked Read tab's place records sources and harvests (URL, filter, date) and hosts the new-vocab round trip. A tank meter shows the days of queue left. New words come after due ones.
+- f18 `topic-coverage` (🟡 in progress, opened 2026-10-06, DECISIONS 261006a): every word gets one topic (50, in `shared/topics.ts`) and a CEFR level; the Harvest tab shows coverage against A1/A2/B1 quotas (about 2,575 words to B1) and **Next batch** copies a ChatGPT request for the two emptiest cells, excluding existing words; a thin classify check mode labels existing words 100 at a time.
 - **Exit:** Sponsor uses the app for reading and review on the phone for several consecutive days without needing Airtable.
 
 ### Phase 3 — Coach connection
@@ -75,3 +76,4 @@
 | f15 | `features/archive/f15-review-correction-archive.md` | 🟢 shipped 2026-10-02 | Back to the previous review card, replace an accidental grade, and tap Urdu to speak. |
 | f16 | `features/archive/f16-dash-archive.md` | 🟢 shipped 2026-10-02 | Dash tab: Known count, due forecast, recall rate, trouble items, learning backlog, review calendar (FR-J). |
 | f17 | `features/archive/f17-vocab-intake-archive.md` | 🟢 shipped 2026-10-02 | Queue harvested words and release a batch a day; Harvest tab with sources and harvests; Intake button and tank meter; Read parked (FR-K). |
+| f18 | `features/f18-topic-coverage.md` | 🟡 in progress (planning; s01 next) | One topic from a fixed list of 50 and a CEFR level per word; coverage grid against per-level quotas; Next batch prompt; thin classify mode for existing words (FR-L). |

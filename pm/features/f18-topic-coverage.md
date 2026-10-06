@@ -1,0 +1,268 @@
+# Feature Plan — Topic Coverage
+
+**Status**: 🟡 IN PROGRESS — *opened 2026-10-06; planned from a sponsor grill the same day. Next: the sponsor reviews the topic and quota table, then `/pm-stress-test`, then s01.*
+**Handle**: `f18`
+**Created**: *2026-10-06* · **Updated**: *2026-10-06*
+
+**Owner docs it serves**:
+- `pm/PRD.md`: new FR-L (this feature); amends §2.2 (the curriculum non-goal and tag UI), FR-A6 (filters), FR-D1/D2 (list and edit), FR-E (review card), FR-F4/F6 (proposal fields), FR-F9 (classify mode), FR-K3 (Topics source), Appendix A
+- `pm/VISION.md` §16 ("a full language curriculum") — reworded, not reversed
+- `pm/DECISIONS.md` 261006a
+- Input: `prompts/vocab-tags.md` (the ChatGPT coach's 45-category draft, 2026-10-06; replaced in s05)
+- Code it extends: `shared/api.ts`, `worker/domain/vocab-input.ts`, `worker/domain/vocab.ts`, `worker/domain/handoff-input.ts`, `worker/domain/check.ts`, `worker/domain/harvest.ts`, `worker/domain/export.ts`, `src/handoff/prompts.ts`, `src/screens/HarvestScreen.tsx`, `src/screens/ReviewScreen.tsx`, `src/vocab/*`, `src/reader/DraftFields.tsx`
+- Touches open front mp05 (`find_vocab` tag filter becomes a topic filter; voice adds arrive unclassified)
+
+> **One-line:** Every word gets one topic from a fixed list of 50 and a CEFR level, and the app shows coverage against per-level targets (about 2,575 words to B1) and builds the ChatGPT request for the next batch, so adding vocab is two pastes instead of eight steps.
+
+## Intent
+
+### Vision
+
+The sponsor wants a solid B1 conversational vocabulary and is willing to have ChatGPT generate
+it in topic batches. Today the vault has no shape: tags are free text that ChatGPT invents
+("objects", "verbs"), there is no notion of level, and nothing says what is missing. Adding words
+takes eight steps: get candidates, find the new ones, copy the new-vocab prompt, paste the JSON,
+copy a check prompt, paste it, copy the corrections, paste them.
+
+After f18 the Harvest tab shows a grid of topics × levels with *have / target* in each cell. **Next
+batch** picks the two emptiest cells at the lowest unfinished level and copies one prompt asking
+ChatGPT for 25 words in each, fully filled, labelled with topic and level, and excluding the words
+already in those topics. The sponsor pastes the reply back and the words join the queue. The
+grid fills A1 across every topic before A2, so the vault grows from a broad core outwards, and the
+sponsor can see how far there is to go.
+
+These are **coverage targets, not a curriculum**: no lessons, no sequencing beyond choosing the
+next batch, no grading of the learner against a level.
+
+### Scope
+
+- **Topics in code.** `shared/topics.ts` is the single source of truth: per topic a slug, label,
+  section, a one-line scope (what belongs there, used in prompts) and A1/A2/B1 quotas
+  (§Topics and quotas). Order is display order; the slug is the identity, so topics can be
+  reordered freely. Adding a topic is a code change; renaming a slug needs a migration.
+- **Schema (migration 0008).** `vocab.topic` (nullable, a known slug) and `vocab.cefr` (nullable,
+  `A1`–`C2`), index on `(topic, cefr)`. `vocab.tags` stays a JSON array but now holds **0–2
+  secondary topic slugs**, never the item's own topic.
+- **Validation.** `topic` and every tag must be a known slug (case-folded to lowercase); at most 2
+  tags. Legacy free tags on existing rows are tolerated until the row's tags are next written.
+- **Coverage API.** `GET /api/coverage` returns counts per topic × level (queued items count, so a
+  batch never re-asks for them), per-topic totals, and the unclassified count. `GET /api/vocab`
+  and `/api/vocab/due` gain `?topic=` and `?cefr=`.
+- **Batch round trip (s02).** **Next batch** chooses two cells: the lowest level with any cell
+  below quota, then the cells with the lowest fill ratio, ties by topic order; tapping a cell asks
+  for that cell (paired with the next pick). Each cell asks for min(25, remaining). The copied
+  prompt carries the conventions, each topic's scope line, the level, the full field list
+  including `topic`, `cefr` and `tags`, a self-review instruction (every field filled, JSON
+  parses, topic and level honest), and the Urdu of every existing word in those two topics. The
+  paste goes into a new harvest under a built-in **Topics** source (filter e.g. "A1 food + A1
+  body"), queued as in f17. ChatGPT's own level label wins over the requested level. The 50-per-
+  paste cap stays.
+- **Classify mode (s03).** A fourth check mode beside correctness, completeness and both. Up to
+  **100** items per batch, unclassified first (`topic IS NULL`, then `added_at`). Thin payload:
+  the prompt lists `n|urdu|english` per line plus the topic list; the reply is
+  `{handoff_id, rows:[[n, "urdu", "topic", "A2", ["tag"]]]}`. The echoed Urdu must match or the
+  row is rejected. Preview and tick as f11; applying sets `topic`, `cefr` and replaces `tags`. No
+  stamp column: unclassified is `topic IS NULL`.
+- **UI (s04).** Harvest tab: the coverage grid by section, with have/target per cell and a
+  section and grand total per level, the unclassified count linking to Copy classify prompt, and
+  Next batch. Vocab tab: topic and level filters in place of the tag select; a topic chip on list
+  rows and in detail. Edit and add forms: a topic picker, a level picker and up to 2 secondary
+  topic pickers in place of free-text tags. Review card: the topic chip and level shown after
+  reveal only.
+- **Prompts and docs (s05).** A script writes `prompts/vocab-tags.md` from `shared/topics.ts`.
+  The ChatGPT Project instructions keep the conventions and `vocab-list`; `vocab-json` gains
+  `topic` and `cefr` and its tags rule points at the slug list. PRD, VISION §16 wording, AGENTS
+  (topics as a shared source of truth) and mp05's tag filter are rippled.
+- **Check step reframed.** The batch flow has no check round trip. The existing correctness and
+  completeness checks stay on the Vocab tab as an occasional audit.
+
+### Exclusions
+
+- **No direct API generation.** The Worker does not call OpenAI to generate batches (sponsor,
+  2026-10-06: avoid API cost, tolerate copy-paste). f08 stays on hold.
+- **No routine check after each batch** (sponsor, 2026-10-06). Self-review in the batch prompt
+  instead; the check tool remains for audits.
+- **No B2+ quotas yet.** Add them when B1 is near complete; the `cefr` column already accepts them.
+- **No learner level estimate** on the Dash (261001a's rejection stands: coverage is what the vault
+  holds, not what the learner knows). Coverage lives on the Harvest tab.
+- **No review-by-topic session.** The due route accepts `?topic=` but the review screen does not
+  offer it (a later option).
+- **No tag management UI**: the list is code. The old `tags` table is left in place, unused.
+- **No lesson ordering, curriculum text or grammar explanations.**
+
+### User Stories
+
+- As the learner, I want to see which topics and levels are thin so that I know what to add next.
+- As the learner, I want one tap to copy a request for the next batch, with my existing words
+  excluded, so that I paste once each way and get no duplicates.
+- As the learner, I want my existing words classified 100 at a time so that the grid is true from
+  the start.
+- As the learner, I want to see a word's topic after revealing it in review so that I have context
+  without a hint.
+- As the learner, I want to filter my vocab by topic and level.
+
+### Non-Functional Requirements
+
+- Topics and quotas have one home (`shared/topics.ts`); the Worker, the client and the prompt
+  generator read it. Tests pin quota totals and slug uniqueness.
+- Batch and classify prompts stay comfortably inside a ChatGPT reply: 50 full entries out, 100 thin
+  rows out.
+- The exclusion list in a batch prompt covers only the two requested topics (at most a few hundred
+  short lines).
+- AI only proposes: topic, level and tags are validated against the list and written by Urdu
+  Core; nothing about them touches the schedule.
+- Migration 0008 is additive (two nullable columns, one index); no table rebuild.
+
+## Topics and quotas
+
+Draft for sponsor review. Quotas are per level, not cumulative. Totals: **A1 685 · A2 955 · B1 935
+· all 2,575**. They are estimates: there is no CEFR word list for Urdu, so the B1 total follows the
+usual 2,500–3,000 for European languages, and the last few hundred are left to reading and harvests.
+
+| # | Slug | Label | Covers | A1 | A2 | B1 |
+|---|---|---|---|---|---|---|
+| | | **A. Grammar & function words** | | **134** | **162** | **154** |
+| 1 | `pronouns` | Pronouns & reference | I/you/he, this/that, someone, possessives, apna, khud | 20 | 12 | 8 |
+| 2 | `questions` | Question words | kya, kaun, kahan, kab, kyun, kaise, kitna | 14 | 4 | 2 |
+| 3 | `postpositions` | Postpositions | mein, par, se, tak, ke liye, ka/ki/ke, ke paas, ke andar, ke baad | 15 | 20 | 15 |
+| 4 | `connectors` | Connectors | aur, lekin, ya, kyunke, agar, to, halanke, warna | 10 | 15 | 15 |
+| 5 | `modals` | Modals & auxiliaries | sakna, chahiye, parna, chahna, lagna, hona | 8 | 10 | 7 |
+| 6 | `compound-verbs` | Compound verbs | vector verbs (kha lena, ho jana) and noun + karna/hona | 10 | 30 | 40 |
+| 7 | `negation` | Negation & certainty | nahin, mat, kabhi nahin, zaroor, shayad, yaqeenan | 8 | 10 | 12 |
+| 8 | `adverbs` | Frequency, degree & manner | hamesha, aksar, kabhi kabhi, bohat, kaafi, taqreeban | 12 | 18 | 20 |
+| 9 | `quantifiers` | Comparison & scope | zyada, kam, kaafi, sab, har, sirf, bhi, wahi, mukhtalif | 12 | 13 | 10 |
+| 10 | `discourse` | Discourse & interjections | achha, to, waise, asal mein, arey, wah, uff, haan/ji | 10 | 15 | 15 |
+| 11 | `patterns` | Sentence patterns | mujhe … chahiye, mera khayal hai, kya aap … sakte hain | 15 | 15 | 10 |
+| | | **B. Talking** | | **37** | **50** | **63** |
+| 12 | `social` | Social phrases & address | greetings, thanks, apologies, invitations, aap/tum, ji, sahib, bhai, baji | 25 | 20 | 15 |
+| 13 | `communication` | Speaking & language | bolna, poochna, samjhana, batana, maanna, behes karna | 12 | 20 | 18 |
+| 14 | `idioms` | Idioms & proverbs | muhavare and common sayings | 0 | 10 | 30 |
+| | | **C. People & self** | | **100** | **145** | **145** |
+| 15 | `family` | Family & kinship | ammi, abbu, chacha, mamu, khala, phuppo, susral | 25 | 20 | 15 |
+| 16 | `people` | People & roles | friends, neighbours, strangers, professions, ages | 15 | 25 | 20 |
+| 17 | `body` | Body & appearance | body parts, looks | 20 | 15 | 15 |
+| 18 | `health` | Health & medicine | illness, symptoms, doctor, medicine, recovery | 10 | 25 | 25 |
+| 19 | `feelings` | Feelings | khush, naraz, dar, sharmindagi, pyar | 12 | 23 | 25 |
+| 20 | `personality` | Personality & character | honest, stubborn, generous, clever, rude | 6 | 19 | 25 |
+| 21 | `mind` | Mind & perception | think, remember, know, decide; see, hear, feel, notice | 12 | 18 | 20 |
+| | | **D. Daily life** | | **163** | **210** | **167** |
+| 22 | `actions` | Everyday actions | lena, dena, rakhna, kholna, intezaar karna, uthana | 40 | 35 | 25 |
+| 23 | `motion` | Movement | jana, aana, baithna, khara hona, bhaagna, girna | 20 | 18 | 12 |
+| 24 | `home` | Home & household | rooms, furniture, chores, household objects | 20 | 30 | 20 |
+| 25 | `food` | Food & drink | ingredients, dishes, cooking, taste, eating out | 35 | 35 | 30 |
+| 26 | `clothing` | Clothing & personal items | clothes, shoes, bags, jewellery, toiletries | 15 | 20 | 15 |
+| 27 | `money` | Money & shopping | buying, prices, bargaining, salary, bank, rent | 15 | 30 | 25 |
+| 28 | `travel` | Travel & transport | vehicles, stations, tickets, hotels, journeys | 10 | 25 | 25 |
+| 29 | `tech` | Technology & media | phone, internet, TV, social media | 8 | 17 | 15 |
+| | | **E. Time, space & quantity** | | **125** | **117** | **78** |
+| 30 | `time` | Time & calendar | days, months, parts of day, duration, early/late, abhi, pehle, baad mein, abhi tak | 35 | 25 | 20 |
+| 31 | `numbers` | Numbers | 1–100 (each irregular), sau, hazaar, lakh, crore, ordinals, sava/derh/dhai/paune | 50 | 45 | 15 |
+| 32 | `measurement` | Measurement | weight, length, distance, volume, units | 5 | 12 | 13 |
+| 33 | `places` | Places & getting around | city, village, buildings, countries, asking the way | 20 | 25 | 25 |
+| 34 | `space` | Space & position | near/far, left/right, above/below, inside/outside | 15 | 10 | 5 |
+| | | **F. Society & world** | | **78** | **189** | **223** |
+| 35 | `work` | Work | jobs, office, meetings, colleagues | 10 | 25 | 25 |
+| 36 | `school` | School & learning | studying, teaching, subjects, exams | 12 | 20 | 18 |
+| 37 | `science` | Science | matter, energy, experiments, everyday science | 0 | 5 | 15 |
+| 38 | `nature` | Nature & animals | land, water, plants, animals (no weather) | 15 | 30 | 25 |
+| 39 | `weather` | Weather & seasons | rain, heat, clouds, seasons, storms | 8 | 12 | 10 |
+| 40 | `society` | Society & customs | customs, weddings, hospitality, community, social issues | 5 | 20 | 25 |
+| 41 | `government` | Government & law | government, elections, rights, police, courts | 0 | 12 | 28 |
+| 42 | `religion` | Religion | prayer, belief, inshallah, mashallah, festivals of faith | 12 | 18 | 20 |
+| 43 | `culture` | Culture & arts | music, books, films, art, festivals | 5 | 15 | 20 |
+| 44 | `sports` | Sports & hobbies | games, exercise, hobbies, outdoors | 8 | 17 | 15 |
+| 45 | `conflict` | Conflict & danger | fighting, accidents, safety, emergencies | 3 | 15 | 22 |
+| | | **G. Describing & reasoning** | | **48** | **82** | **105** |
+| 46 | `qualities` | Physical qualities | colours, shapes, size, texture, condition | 25 | 25 | 20 |
+| 47 | `opinions` | Opinions & judgement | achha/bura, zaroori, ajeeb, saaf zahir | 15 | 20 | 25 |
+| 48 | `change` | Change & processes | begin, end, become, improve, break | 5 | 15 | 20 |
+| 49 | `cause` | Cause & purpose | wajah, nateeja, maqsad, is liye | 3 | 10 | 12 |
+| 50 | `abstract` | Abstract ideas | freedom, truth, luck, responsibility (only when nothing above fits) | 0 | 12 | 28 |
+
+Boundaries the prompts state: frequency words go to `adverbs`, time words (already, still, yet,
+soon) to `time`; size to `qualities`; money of any kind to `money`; weather never to `nature`;
+spatial relations to `space`, places themselves to `places`; set social formulas to `social`,
+fillers and interjections to `discourse`, verbs of speaking to `communication`.
+
+## Planning
+
+### Testing
+
+- **shared:** `topics.test.ts` pins slug uniqueness and format, quota totals per level, and that
+  every section is non-empty. Next-batch selection: lowest unfinished level first, lowest fill
+  ratio, tie by order, a cell under 25 asks for the remainder, everything full returns none.
+- **worker:** topic, cefr and tags validation (unknown slug, >2 tags, tag equal to topic,
+  uppercase folded, legacy tags tolerated until rewritten); `GET /api/coverage` counts including
+  queued and unclassified; `?topic=`/`?cefr=` filters; a batch paste with topic/cefr lands in a
+  Topics harvest, queued; classify batch issue (100 cap, unclassified first), preview (echo
+  mismatch, unknown n, unknown slug rejected), apply (writes topic/cefr/tags, schedule untouched,
+  repeat paste returns the stored result); export carries the new columns.
+- **client:** prompt builders (batch prompt carries both topics' scope lines and exclusions;
+  classify prompt is thin); `parsePasted` on classify rows.
+- **Headless** phone-width screenshots of the grid, the forms and the revealed review card, in
+  both themes.
+- **Sponsor smoke (short):** one real Next batch round trip and one 100-word classify round trip
+  on the phone; the chip on a revealed card.
+
+### Done When
+
+- Migration 0008 applied locally and remotely; `pnpm check` green.
+- The grid on the phone matches `GET /api/coverage`, and the unclassified count falls to zero after
+  classify passes.
+- One real batch round trip: two pastes, words queued in a Topics harvest with topic and level,
+  no duplicates of existing words in those topics.
+- One real 100-word classify round trip applied.
+- Revealed review cards show the topic chip and level; list filters work.
+- PRD, VISION §16, AGENTS, ChatGPT Project instructions and `prompts/vocab-tags.md` match the
+  build; mp05's tag filter reads topic.
+
+### Roadmap
+
+1. **s01 Topics and schema** — `shared/topics.ts` + tests, migration 0008, validation, coverage
+   route, list/due filters, export. No UI.
+2. **s02 Batch round trip** — next-batch selection, batch prompt builder, Topics source, paste path
+   accepting topic/cefr, Next batch and cell taps on a minimal grid.
+3. **s03 Classify mode** — thin prompt, compact reply parser, preview and apply in the check
+   machinery.
+4. **s04 UI** — full grid, Vocab filters and chips, form pickers, review card chip.
+5. **s05 Prompts and docs** — generated `prompts/vocab-tags.md`, Project instructions, PRD/VISION/
+   AGENTS ripples, mp05 note.
+
+s02 and s03 both depend on s01 and are independent of each other. s04 can start after s01. The
+sponsor can begin classifying after s03 is deployed, before the grid is polished.
+
+## Status
+
+### Recently Completed
+
+- 2026-10-06 — Planned and opened from a sponsor grill; the ChatGPT draft saved as
+  `prompts/vocab-tags.md`; DECISIONS 261006a.
+
+### Next Steps
+
+1. Sponsor reviews §Topics and quotas (slugs, boundaries, per-level numbers).
+2. `/pm-stress-test` f18, then build s01.
+
+### Open Questions
+
+- Quota numbers are a draft (sponsor review, step 1 above).
+
+## Decisions
+
+- 2026-10-06 — Batches come through a ChatGPT paste round trip, not a Worker API call (sponsor:
+  avoid API cost; fewer round trips preferred). Rejected: Worker-generated batches via OpenAI
+  (f08 territory, stays on hold); both.
+- 2026-10-06 — No check round trip after a batch; the batch prompt self-reviews and the check tool
+  stays as an audit (sponsor, agent recommendation). Rejected: a check after every batch; removing
+  the check tool.
+- 2026-10-06 — One `topic` per word plus 0–2 secondary tags drawn from the same list (sponsor,
+  agent recommendation). Quotas count `topic` only. Rejected: topic only, with tags retired; topic
+  beside free-form tags.
+- 2026-10-06 — Existing words are classified by a new thin check mode at 100 per round trip
+  (sponsor, asking for a thin payload to allow 100). Rejected: leaving them unclassified;
+  classifying by hand.
+- 2026-10-06 — Quotas per level (A1/A2/B1) per topic, filled level-first across all topics; B2
+  later (sponsor asked for per-level quotas; agent defaults for order and range).
+- 2026-10-06 — Agent defaults: topics and quotas in code, not D1; queued words count toward
+  coverage; ChatGPT's level label wins; unclassified words from Reader, voice and manual adds wait
+  for a classify pass; the `tags` table stays, unused; topic chip after reveal only.
