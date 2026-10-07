@@ -1,6 +1,10 @@
 # f18 topic-coverage — journal
 
-**Current state (2026-10-06):** 🟡 s01–s05 built and committed; migration 0008 applied locally only. Next: the sponsor applies 0008 remotely, deploys, updates the ChatGPT Project and runs `smoke-tests/smoke-test-18.md`.
+**Current state (2026-10-07):** 🟡 deployed with 0008 applied remotely; smoke-test-18 steps 1, 2, 3 and 5 pass. Step 4 (topic chip on the revealed review card) not seen: the code path checks out, likely the session held no classified words. Next: sponsor reveals a word that shows a chip on Vocab; if it shows, close f18.
+
+## 261007a — smoke-test-18 and a slowness scare
+
+Sponsor ran smoke-test-18 on production: grid, classify, Next batch and Vocab filters pass; no blue chip after Reveal in review. Traced the chip path end to end (`dueVocab` `SELECT *` → `toItem` → `topicChip` at `src/screens/ReviewScreen.tsx:419`) with no break found; most likely the due words were unclassified (classify does 100 a round, due order favours the oldest words, batch words stay queued). Sponsor also reported 1–3 s grading since the deploy. `wrangler d1 insights` (3 d) showed no query above 20 ms (the ALTER) and the grade path's queries under 2 ms; Workers Observability logs for today showed every review POST at 99–204 ms wall, 1–4 ms CPU, CPU flat over the week; client QUIC RTT rose from 6–19 ms (Telus fibre) to up to 458 ms (Rogers mobile). Sponsor confirmed a downtown internet outage yesterday: network, not f18. Offered, not opened: advance the card on tap and save the grade in the background.
 
 ## 261006d — s05 prompts and docs
 
