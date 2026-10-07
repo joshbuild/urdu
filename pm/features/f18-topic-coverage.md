@@ -1,6 +1,6 @@
 # Feature Plan — Topic Coverage
 
-**Status**: 🟡 IN PROGRESS — *opened 2026-10-06; planned from a sponsor grill the same day. Next: the sponsor reviews the topic and quota table, then `/pm-stress-test`, then s01.*
+**Status**: 🟡 IN PROGRESS — *opened 2026-10-06; planned from a sponsor grill the same day; topics approved and plan stress-tested the same day. Next: s01.*
 **Handle**: `f18`
 **Created**: *2026-10-06* · **Updated**: *2026-10-06*
 
@@ -42,37 +42,78 @@ next batch, no grading of the learner against a level.
   reordered freely. Adding a topic is a code change; renaming a slug needs a migration.
 - **Schema (migration 0008).** `vocab.topic` (nullable, a known slug) and `vocab.cefr` (nullable,
   `A1`–`C2`), index on `(topic, cefr)`. `vocab.tags` stays a JSON array but now holds **0–2
-  secondary topic slugs**, never the item's own topic.
-- **Validation.** `topic` and every tag must be a known slug (case-folded to lowercase); at most 2
-  tags. Legacy free tags on existing rows are tolerated until the row's tags are next written.
-- **Coverage API.** `GET /api/coverage` returns counts per topic × level (queued items count, so a
-  batch never re-asks for them), per-topic totals, and the unclassified count. `GET /api/vocab`
-  and `/api/vocab/due` gain `?topic=` and `?cefr=`.
-- **Batch round trip (s02).** **Next batch** chooses two cells: the lowest level with any cell
-  below quota, then the cells with the lowest fill ratio, ties by topic order; tapping a cell asks
-  for that cell (paired with the next pick). Each cell asks for min(25, remaining). The copied
-  prompt carries the conventions, each topic's scope line, the level, the full field list
-  including `topic`, `cefr` and `tags`, a self-review instruction (every field filled, JSON
-  parses, topic and level honest), and the Urdu of every existing word in those two topics. The
-  paste goes into a new harvest under a built-in **Topics** source (filter e.g. "A1 food + A1
-  body"), queued as in f17. ChatGPT's own level label wins over the requested level. The 50-per-
-  paste cap stays.
-- **Classify mode (s03).** A fourth check mode beside correctness, completeness and both. Up to
-  **100** items per batch, unclassified first (`topic IS NULL`, then `added_at`). Thin payload:
-  the prompt lists `n|urdu|english` per line plus the topic list; the reply is
-  `{handoff_id, rows:[[n, "urdu", "topic", "A2", ["tag"]]]}`. The echoed Urdu must match or the
-  row is rejected. Preview and tick as f11; applying sets `topic`, `cefr` and replaces `tags`. No
-  stamp column: unclassified is `topic IS NULL`.
+  secondary topic slugs**, never the item's own topic. The two columns are independent; an item
+  is **unclassified** while either is null. No other schema change: batch requests are
+  `handoffs` rows (status has no CHECK), and the Topics source id is a `settings` row.
+- **Validation, two strictnesses.** Direct writes (`POST`/`PATCH /api/vocab`) are strict: `topic`
+  and every tag must be a known slug (trimmed, case-folded to lowercase), `cefr` one of `A1`–`C2`
+  (upper-cased), at most 2 tags, none equal to the topic, else 400. Proposal paths (every
+  handoff paste, voice adds, the Airtable import) are lenient, because a ChatGPT Project not yet
+  re-pasted still emits free tags: an unknown tag or a tag equal to the topic is dropped, tags
+  past the second are dropped, an unknown topic or level becomes null, and the result row notes
+  what was dropped. A whole paste is never rejected for these fields. Legacy free tags on
+  existing rows stay until the row's tags are next written. `MAX_TAGS` becomes 2.
+- **Coverage API.** `GET /api/coverage` returns counts per topic × level for every level present
+  (A1–C2), per-topic totals, and the unclassified count. Counts use `topic` only, never secondary
+  tags, and include queued items so a batch never re-asks for them. `GET /api/vocab` and
+  `/api/vocab/due` gain `?topic=` (matches `topic` only) and `?cefr=`; the old `?tag=` stays.
+- **Batch round trip (s02).** Selection is a pure function in `shared/topics.ts`
+  (`nextCells(counts, tapped?)`). **Next batch** chooses up to two cells: the lowest level with any
+  cell below quota (cells with quota 0 never count), then the cells there with the lowest fill
+  ratio, ties by topic order; one open cell left at that level means a one-cell batch. Tapping a
+  cell below quota asks for that cell paired with the next pick **at the same level**; a full
+  cell is not tappable. Each cell asks for min(25, remaining). All cells full: Next batch is
+  disabled and says so.
+  - **Issue:** `POST /api/batches` (body: optional tapped cell) picks the cells, records a
+    `batch_issued` handoff under a Worker-minted id holding the cells, and returns the id, the
+    cells and, per topic, the Urdu of every word whose `topic` or tags hold that slug. So a
+    reload between copy and paste loses nothing, as with f11's check.
+  - **Prompt:** the client builds it: the conventions, each topic's scope line and the
+    boundaries, the level, the full field list including `topic`, `cefr` and `tags`, a
+    self-review instruction (every field filled, JSON parses, topic and level honest), and the
+    exclusion lists.
+  - **Paste:** `POST /api/batches/:id/handoffs` (FR-F4 body, `?start=1` as f17). A repeat of
+    an applied id returns the stored result and creates nothing. An unknown id, or an id that
+    is not a batch, is 404. Otherwise the route finds or creates the built-in **Topics** source
+    (`settings.topics_source_id`; recreated if deleted), creates a harvest with filter text from
+    the cells (e.g. "A1 food + A1 body"), imports into it queued as in f17, and marks the
+    handoff applied. ChatGPT's own topic and level win over the requested ones; leniency as
+    above. A duplicate of any existing word is reported, not created (`urdu_key`, as now), which
+    is the backstop for words the exclusion list missed (unclassified ones). The 50-per-paste cap
+    stays; two cells of 25 fit it exactly.
+  - **Harvest pastes too:** the in-app Copy new-vocab prompt (source harvests) also asks for
+    `topic`, `cefr` and `tags` from the slug list, so harvested words arrive classified.
+- **Classify mode (s03).** A fourth mode in the f13 Check options dialog beside correctness,
+  completeness and both; picking it hides the field ticks and the only-unchecked box and caps the
+  count at **100** (`MAX_CLASSIFY_BATCH`; `MAX_CHECK_BATCH` stays 50 for the others). It selects
+  only unclassified items (`topic IS NULL OR cefr IS NULL`), oldest `added_at` first; none left
+  means the dialog says so and issues nothing. The issued batch is a `check_issued` handoff with
+  mode `classify`, as f13. Thin payload: the prompt lists `n|urdu|english` per line (n from 1, the
+  position in the batch) plus the slug list with scope lines and boundaries; the reply is
+  `{handoff_id, rows:[[n, "urdu", "topic", "A2", ["tag"]]]}`, parsed by its own parser and posted
+  to `POST /api/handoffs/classify` (`?preview=1` as the corrections route).
+  - **Preview** rejects per row: unknown n, echoed Urdu not equal to the stored item's, unknown
+    topic slug or level; unknown tags are dropped as on the lenient paths. Rows the reply omits
+    are reported as missing and stay unclassified.
+  - **Apply** (ticked rows) writes `topic`, `cefr` and replaces `tags`, sets `updated_at`, and
+    writes a row only if its topic and level are still what they were at issue (else reported
+    stale, as f11). The schedule and review events are untouched. A repeat paste returns the
+    stored result. No stamp column: classified is `topic` and `cefr` both set.
+  - Reclassifying a single item is the edit form's job; classify never re-serves a classified
+    item.
 - **UI (s04).** Harvest tab: the coverage grid by section, with have/target per cell and a
   section and grand total per level, the unclassified count linking to Copy classify prompt, and
   Next batch. Vocab tab: topic and level filters in place of the tag select; a topic chip on list
   rows and in detail. Edit and add forms: a topic picker, a level picker and up to 2 secondary
-  topic pickers in place of free-text tags. Review card: the topic chip and level shown after
+  topic pickers in place of free-text tags; legacy free tags show as removable chips and are
+  dropped on save. Level picker offers A1–C2 and none. The grid shows A1, A2 and B1 cells and a
+  B2+ count per topic with no target. Review card: the topic chip and level shown after
   reveal only.
 - **Prompts and docs (s05).** A script writes `prompts/vocab-tags.md` from `shared/topics.ts`.
   The ChatGPT Project instructions keep the conventions and `vocab-list`; `vocab-json` gains
   `topic` and `cefr` and its tags rule points at the slug list. PRD, VISION §16 wording, AGENTS
-  (topics as a shared source of truth) and mp05's tag filter are rippled.
+  (topics as a shared source of truth) and mp05's tag filter are rippled. The voice add tool
+  takes no topic or level; voice adds arrive unclassified and are picked up by classify.
 - **Check step reframed.** The batch flow has no check round trip. The existing correctness and
   completeness checks stay on the Vocab tab as an occasional audit.
 
@@ -115,7 +156,7 @@ next batch, no grading of the learner against a level.
 
 ## Topics and quotas
 
-Draft for sponsor review. Quotas are per level, not cumulative. Totals: **A1 685 · A2 955 · B1 935
+Approved by the sponsor 2026-10-06. Quotas are per level, not cumulative. Totals: **A1 685 · A2 955 · B1 935
 · all 2,575**. They are estimates: there is no CEFR word list for Urdu, so the B1 total follows the
 usual 2,500–3,000 for European languages, and the last few hundred are left to reading and harvests.
 
@@ -178,6 +219,7 @@ usual 2,500–3,000 for European languages, and the last few hundred are left to
 | 48 | `change` | Change & processes | begin, end, become, improve, break | 5 | 15 | 20 |
 | 49 | `cause` | Cause & purpose | wajah, nateeja, maqsad, is liye | 3 | 10 | 12 |
 | 50 | `abstract` | Abstract ideas | freedom, truth, luck, responsibility (only when nothing above fits) | 0 | 12 | 28 |
+| | | **Total (all 2,575)** | | **685** | **955** | **935** |
 
 Boundaries the prompts state: frequency words go to `adverbs`, time words (already, still, yet,
 soon) to `time`; size to `qualities`; money of any kind to `money`; weather never to `nature`;
@@ -190,15 +232,22 @@ fillers and interjections to `discourse`, verbs of speaking to `communication`.
 
 - **shared:** `topics.test.ts` pins slug uniqueness and format, quota totals per level, and that
   every section is non-empty. Next-batch selection: lowest unfinished level first, lowest fill
-  ratio, tie by order, a cell under 25 asks for the remainder, everything full returns none.
-- **worker:** topic, cefr and tags validation (unknown slug, >2 tags, tag equal to topic,
-  uppercase folded, legacy tags tolerated until rewritten); `GET /api/coverage` counts including
-  queued and unclassified; `?topic=`/`?cefr=` filters; a batch paste with topic/cefr lands in a
-  Topics harvest, queued; classify batch issue (100 cap, unclassified first), preview (echo
-  mismatch, unknown n, unknown slug rejected), apply (writes topic/cefr/tags, schedule untouched,
-  repeat paste returns the stored result); export carries the new columns.
-- **client:** prompt builders (batch prompt carries both topics' scope lines and exclusions;
-  classify prompt is thin); `parsePasted` on classify rows.
+  ratio, tie by order, a cell under 25 asks for the remainder, quota-0 cells skipped, one open
+  cell gives a one-cell batch, a tapped cell pairs at its own level, a full or quota-0 tapped
+  cell is refused, everything full returns none.
+- **worker:** strict validation on `/api/vocab` (unknown slug, >2 tags, tag equal to topic, bad
+  level → 400; case folded); lenient proposals (unknown tag, topic or level dropped and noted,
+  the paste still applied); legacy tags kept until rewritten; `GET /api/coverage` counts
+  including queued, B2+ and unclassified (either column null), topic only; `?topic=`/`?cefr=`
+  filters; `POST /api/batches` (cells, exclusions by topic or tag, `batch_issued` row); batch
+  paste (Topics source created once and recreated after delete, harvest filter text, queued,
+  `?start=1`, repeat returns stored, unknown id 404, duplicate reported); classify issue (100
+  cap, only unclassified, none left), preview (echo mismatch, unknown n, unknown slug or level,
+  missing rows), apply (writes topic/cefr/tags and `updated_at`, stale rows skipped, schedule
+  and events untouched, repeat returns stored); export carries the new columns.
+- **client:** prompt builders (batch prompt carries each topic's scope line, the boundaries and
+  the exclusions; new-vocab prompt asks for topic/cefr/tags; classify prompt is thin); the
+  classify reply parser; the edit form drops legacy tags on save.
 - **Headless** phone-width screenshots of the grid, the forms and the revealed review card, in
   both themes.
 - **Sponsor smoke (short):** one real Next batch round trip and one 100-word classify round trip
@@ -206,30 +255,40 @@ fillers and interjections to `discourse`, verbs of speaking to `communication`.
 
 ### Done When
 
-- Migration 0008 applied locally and remotely; `pnpm check` green.
-- The grid on the phone matches `GET /api/coverage`, and the unclassified count falls to zero after
-  classify passes.
-- One real batch round trip: two pastes, words queued in a Topics harvest with topic and level,
-  no duplicates of existing words in those topics.
-- One real 100-word classify round trip applied.
-- Revealed review cards show the topic chip and level; list filters work.
-- PRD, VISION §16, AGENTS, ChatGPT Project instructions and `prompts/vocab-tags.md` match the
-  build; mp05's tag filter reads topic.
+- (s01–s04) The Testing rows above pass; `pnpm check` green after each slice.
+- (s01) Migration 0008 applied locally, and remotely by the sponsor before the first deploy.
+- (s02, sponsor) One real Next batch round trip on the phone: copy, ChatGPT, paste; the words
+  sit queued in a Topics harvest with topic and level, and none duplicates an existing word.
+- (s03, sponsor) One real 100-word classify round trip applied on the phone; the grid's
+  unclassified count drops by the rows applied.
+- (s04) Headless phone-width screenshots, both themes, of the grid, the edit form and a revealed
+  review card; the agent checks the grid's numbers against `GET /api/coverage` on `pnpm dev`.
+- (s04, sponsor) The topic chip and level on a revealed card on the phone.
+- (s05) PRD (FR-L and the amended FRs), VISION §16, AGENTS, the ChatGPT Project instructions and a
+  regenerated `prompts/vocab-tags.md` match the build (the generator test pins the file); mp05's
+  doc names the topic filter.
+- The unclassified count reaching zero is the sponsor's to do over time and does not gate close.
 
 ### Roadmap
 
-1. **s01 Topics and schema** — `shared/topics.ts` + tests, migration 0008, validation, coverage
-   route, list/due filters, export. No UI.
-2. **s02 Batch round trip** — next-batch selection, batch prompt builder, Topics source, paste path
-   accepting topic/cefr, Next batch and cell taps on a minimal grid.
-3. **s03 Classify mode** — thin prompt, compact reply parser, preview and apply in the check
-   machinery.
+1. **s01 Topics and schema** — `shared/topics.ts` + tests, migration 0008, strict and lenient
+   validation (every paste path accepts topic/cefr), coverage route, list/due filters, export.
+   No UI, except that the old free-text tag field now gets a 400 for unknown tags until s04.
+2. **s02 Batch round trip** — `nextCells`, `POST /api/batches`, the batch paste route and Topics
+   source, the batch prompt builder, topic/cefr/tags in the new-vocab prompt, Next batch and cell
+   taps on a minimal grid.
+3. **s03 Classify mode** — the dialog mode, the issue query, the thin prompt, the reply parser,
+   `POST /api/handoffs/classify` preview and apply.
 4. **s04 UI** — full grid, Vocab filters and chips, form pickers, review card chip.
 5. **s05 Prompts and docs** — generated `prompts/vocab-tags.md`, Project instructions, PRD/VISION/
    AGENTS ripples, mp05 note.
 
 s02 and s03 both depend on s01 and are independent of each other. s04 can start after s01. The
-sponsor can begin classifying after s03 is deployed, before the grid is polished.
+sponsor can begin classifying after s03 is deployed, before the grid is polished; classifying
+before the first Next batch makes its exclusion lists complete (the `urdu_key` duplicate check
+catches what they miss either way). mp05 (in flight, no migration) may build before or after
+f18: if first, its `find_vocab` tag argument is renamed to topic in f18 s05; both edit
+`worker/domain/vocab.ts`, so they don't build at the same time.
 
 ## Status
 
@@ -237,15 +296,17 @@ sponsor can begin classifying after s03 is deployed, before the grid is polished
 
 - 2026-10-06 — Planned and opened from a sponsor grill; the ChatGPT draft saved as
   `prompts/vocab-tags.md`; DECISIONS 261006a.
+- 2026-10-06 — Sponsor approved §Topics and quotas (topics, boundaries, per-level numbers); a
+  totals row added.
+- 2026-10-06 — Stress-tested: 22 findings, all resolved by the agent; none escalated.
 
 ### Next Steps
 
-1. Sponsor reviews §Topics and quotas (slugs, boundaries, per-level numbers).
-2. `/pm-stress-test` f18, then build s01.
+1. Build s01 (stress-tested 2026-10-06, ready).
 
 ### Open Questions
 
-- Quota numbers are a draft (sponsor review, step 1 above).
+- None.
 
 ## Decisions
 
@@ -266,3 +327,16 @@ sponsor can begin classifying after s03 is deployed, before the grid is polished
 - 2026-10-06 — Agent defaults: topics and quotas in code, not D1; queued words count toward
   coverage; ChatGPT's level label wins; unclassified words from Reader, voice and manual adds wait
   for a classify pass; the `tags` table stays, unused; topic chip after reveal only.
+- 2026-10-06 — Stress-test calls (agent):
+  - Proposal paths are lenient about topic, level and tags (drop and note), direct writes strict.
+    A ChatGPT Project not yet updated would otherwise fail whole pastes. Rejected: strict
+    everywhere.
+  - Batch requests are Worker-issued `batch_issued` handoffs with their own paste route, which
+    creates the Topics harvest at paste time. A reload between copy and paste keeps the cells,
+    and an abandoned copy leaves no empty harvest. Rejected: client-held cells; a harvest
+    created at copy time.
+  - Unclassified means topic or level null; classify serves only those, and apply guards against
+    a value changed since issue.
+  - Exclusion lists match topic or tag; coverage, quotas and the topic filter use `topic` only.
+  - The in-app new-vocab prompt also asks for topic/cefr/tags; the voice tool does not.
+  - B2+ words count per topic without a target; quota-0 cells are never picked.
