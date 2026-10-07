@@ -30,6 +30,11 @@ sponsor chose A + B. The stress test (2026-10-02) added the hold rule and the bu
 - `get_vocab` (`worker/coach/prompt.ts`, `worker/domain/voice.ts`): scope `due` or `all`,
   optional tag, `limit` ≤ 50 (`MAX_VOICE_VOCAB_LIMIT`). `all` is newest first, so older words are
   invisible to the Coach.
+- *(f18, 2026-10-06)* `tags` now hold 0–2 secondary topic slugs and each item has a `topic` and
+  `cefr`; `GET /api/vocab` and the due route take `?topic=`/`?cefr=`. `get_vocab`'s `tag` still
+  matches tags only, so whichever slice touches the tool schema renames it to `topic` (matching
+  `vocab.topic`, as the Vocab tab's filter does). Voice adds still take no topic or level and are
+  picked up by classify.
 - `add_to_vault` already dedupes against the whole vault server-side (`createVocab` reports
   `duplicate` with the existing meaning). Adds are released at once (f17 Scope), with only
   urdu, roman, english and kind filled.

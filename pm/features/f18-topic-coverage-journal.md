@@ -1,6 +1,10 @@
 # f18 topic-coverage — journal
 
-**Current state (2026-10-06):** 🟡 s01–s04 built and committed; migration 0008 applied locally only. Next: s05 prompts and docs, then smoke-test-18. Before any deploy the sponsor applies 0008 remotely.
+**Current state (2026-10-06):** 🟡 s01–s05 built and committed; migration 0008 applied locally only. Next: the sponsor applies 0008 remotely, deploys, updates the ChatGPT Project and runs `smoke-tests/smoke-test-18.md`.
+
+## 261006d — s05 prompts and docs
+
+`scripts/vocab-tags.ts` builds `prompts/vocab-tags.md` from `shared/topics.ts` (slug, label, scope by section, plus the boundaries; no quotas, which ChatGPT doesn't need); `scripts/write-vocab-tags.ts` writes it and `scripts/vocab-tags.test.ts` pins the committed file. This replaced the ChatGPT coach's 45-category draft (kept in git at `151be27`). The file is 4.8 KB, so it goes into the Project as an uploaded file rather than inline: the instructions are 5.9 KB against ChatGPT's 8,000-character limit. `vocab-json` (both copies, still identical) now has nine fields: `topic` and `cefr` added, `tags` 0–2 slugs or `[]`, and the self-check names the slug list. Ripples: PRD FR-L1–L6, FR-F11 and the amended FR-A6/A7, C6, D1, D2, E2 and Appendix A; VISION §16 (coverage is no curriculum); AGENTS (topics as a shared source of truth, the generator command, Project state); mp05 (`get_vocab`'s `tag` to become `topic`); CHANGELOG. smoke-test-18 is five phone steps after the migration and Project update.
 
 ## 261006c — s04 UI
 

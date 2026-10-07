@@ -1,52 +1,80 @@
-# Vocab tags
+# Vocab topics
 
-Proposed tag taxonomy for vocab items, drafted by the ChatGPT Urdu coach and saved
-2026-10-06. Status: **proposed, under review** — not yet wired into
-`urdu-coach-project-instructions.md` or `vocab-json.md`, which still ask for free-form
-lowercase topic tags.
+The topic list for my vocabulary app. Every entry has one `topic` slug from this list, the
+one where it belongs most, and 0 to 2 `tags`: other slugs from this list where it clearly also
+belongs, never the topic itself. Use the slugs exactly as written.
 
-1. People & relationships — family, friends, strangers, professions, social roles
-2. Body & appearance — body parts, physical description, movement
-3. Health & medicine — illness, symptoms, doctors, medicine, recovery
-4. Feelings & emotions — happiness, anger, fear, embarrassment, affection
-5. Personality & character — honest, stubborn, generous, clever, rude
-6. Mind & thought — thinking, remembering, knowing, believing, deciding
-7. Communication & language — speaking, asking, explaining, agreeing, arguing
-8. Everyday actions — taking, giving, putting, opening, waiting, carrying
-9. Home & household — rooms, furniture, cleaning, household objects
-10. Food & drink — ingredients, meals, cooking, taste, restaurants
-11. Clothing & personal items — clothes, shoes, bags, jewellery, toiletries
-12. Time & calendar — days, months, duration, frequency, early/late
-13. Numbers, quantity & measurement — amounts, size, weight, distance, fractions
-14. Places & directions — locations, position, navigation, near/far
-15. Travel & transportation — vehicles, airports, hotels, tickets, journeys
-16. Work & business — jobs, offices, meetings, money, management
-17. School & learning — studying, teaching, subjects, exams, knowledge
-18. Shopping & money — buying, selling, prices, payment, expensive/cheap
-19. Technology & media — phones, computers, internet, television, social media
-20. Nature & the natural world — land, water, weather, plants, animals
-21. Weather & climate — rain, heat, clouds, seasons, storms
-22. Science & mathematics — matter, energy, experiments, calculation, biology
-23. Society & community — groups, customs, institutions, social issues
-24. Government, law & politics — government, elections, rights, police, courts
-25. Religion & spirituality — religious life, prayer, belief, common Islamic expressions
-26. Culture, arts & entertainment — music, books, films, art, festivals
-27. Sports & recreation — games, exercise, hobbies, outdoor activities
-28. Conflict & danger — fighting, accidents, weapons, safety, emergencies
-29. Physical qualities & description — colours, shapes, textures, condition, size
-30. Space & position — inside, outside, above, below, between, direction
-31. Change & processes — beginning, ending, becoming, improving, breaking
-32. Cause, purpose & consequence — reason, result, intention, possibility
-33. Opinions & judgement — good/bad, important, strange, obvious, reasonable
-34. Abstract concepts — freedom, truth, luck, responsibility, hope, justice
-35. Conversation & social interaction — greetings, politeness, invitations, apologies, humour
-36. Pronouns & reference — I/you/he/she, this/that, someone, something, oneself
-37. Question words — what, who, where, when, why, how, which, how much
-38. Connectors & conjunctions — and, but, or, because, if, then, although, otherwise
-39. Postpositions & relationships — in, on, from, until, for, with, about, toward
-40. Frequency, degree & manner — always, often, sometimes, already, very, quite, almost
-41. Negation, certainty & possibility — not, never, definitely, perhaps, probably, possibly
-42. Auxiliaries & modal constructions — can, should, must, need to, want to, have to, seem
-43. Comparison, quantity & scope — more, less, enough, all, every, only, also, same/different
-44. Discourse & conversational glue — well, so, anyway, actually, basically, for example, still
-45. Essential sentence patterns — I need…, I think…, I have…, I know…, could you…?, there is…?
+Boundaries: Frequency words go to adverbs; time words (already, still, yet, soon) to time; size to qualities; money of any kind to money; weather never to nature; spatial relations to space, places themselves to places; set social formulas to social; fillers and interjections to discourse; verbs of speaking to communication.
+
+## Grammar & function words
+
+- `pronouns` (Pronouns & reference): I/you/he, this/that, someone, possessives, apna, khud
+- `questions` (Question words): kya, kaun, kahan, kab, kyun, kaise, kitna
+- `postpositions` (Postpositions): mein, par, se, tak, ke liye, ka/ki/ke, ke paas, ke andar, ke baad
+- `connectors` (Connectors): aur, lekin, ya, kyunke, agar, to, halanke, warna
+- `modals` (Modals & auxiliaries): sakna, chahiye, parna, chahna, lagna, hona
+- `compound-verbs` (Compound verbs): vector verbs (kha lena, ho jana) and noun + karna/hona
+- `negation` (Negation & certainty): nahin, mat, kabhi nahin, zaroor, shayad, yaqeenan
+- `adverbs` (Frequency, degree & manner): hamesha, aksar, kabhi kabhi, bohat, kaafi, taqreeban
+- `quantifiers` (Comparison & scope): zyada, kam, kaafi, sab, har, sirf, bhi, wahi, mukhtalif
+- `discourse` (Discourse & interjections): achha, to, waise, asal mein, arey, wah, uff, haan/ji
+- `patterns` (Sentence patterns): mujhe … chahiye, mera khayal hai, kya aap … sakte hain
+
+## Talking
+
+- `social` (Social phrases & address): greetings, thanks, apologies, invitations, aap/tum, ji, sahib, bhai, baji
+- `communication` (Speaking & language): bolna, poochna, samjhana, batana, maanna, behes karna
+- `idioms` (Idioms & proverbs): muhavare and common sayings
+
+## People & self
+
+- `family` (Family & kinship): ammi, abbu, chacha, mamu, khala, phuppo, susral
+- `people` (People & roles): friends, neighbours, strangers, professions, ages
+- `body` (Body & appearance): body parts, looks
+- `health` (Health & medicine): illness, symptoms, doctor, medicine, recovery
+- `feelings` (Feelings): khush, naraz, dar, sharmindagi, pyar
+- `personality` (Personality & character): honest, stubborn, generous, clever, rude
+- `mind` (Mind & perception): think, remember, know, decide; see, hear, feel, notice
+
+## Daily life
+
+- `actions` (Everyday actions): lena, dena, rakhna, kholna, intezaar karna, uthana
+- `motion` (Movement): jana, aana, baithna, khara hona, bhaagna, girna
+- `home` (Home & household): rooms, furniture, chores, household objects
+- `food` (Food & drink): ingredients, dishes, cooking, taste, eating out
+- `clothing` (Clothing & personal items): clothes, shoes, bags, jewellery, toiletries
+- `money` (Money & shopping): buying, prices, bargaining, salary, bank, rent
+- `travel` (Travel & transport): vehicles, stations, tickets, hotels, journeys
+- `tech` (Technology & media): phone, internet, TV, social media
+
+## Time, space & quantity
+
+- `time` (Time & calendar): days, months, parts of day, duration, early/late, abhi, pehle, baad mein, abhi tak
+- `numbers` (Numbers): 1–100 (each irregular), sau, hazaar, lakh, crore, ordinals, sava/derh/dhai/paune
+- `measurement` (Measurement): weight, length, distance, volume, units
+- `places` (Places & getting around): city, village, buildings, countries, asking the way
+- `space` (Space & position): near/far, left/right, above/below, inside/outside
+
+## Society & world
+
+- `work` (Work): jobs, office, meetings, colleagues
+- `school` (School & learning): studying, teaching, subjects, exams
+- `science` (Science): matter, energy, experiments, everyday science
+- `nature` (Nature & animals): land, water, plants, animals (no weather)
+- `weather` (Weather & seasons): rain, heat, clouds, seasons, storms
+- `society` (Society & customs): customs, weddings, hospitality, community, social issues
+- `government` (Government & law): government, elections, rights, police, courts
+- `religion` (Religion): prayer, belief, inshallah, mashallah, festivals of faith
+- `culture` (Culture & arts): music, books, films, art, festivals
+- `sports` (Sports & hobbies): games, exercise, hobbies, outdoors
+- `conflict` (Conflict & danger): fighting, accidents, safety, emergencies
+
+## Describing & reasoning
+
+- `qualities` (Physical qualities): colours, shapes, size, texture, condition
+- `opinions` (Opinions & judgement): achha/bura, zaroori, ajeeb, saaf zahir
+- `change` (Change & processes): begin, end, become, improve, break
+- `cause` (Cause & purpose): wajah, nateeja, maqsad, is liye
+- `abstract` (Abstract ideas): freedom, truth, luck, responsibility (only when nothing above fits)
+
+<!-- Generated from shared/topics.ts by `pnpm tsx scripts/write-vocab-tags.ts`; do not edit. -->

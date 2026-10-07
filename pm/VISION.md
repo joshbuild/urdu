@@ -626,7 +626,7 @@ The PWA does **not** need to reproduce every capability of Urdu Coach.
 V0 is not intended to be:
 
 - a replacement for ChatGPT Live Voice;
-- a full language curriculum;
+- a full language curriculum (f18's topic coverage targets gauge what the vault holds; they set no lessons, order or grammar);
 - an Anki replacement;
 - a multi-user application;
 - a public vocabulary-sharing service;

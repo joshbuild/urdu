@@ -310,12 +310,16 @@ f18: if first, its `find_vocab` tag argument is renamed to topic in f18 s05; bot
   (legacy free tags shown struck through, dropped on save), topic and level filters on the Vocab
   tab, topic chips on list rows, detail and the revealed review card; grid numbers checked against
   `GET /api/coverage` on `pnpm dev`; headless 360 px shots (light theme only, the app has no dark).
+- 2026-10-06 — s05 prompts and docs: `scripts/write-vocab-tags.ts` regenerates
+  `prompts/vocab-tags.md` (a test pins it), uploaded to the ChatGPT Project as a file; `vocab-json`
+  asks for `topic`, `cefr` and slug `tags`; PRD FR-L (and FR-A6/A7, C6, D1/D2, E2, F11, Appendix
+  A), VISION §16, AGENTS, mp05 and CHANGELOG rippled; smoke-test-18 written.
 
 ### Next Steps
 
-1. s05 prompts and docs (Project instructions, generated `prompts/vocab-tags.md`, PRD FR-L,
-   VISION §16, AGENTS, mp05 note), then smoke-test-18.
-2. Sponsor: `pnpm wrangler d1 migrations apply urdu --remote` before the next deploy.
+1. Sponsor: back up, `pnpm wrangler d1 migrations apply urdu --remote`, deploy, re-paste the
+   Project instructions and upload `prompts/vocab-tags.md`, then run `smoke-test-18.md`.
+2. Close f18 on the smoke (or daily-use report).
 
 ### Open Questions
 
