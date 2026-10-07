@@ -228,6 +228,48 @@ export type BatchIssueResponse = {
 // POST /api/batches/handoffs: the FR-F4 reply, imported into a new harvest of the Topics source.
 export type BatchPasteResponse = HandoffResponse & { harvest_id: string };
 
+// f18: classify. POST /api/handoffs/classify-batch takes {count?} (1–100, default 100) and lists
+// unclassified items (topic or level null), oldest first, numbered from 1.
+export const MAX_CLASSIFY_BATCH = 100;
+export type ClassifyItem = { n: number; vocab_id: string; urdu: string; english: string | null };
+export type ClassifyBatchResponse = {
+  // Null when every item is classified: nothing recorded.
+  handoff_id: string | null;
+  items: ClassifyItem[];
+  unclassified: number;
+};
+// POST /api/handoffs/classify: rows are [n, urdu, topic, level] or [n, urdu, topic, level, tags],
+// judged row by row. `accept` (the ticked n) is absent on ?preview=1 and required on apply.
+export type ClassifyRequest = { handoff_id: string; rows: unknown[]; accept?: number[] };
+type Classified = {
+  n: number;
+  vocab_id: string;
+  urdu: string;
+  topic: string;
+  cefr: CefrLevel;
+  tags: string[];
+  // Secondary tags left out: unknown, the topic itself, or past the second.
+  dropped?: string[];
+};
+export type ClassifyPlan =
+  // n null: the row was not even [n, urdu, …].
+  | { n: number | null; urdu: string; outcome: "rejected"; reason: string }
+  // In the batch, absent from the reply: stays unclassified.
+  | { n: number; vocab_id: string; urdu: string; outcome: "missing" }
+  | (Classified & { outcome: "classify" });
+// After apply: "stale" when the item's topic or level changed after the batch was issued.
+export type ClassifyResult =
+  | Exclude<ClassifyPlan, { outcome: "classify" }>
+  | (Classified & { outcome: "classified" | "declined" | "stale" });
+export type ClassifyResponse = {
+  handoff_id: string;
+  preview: boolean;
+  // A batch already applied: nothing written, the stored results.
+  repeat: boolean;
+  batch_size: number;
+  results: (ClassifyPlan | ClassifyResult)[];
+};
+
 // The whole vault except sessions (PRD §6 Portability).
 export type ExportResponse = {
   exported_at: string;
@@ -323,6 +365,9 @@ export const HANDOFF_STATUSES = [
   "batch_issued",
   // While a batch reply is being imported, so a second paste of it waits.
   "batch_pasting",
+  // A classify batch (f18), from Copy classify prompt until its reply is applied.
+  "classify_issued",
+  "classified",
 ] as const;
 export type HandoffStatus = (typeof HANDOFF_STATUSES)[number];
 

@@ -6,6 +6,7 @@
 import {
   type BatchIssueResponse,
   type CheckOptions,
+  type ClassifyItem,
   FILLABLE_FIELDS,
   type FillableField,
   MAX_CHECK_BATCH,
@@ -203,3 +204,33 @@ export const FIELD_LABELS: Readonly<Record<FillableField, string>> = {
   example_urdu: "Example",
   example_english: "Example (English)",
 };
+
+// f18 (FR-L): classify existing words, up to 100 a time. Thin both ways: one line per item out,
+// one compact row per item back, so a reply of 100 rows stays comfortably inside a chat answer.
+export function classifyPrompt(batch: {
+  handoff_id: string;
+  items: readonly ClassifyItem[];
+}): string {
+  const lines = batch.items.map((i) => `${i.n}|${i.urdu}|${i.english ?? ""}`).join("\n");
+  return `You are labelling entries in my Urdu vocabulary app. For every item below, give the one topic from the list where it belongs most, its CEFR level (A1, A2, B1, B2, C1 or C2: the level at which a learner usually meets it), and at most two other topics where it clearly also belongs (never the topic itself; usually none).
+
+Topic boundaries: ${TOPIC_BOUNDARIES}
+
+Topic list:
+${TOPIC_LIST}
+
+Items, one per line as n|urdu|english:
+${lines}
+
+Return one row per item as [n, urdu, topic, level, tags], copying n and urdu exactly as given, in exactly this JSON shape, copying handoff_id as given:
+
+{
+  "handoff_id": "${batch.handoff_id}",
+  "rows": [
+    [1, "کتاب", "school", "A1", []]
+  ]
+}
+
+Answer every item, and nothing else. ${JSON_ONLY}
+`;
+}

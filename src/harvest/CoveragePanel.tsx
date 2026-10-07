@@ -3,11 +3,12 @@
 // and Paste batch reply brings the answer back into a harvest of the Topics source.
 
 import { useState } from "react";
-import type { BatchIssueResponse, CoverageResponse } from "../../shared/api";
+import type { BatchIssueResponse, ClassifyBatchResponse, CoverageResponse } from "../../shared/api";
 import type { QuotaLevel } from "../../shared/topics";
 import { type Copied, CopiedNote, copy, postJson } from "../handoff/clipboard";
 import { PasteNewSheet } from "../handoff/NewVocabSheets";
-import { batchPrompt } from "../handoff/prompts";
+import { batchPrompt, classifyPrompt } from "../handoff/prompts";
+import { ClassifySheet } from "./ClassifySheet";
 import { type CoverageGrid, coverageGrid, type GridCell, type LevelTotal } from "./coverage";
 import { Unavailable, useFetched } from "./fetched";
 
@@ -131,22 +132,40 @@ export function CoveragePanel({
 }) {
   const { loaded, reload } = useFetched<CoverageResponse>("/api/coverage", onLocked, preloaded);
   const [copied, setCopied] = useState<Copied>({ kind: "none" });
-  const [busy, setBusy] = useState(false);
+  const [working, setWorking] = useState<"batch" | "classify" | null>(null);
+  const busy = working !== null;
   const [error, setError] = useState("");
-  const [pasting, setPasting] = useState(false);
+  const [pasting, setPasting] = useState<"batch" | "classify" | null>(null);
 
   async function ask(cell?: { topic: string; level: QuotaLevel }) {
-    setBusy(true);
+    setWorking("batch");
     setError("");
     setCopied({ kind: "none" });
     const posted = await postJson<BatchIssueResponse>("/api/batches", cell ?? {});
-    setBusy(false);
+    setWorking(null);
     if (!posted.ok) return setError(posted.message);
     const asked = posted.body.cells.map((c) => `${c.ask} ${c.level} ${c.topic}`).join(" + ");
     setCopied(
       await copy(
         batchPrompt(posted.body),
         `Batch prompt copied (${asked}). Paste it into ChatGPT, then tap Paste batch reply.`,
+      ),
+    );
+  }
+
+  async function classify() {
+    setWorking("classify");
+    setError("");
+    setCopied({ kind: "none" });
+    const posted = await postJson<ClassifyBatchResponse>("/api/handoffs/classify-batch", {});
+    setWorking(null);
+    if (!posted.ok) return setError(posted.message);
+    const { handoff_id, items, unclassified } = posted.body;
+    if (handoff_id === null) return setError("Every word already has a topic and level.");
+    setCopied(
+      await copy(
+        classifyPrompt({ handoff_id, items }),
+        `Classify prompt copied (${items.length} of ${unclassified} unclassified). Paste it into ChatGPT, then tap Paste classify reply.`,
       ),
     );
   }
@@ -163,10 +182,25 @@ export function CoveragePanel({
         <TotalsLine totals={grid.totals} />
       </p>
       {grid.unclassified > 0 && (
-        <p className="hint">
-          {grid.unclassified} {grid.unclassified === 1 ? "word has" : "words have"} no topic or
-          level yet.
-        </p>
+        <>
+          <p className="hint">
+            {grid.unclassified} {grid.unclassified === 1 ? "word has" : "words have"} no topic or
+            level yet. Classify them 100 at a time.
+          </p>
+          <div className="handoff-buttons">
+            <button
+              type="button"
+              className="secondary"
+              disabled={busy}
+              onClick={() => void classify()}
+            >
+              Copy classify prompt
+            </button>
+            <button type="button" className="secondary" onClick={() => setPasting("classify")}>
+              Paste classify reply
+            </button>
+          </div>
+        </>
       )}
       <div className="handoff-buttons">
         <button
@@ -175,9 +209,9 @@ export function CoveragePanel({
           disabled={busy || !anyOpen}
           onClick={() => void ask()}
         >
-          {busy ? "Choosing…" : anyOpen ? "Next batch" : "Every target met"}
+          {working === "batch" ? "Choosing…" : anyOpen ? "Next batch" : "Every target met"}
         </button>
-        <button type="button" className="secondary" onClick={() => setPasting(true)}>
+        <button type="button" className="secondary" onClick={() => setPasting("batch")}>
           Paste batch reply
         </button>
       </div>
@@ -188,12 +222,21 @@ export function CoveragePanel({
         </p>
       )}
       <CoverageTable grid={grid} busy={busy} onAsk={(topic, level) => void ask({ topic, level })} />
-      {pasting && (
+      {pasting === "classify" && (
+        <ClassifySheet
+          onClose={() => {
+            setPasting(null);
+            reload();
+          }}
+          onChanged={onChanged}
+        />
+      )}
+      {pasting === "batch" && (
         <PasteNewSheet
           path={BATCH_PASTE}
           title="Paste batch reply"
           onClose={() => {
-            setPasting(false);
+            setPasting(null);
             reload();
           }}
           onChanged={onChanged}

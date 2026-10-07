@@ -1,7 +1,14 @@
 import { describe, expect, it } from "vitest";
 import { FILLABLE_FIELDS, type VocabItem } from "../../shared/api";
 import { TOPICS } from "../../shared/topics";
-import { batchPrompt, checkPrompt, describeInvalid, newVocabPrompt, parsePasted } from "./prompts";
+import {
+  batchPrompt,
+  checkPrompt,
+  classifyPrompt,
+  describeInvalid,
+  newVocabPrompt,
+  parsePasted,
+} from "./prompts";
 
 const item = (over: Partial<VocabItem>): VocabItem => ({
   id: "01J0000000000000000000000A",
@@ -149,6 +156,34 @@ describe("batchPrompt", () => {
     expect(text).toContain("At most 30 proposals");
     expect(text).toContain("Before replying, review");
     expect(text).toContain("strict JSON");
+  });
+});
+
+describe("classifyPrompt", () => {
+  const BATCH = {
+    handoff_id: "K1",
+    items: [
+      { n: 1, vocab_id: "a", urdu: ROTI, english: "bread" },
+      { n: 2, vocab_id: "b", urdu: "\u{06A9}\u{06CC}\u{0627}", english: null },
+    ],
+  };
+
+  it("lists one thin line per item and asks for compact rows", () => {
+    const text = classifyPrompt(BATCH);
+    expect(text).toContain('"handoff_id": "K1"');
+    expect(text).toContain(`1|${ROTI}|bread`);
+    expect(text).toContain("2|\u{06A9}\u{06CC}\u{0627}|");
+    expect(text).toContain('"rows"');
+    expect(text).toContain("[n, urdu, topic, level, tags]");
+    for (const t of TOPICS) expect(text).toContain(t.slug);
+    expect(text).toContain("every item");
+    expect(text).toContain("strict JSON");
+  });
+
+  it("stays thin: no full entries, no examples asked for", () => {
+    const text = classifyPrompt(BATCH);
+    expect(text).not.toContain('"example_urdu"');
+    expect(text).not.toContain('"proposals"');
   });
 });
 

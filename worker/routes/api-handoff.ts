@@ -4,10 +4,17 @@
 // is the right credential. The bearer-token /coach/* routes are Stage 3.
 
 import { Hono } from "hono";
-import type { CheckBatchResponse, ConflictResponse } from "../../shared/api";
+import type { CheckBatchResponse, ClassifyBatchResponse, ConflictResponse } from "../../shared/api";
 import { correctVocab, issueCheckBatch, NOT_ISSUED } from "../domain/check";
+import { classifyVocab, issueClassifyBatch, NOT_ISSUED as NOT_CLASSIFY } from "../domain/classify";
 import { ID_CONFLICT, importHandoff } from "../domain/handoff";
-import { parseCheckOptions, parseCorrections, parseHandoff } from "../domain/handoff-input";
+import {
+  parseCheckOptions,
+  parseClassify,
+  parseClassifyBatch,
+  parseCorrections,
+  parseHandoff,
+} from "../domain/handoff-input";
 import { activeLadderId } from "../domain/settings";
 import type { AppEnv } from "../env";
 import { invalid, readJson } from "./api-vocab";
@@ -61,6 +68,36 @@ handoffRoutes.post("/api/handoffs/corrections", async (c) => {
     return invalid(c, {
       field: "handoff_id",
       message: "is not a check batch this app issued; copy a fresh check prompt",
+    });
+  }
+  return result === ID_CONFLICT ? c.json(conflict, 409) : c.json(result);
+});
+
+// f18 (FR-L): records the next batch of unclassified items for Copy classify prompt.
+handoffRoutes.post("/api/handoffs/classify-batch", async (c) => {
+  const body = await readJson(c);
+  if (body === undefined) return invalid(c, { message: "body must be valid JSON" });
+  const parsed = parseClassifyBatch(body);
+  if (!parsed.ok) return invalid(c, parsed.error);
+  const batch: ClassifyBatchResponse = await issueClassifyBatch(
+    c.env.DB,
+    parsed.value.count,
+    new Date(),
+  );
+  return c.json(batch);
+});
+
+// f18: ?preview=1 plans the rows and writes nothing; without it `accept` names the ticked rows.
+handoffRoutes.post("/api/handoffs/classify", async (c) => {
+  const body = await readJson(c);
+  if (body === undefined) return invalid(c, { message: "body must be valid JSON" });
+  const parsed = parseClassify(body, c.req.query("preview") === "1");
+  if (!parsed.ok) return invalid(c, parsed.error);
+  const result = await classifyVocab(c.env.DB, parsed.value, new Date());
+  if (result === NOT_CLASSIFY) {
+    return invalid(c, {
+      field: "handoff_id",
+      message: "is not a classify batch this app issued; copy a fresh classify prompt",
     });
   }
   return result === ID_CONFLICT ? c.json(conflict, 409) : c.json(result);

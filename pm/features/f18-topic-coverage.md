@@ -86,22 +86,24 @@ next batch, no grading of the learner against a level.
     stays; two cells of 25 fit it exactly.
   - **Harvest pastes too:** the in-app Copy new-vocab prompt (source harvests) also asks for
     `topic`, `cefr` and `tags` from the slug list, so harvested words arrive classified.
-- **Classify mode (s03).** A fourth mode in the f13 Check options dialog beside correctness,
-  completeness and both; picking it hides the field ticks and the only-unchecked box and caps the
-  count at **100** (`MAX_CLASSIFY_BATCH`; `MAX_CHECK_BATCH` stays 50 for the others). It selects
-  only unclassified items (`topic IS NULL OR cefr IS NULL`), oldest `added_at` first; none left
-  means the dialog says so and issues nothing. The issued batch is a `check_issued` handoff with
-  mode `classify`, as f13. Thin payload: the prompt lists `n|urdu|english` per line (n from 1, the
-  position in the batch) plus the slug list with scope lines and boundaries; the reply is
-  `{handoff_id, rows:[[n, "urdu", "topic", "A2", ["tag"]]]}`, parsed by its own parser and posted
-  to `POST /api/handoffs/classify` (`?preview=1` as the corrections route).
-  - **Preview** rejects per row: unknown n, echoed Urdu not equal to the stored item's, unknown
-    topic slug or level; unknown tags are dropped as on the lenient paths. Rows the reply omits
-    are reported as missing and stay unclassified.
+- **Classify (s03).** On the Harvest tab's coverage panel, beside the unclassified count:
+  **Copy classify prompt** and **Paste classify reply** (built there rather than as a fourth mode
+  of the f13 Check options dialog; see Decisions). `POST /api/handoffs/classify-batch` (`{count?}`,
+  1–100, default 100, `MAX_CLASSIFY_BATCH`) selects only unclassified items
+  (`topic IS NULL OR cefr IS NULL`), oldest `added_at` first, and records a `classify_issued`
+  handoff holding each item's id and the topic and level it had; none left issues nothing. Thin
+  payload: the prompt lists `n|urdu|english` per line (n from 1) plus the slug list with scope
+  lines and boundaries; the reply is `{handoff_id, rows:[[n, "urdu", "topic", "A2", ["tag"]]]}`,
+  posted to `POST /api/handoffs/classify` (`?preview=1` plans, apply adds `accept`: the ticked n).
+  Only the envelope is strict; rows are judged one by one.
+  - **Preview** rejects per row: a row not shaped `[n, urdu, topic, level, tags?]`, unknown or
+    repeated n, echoed Urdu not matching the item (`urdu_key`), unknown topic slug or level;
+    unknown tags are dropped as on the lenient paths. Items the reply omits are reported as
+    missing and stay unclassified (a rejected row counts as answered).
   - **Apply** (ticked rows) writes `topic`, `cefr` and replaces `tags`, sets `updated_at`, and
-    writes a row only if its topic and level are still what they were at issue (else reported
-    stale, as f11). The schedule and review events are untouched. A repeat paste returns the
-    stored result. No stamp column: classified is `topic` and `cefr` both set.
+    writes a row only if its topic and level are still what they were at issue (else stale), in
+    one D1 batch that also closes the handoff as `classified`, so a racing second apply writes
+    nothing. The schedule and review events are untouched. A repeat returns the stored result.
   - Reclassifying a single item is the edit form's job; classify never re-serves a classified
     item.
 - **UI (s04).** Harvest tab: the coverage grid by section, with have/target per cell and a
@@ -330,6 +332,13 @@ f18: if first, its `find_vocab` tag argument is renamed to topic in f18 s05; bot
 - 2026-10-06 — Agent defaults: topics and quotas in code, not D1; queued words count toward
   coverage; ChatGPT's level label wins; unclassified words from Reader, voice and manual adds wait
   for a classify pass; the `tags` table stays, unused; topic chip after reveal only.
+- 2026-10-06 — Build calls (agent, s02–s03): the batch paste route reads the batch id from the
+  reply's `handoff_id` (`POST /api/batches/handoffs`), so nothing is held on the device; a
+  paste claim older than 60 s may be taken over, reusing the harvest it made (review finding:
+  a paste cut off by a closed app would otherwise block the reply for good). Classify has its own
+  handoff statuses and lives on the coverage panel, not in the f13 dialog: the check apply keys
+  its stamps and labels on the three check modes, the classify reply has another shape, and the
+  unclassified count it serves is on the Harvest tab. Rejected: a fourth `CheckMode`.
 - 2026-10-06 — Stress-test calls (agent):
   - Proposal paths are lenient about topic, level and tags (drop and note), direct writes strict.
     A ChatGPT Project not yet updated would otherwise fail whole pastes. Rejected: strict

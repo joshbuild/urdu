@@ -9,6 +9,7 @@ import {
   CHECK_MODES,
   type CheckMode,
   type CheckOptions,
+  type ClassifyRequest,
   type Correction,
   type CorrectionAccept,
   type CorrectionsRequest,
@@ -18,6 +19,7 @@ import {
   type HandoffProposal,
   type HandoffRequest,
   MAX_CHECK_BATCH,
+  MAX_CLASSIFY_BATCH,
   MAX_HANDOFF_ID_LENGTH,
   MAX_HANDOFF_PROPOSALS,
   type Revision,
@@ -279,4 +281,37 @@ export function parseCheckOptions(body: unknown): Parsed<CheckOptions> {
       only_unchecked: onlyUnchecked,
     },
   };
+}
+
+// f18 classify-batch: {count?}, 1–100, default 100.
+export function parseClassifyBatch(body: unknown): Parsed<{ count: number }> {
+  if (!isRecord(body)) return fail(undefined, "body must be a JSON object");
+  const extra = unknownKey(body, new Set(["count"]));
+  if (extra) return fail(extra, "is not a recognised field");
+  const count = body.count ?? MAX_CLASSIFY_BATCH;
+  if (!Number.isInteger(count) || (count as number) < 1 || (count as number) > MAX_CLASSIFY_BATCH) {
+    return fail("count", `must be a whole number from 1 to ${MAX_CLASSIFY_BATCH}`);
+  }
+  return { ok: true, value: { count: count as number } };
+}
+
+// f18 classify reply. Only the envelope is strict; each row is judged on its own in the domain,
+// so one malformed row never sinks the other ninety-nine.
+export function parseClassify(body: unknown, preview: boolean): Parsed<ClassifyRequest> {
+  if (!isRecord(body)) return fail(undefined, "body must be a JSON object");
+  const extra = unknownKey(body, new Set(["handoff_id", "rows", "accept"]));
+  if (extra) return fail(extra, "is not a recognised field");
+  const id = handoffId(body.handoff_id);
+  if (!id.ok) return id;
+  // Room for a chat that repeats or invents rows; those past the batch are rejected one by one.
+  const rows = list(body, "rows", 2 * MAX_CLASSIFY_BATCH, true);
+  if (!rows.ok) return rows;
+  const value: ClassifyRequest = { handoff_id: id.value, rows: rows.value };
+  if (preview) return { ok: true, value };
+  const accept = body.accept;
+  if (!Array.isArray(accept) || !accept.every((n) => Number.isInteger(n))) {
+    return fail("accept", "is required and must be an array of row numbers");
+  }
+  value.accept = accept as number[];
+  return { ok: true, value };
 }
