@@ -58,7 +58,7 @@ describe("POST /api/handoffs", () => {
         "POST",
         "/api/handoffs",
         handoff([
-          { urdu: KITAB, roman: "kitaab", english: "book", tags: ["chat"] },
+          { urdu: KITAB, roman: "kitaab", english: "book", tags: ["social"] },
           { urdu: PANI, english: "water", notes: null },
         ]),
       ),
@@ -72,7 +72,7 @@ describe("POST /api/handoffs", () => {
       urdu: KITAB,
       roman: "kitaab",
       english: "book",
-      tags: ["chat"],
+      tags: ["social"],
       source: "coach",
       ladder_id: 8,
       ladder_step: 2,
@@ -140,7 +140,6 @@ describe("POST /api/handoffs", () => {
       "proposals[1].mastery",
     ],
     ["wrong field type", handoff([{ urdu: PANI, english: 5 }]), "proposals[0].english"],
-    ["bad tags", handoff([{ urdu: PANI, tags: "chat" }]), "proposals[0].tags"],
   ])("rejects %s whole, writing nothing", async (_name, body, field) => {
     const res = await json<InvalidRequestResponse>(await api("POST", "/api/handoffs", body), 400);
     expect(res.field).toBe(field);

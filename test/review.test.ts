@@ -351,7 +351,7 @@ describe("review service", () => {
 
 describe("GET /api/export", () => {
   it("returns ladders, the active ladder, vocab, review events, tags and handoffs, and no sessions", async () => {
-    const a = await create({ urdu: KITAB, tags: ["nouns"] });
+    const a = await create({ urdu: KITAB, tags: ["food"] });
     await create({ urdu: PANI, favourite: true });
     const review = await json<ReviewResponse>(
       await api("POST", `/api/vocab/${a.id}/reviews`, { grade: "correct", direction: "ur_en" }),
@@ -387,7 +387,7 @@ describe("GET /api/export", () => {
     expect(body.vocab[0]).toEqual(review.item);
     expect(body.vocab[1]).toMatchObject({ urdu: PANI, favourite: true, tags: [] });
     expect(body.review_events).toEqual([review.event]);
-    expect(body.tags).toEqual([{ name: "nouns", description: null }]);
+    expect(body.tags).toEqual([{ name: "food", description: null }]);
     expect(body.handoffs).toEqual([
       {
         id: "h1",

@@ -47,12 +47,14 @@ next batch, no grading of the learner against a level.
   `handoffs` rows (status has no CHECK), and the Topics source id is a `settings` row.
 - **Validation, two strictnesses.** Direct writes (`POST`/`PATCH /api/vocab`) are strict: `topic`
   and every tag must be a known slug (trimmed, case-folded to lowercase), `cefr` one of `A1`–`C2`
-  (upper-cased), at most 2 tags, none equal to the topic, else 400. Proposal paths (every
-  handoff paste, voice adds, the Airtable import) are lenient, because a ChatGPT Project not yet
+  (upper-cased), at most 2 tags, none equal to the topic, else 400. Paste paths (every handoff
+  paste, harvest and batch) are lenient, because a ChatGPT Project not yet
   re-pasted still emits free tags: an unknown tag or a tag equal to the topic is dropped, tags
   past the second are dropped, an unknown topic or level becomes null, and the result row notes
   what was dropped. A whole paste is never rejected for these fields. Legacy free tags on
-  existing rows stay until the row's tags are next written. `MAX_TAGS` becomes 2.
+  existing rows stay until the row's tags are next written. `MAX_TAGS` becomes 2. Outside both
+  rules: the voice add tool takes only urdu/roman/english/kind (no topic, so nothing to relax),
+  and the f02 Airtable import keeps its own free-tag rules (a finished one-off).
 - **Coverage API.** `GET /api/coverage` returns counts per topic × level for every level present
   (A1–C2), per-topic totals, and the unclassified count. Counts use `topic` only, never secondary
   tags, and include queued items so a batch never re-asks for them. `GET /api/vocab` and

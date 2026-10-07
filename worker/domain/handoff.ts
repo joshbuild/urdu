@@ -59,16 +59,23 @@ export async function importHandoff(
 
   const results: ProposalResult[] = [];
   for (const [index, proposal] of request.proposals.entries()) {
-    const urdu = proposal.urdu;
+    const { dropped, ...fields } = proposal;
+    const urdu = fields.urdu;
     const result = await createVocab(
       db,
-      { ...proposal, source: "coach" },
+      { ...fields, source: "coach" },
       now,
       activeLadderId,
       options,
     );
     if (result.ok) {
-      results.push({ index, urdu, outcome: "created", id: result.item.id });
+      results.push({
+        index,
+        urdu,
+        outcome: "created",
+        id: result.item.id,
+        ...(dropped ? { dropped } : {}),
+      });
     } else if (result.error === "duplicate") {
       results.push({ index, urdu, outcome: "duplicate", existing_id: result.existingId });
     } else {

@@ -35,7 +35,7 @@ export async function voiceGetVocab(
   const at = now.toISOString();
   if (args.scope === "due") {
     const [items, all] = await Promise.all([
-      dueVocab(db, at, args.limit, args.tag),
+      dueVocab(db, at, args.limit, { tag: args.tag }),
       listVocab(db, { due: true, tag: args.tag, sort: "next_review", limit: 1, offset: 0 }, at),
     ]);
     return { items: items.map(entry), total: all.total };

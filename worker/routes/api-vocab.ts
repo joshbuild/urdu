@@ -2,6 +2,7 @@
 
 import { type Context, Hono } from "hono";
 import {
+  type CoverageResponse,
   type DueResponse,
   type DuplicateResponse,
   type InvalidRequestResponse,
@@ -15,6 +16,8 @@ import {
 } from "../../shared/api";
 import { todayIn } from "../../shared/dates";
 import { addSeconds } from "../../shared/ladders";
+import { cefrLevel, topicSlug } from "../../shared/topics";
+import { coverage } from "../domain/coverage";
 import { intakeCounts, safeTopUp } from "../domain/intake";
 import { activeLadderId } from "../domain/settings";
 import {
@@ -27,6 +30,7 @@ import {
   matchVocab,
   upcomingDueTimes,
   updateVocab,
+  type VocabFilter,
   vocabCounts,
   type WriteResult,
 } from "../domain/vocab";
@@ -62,6 +66,8 @@ function writeFailure(c: Ctx, result: Exclude<WriteResult, { ok: true }>) {
       });
     case "not_found":
       return c.json({ error: "not_found" }, 404);
+    case "tag_is_topic":
+      return invalid(c, { field: "tags", message: "must not repeat the item's topic" });
     case "bad_step":
       return invalid(c, {
         field: "ladder_step",
@@ -102,7 +108,26 @@ function tagParam(c: Ctx): string | undefined {
   return tag === "" ? undefined : tag;
 }
 
-const isError = (v: unknown): v is InputError => typeof v === "object" && v !== null;
+const isError = (v: unknown): v is InputError =>
+  typeof v === "object" && v !== null && "message" in v;
+
+// f18: ?tag=, ?topic= and ?cefr=; a topic or level that is given must be known.
+function filterParams(c: Ctx): VocabFilter | InputError {
+  const filter: VocabFilter = { tag: tagParam(c) };
+  const topic = c.req.query("topic")?.trim();
+  if (topic) {
+    const slug = topicSlug(topic);
+    if (slug === null) return { field: "topic", message: "is not a known topic" };
+    filter.topic = slug;
+  }
+  const cefr = c.req.query("cefr")?.trim();
+  if (cefr) {
+    const level = cefrLevel(cefr);
+    if (level === null) return { field: "cefr", message: "must be one of A1, A2, B1, B2, C1, C2" };
+    filter.cefr = level;
+  }
+  return filter;
+}
 
 export const vocabRoutes = new Hono<AppEnv>();
 
@@ -116,6 +141,11 @@ vocabRoutes.get("/api/status", async (c) => {
     active_ladder_id: await activeLadderId(c.env.DB),
     intake: await intakeCounts(c.env.DB),
   };
+  return c.json(body);
+});
+
+vocabRoutes.get("/api/coverage", async (c) => {
+  const body: CoverageResponse = await coverage(c.env.DB);
   return c.json(body);
 });
 
@@ -162,12 +192,14 @@ vocabRoutes.get("/api/vocab", async (c) => {
   if (!(VOCAB_SORTS as readonly string[]).includes(sort)) {
     return invalid(c, { field: "sort", message: `must be one of ${VOCAB_SORTS.join(", ")}` });
   }
+  const filter = filterParams(c);
+  if (isError(filter)) return invalid(c, filter);
 
   const result = await listVocab(
     c.env.DB,
     {
       q: c.req.query("q"),
-      tag: tagParam(c),
+      ...filter,
       due,
       queued,
       sort: sort as VocabSort,
@@ -187,11 +219,13 @@ vocabRoutes.get("/api/vocab/due", async (c) => {
   // Review ahead (f05, by the second since mp03): also take items falling due within that span.
   const ahead = intParam(c, "ahead_seconds", 0, 0, MAX_AHEAD_SECONDS);
   if (isError(ahead)) return invalid(c, ahead);
+  const filter = filterParams(c);
+  if (isError(filter)) return invalid(c, filter);
   const now = new Date();
   await safeTopUp(c.env.DB, now, c.env.HOME_TZ);
   const cutoff = addSeconds(now.toISOString(), ahead);
   const body: DueResponse = {
-    items: await dueVocab(c.env.DB, cutoff, limit, tagParam(c)),
+    items: await dueVocab(c.env.DB, cutoff, limit, filter),
     today: today(c),
   };
   return c.json(body);

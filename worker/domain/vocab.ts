@@ -4,6 +4,7 @@
 import type { MatchResult, Tag, UpdateVocabRequest, VocabItem, VocabSort } from "../../shared/api";
 import { correctStep, entryStep, ladder } from "../../shared/ladders";
 import { inferKind, urduKey } from "../../shared/normalize";
+import type { CefrLevel } from "../../shared/topics";
 import { ulid } from "../../shared/ulid";
 import type { CreateInput } from "./vocab-input";
 
@@ -18,7 +19,9 @@ export type WriteResult =
   | { ok: false; error: "empty_key" }
   | { ok: false; error: "not_found" }
   // A ladder_step edit past the active ladder's last rung.
-  | { ok: false; error: "bad_step"; maxStep: number };
+  | { ok: false; error: "bad_step"; maxStep: number }
+  // f18: a tags edit naming the item's own topic.
+  | { ok: false; error: "tag_is_topic" };
 
 export function toItem(row: VocabRow): VocabItem {
   return {
@@ -129,6 +132,8 @@ export async function createVocab(
     notes: input.notes ?? null,
     example_urdu: input.example_urdu ?? null,
     example_english: input.example_english ?? null,
+    topic: input.topic ?? null,
+    cefr: input.cefr ?? null,
     tags,
     favourite: input.favourite ?? false,
     ladder_id: activeLadderId,
@@ -153,10 +158,10 @@ export async function createVocab(
       db
         .prepare(
           `INSERT INTO vocab (id, urdu, urdu_key, kind, roman, english, notes, example_urdu,
-             example_english, tags, favourite, ladder_id, ladder_step, interval_seconds,
-             added_at, last_reviewed_at, due_at, source, airtable_id, harvest_id, released_at,
-             created_at, updated_at)
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+             example_english, topic, cefr, tags, favourite, ladder_id, ladder_step,
+             interval_seconds, added_at, last_reviewed_at, due_at, source, airtable_id,
+             harvest_id, released_at, created_at, updated_at)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         )
         .bind(
           item.id,
@@ -168,6 +173,8 @@ export async function createVocab(
           item.notes,
           item.example_urdu,
           item.example_english,
+          item.topic,
+          item.cefr,
           JSON.stringify(item.tags),
           item.favourite ? 1 : 0,
           item.ladder_id,
@@ -205,6 +212,13 @@ export async function updateVocab(
 
   const next: VocabItem = { ...current, ...changes, updated_at: now.toISOString() };
 
+  // f18: tags never repeat the topic. A tags edit naming it is refused; a new topic that an
+  // existing tag already names takes that tag's place.
+  if (next.topic !== null && next.tags.includes(next.topic)) {
+    if (changes.tags !== undefined) return { ok: false, error: "tag_is_topic" };
+    next.tags = next.tags.filter((tag) => tag !== next.topic);
+  }
+
   if (changes.urdu !== undefined) {
     next.urdu_key = urduKey(changes.urdu);
     if (next.urdu_key === "") return { ok: false, error: "empty_key" };
@@ -226,8 +240,8 @@ export async function updateVocab(
       db
         .prepare(
           `UPDATE vocab SET urdu = ?, urdu_key = ?, kind = ?, roman = ?, english = ?, notes = ?,
-             example_urdu = ?, example_english = ?, tags = ?, favourite = ?, ladder_id = ?,
-             ladder_step = ?, interval_seconds = ?, due_at = ?, updated_at = ?
+             example_urdu = ?, example_english = ?, topic = ?, cefr = ?, tags = ?, favourite = ?,
+             ladder_id = ?, ladder_step = ?, interval_seconds = ?, due_at = ?, updated_at = ?
            WHERE id = ?`,
         )
         .bind(
@@ -239,6 +253,8 @@ export async function updateVocab(
           next.notes,
           next.example_urdu,
           next.example_english,
+          next.topic,
+          next.cefr,
           JSON.stringify(next.tags),
           next.favourite ? 1 : 0,
           next.ladder_id,
@@ -261,9 +277,26 @@ export async function deleteVocab(db: D1Database, id: string): Promise<boolean> 
   return result.meta.changes > 0;
 }
 
-export type ListQuery = {
+// f18: topic matches the item's own topic only, never a secondary tag.
+export type VocabFilter = { tag?: string; topic?: string; cefr?: CefrLevel };
+
+function filterSql(filter: VocabFilter, where: string[], params: unknown[]): void {
+  if (filter.tag !== undefined) {
+    where.push(HAS_TAG);
+    params.push(filter.tag);
+  }
+  if (filter.topic !== undefined) {
+    where.push("topic = ?");
+    params.push(filter.topic);
+  }
+  if (filter.cefr !== undefined) {
+    where.push("cefr = ?");
+    params.push(filter.cefr);
+  }
+}
+
+export type ListQuery = VocabFilter & {
   q?: string;
-  tag?: string;
   due?: boolean;
   // f17: queued items only.
   queued?: boolean;
@@ -298,10 +331,7 @@ export async function listVocab(
     }
     where.push(`(${clauses.join(" OR ")})`);
   }
-  if (query.tag !== undefined) {
-    where.push(HAS_TAG);
-    params.push(query.tag);
-  }
+  filterSql(query, where, params);
   if (query.due) {
     where.push(DUE);
     params.push(now);
@@ -327,14 +357,11 @@ export async function dueVocab(
   db: D1Database,
   cutoff: string,
   limit: number,
-  tag?: string,
+  filter: VocabFilter = {},
 ): Promise<VocabItem[]> {
   const where = [DUE];
   const params: unknown[] = [cutoff];
-  if (tag !== undefined) {
-    where.push(HAS_TAG);
-    params.push(tag);
-  }
+  filterSql(filter, where, params);
   const { results } = await db
     .prepare(`SELECT * FROM vocab WHERE ${where.join(" AND ")} ORDER BY ${DUE_ORDER} LIMIT ?`)
     .bind(...params, limit)

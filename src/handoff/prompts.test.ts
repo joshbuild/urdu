@@ -12,6 +12,8 @@ const item = (over: Partial<VocabItem>): VocabItem => ({
   notes: null,
   example_urdu: null,
   example_english: null,
+  topic: null,
+  cefr: null,
   tags: [],
   favourite: false,
   ladder_id: 3,

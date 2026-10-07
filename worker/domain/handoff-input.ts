@@ -1,6 +1,9 @@
 // Validation for clipboard handoffs (f06, FR-F4; f11 corrections and f13 check options, FR-F9). Strict: a payload with any bad field is
 // rejected whole, with the field's path, and never repaired. Rejecting whole keeps a handoff_id
 // unrecorded, so the corrected reply can be pasted again under the same id.
+// The one exception (f18): a proposal's topic, level and tags are lenient, kept where valid and
+// otherwise dropped with a note (lenientClassification), so a chat without the slug list still
+// pastes.
 
 import {
   CHECK_MODES,
@@ -21,6 +24,7 @@ import {
 } from "../../shared/api";
 import {
   isRecord,
+  lenientClassification,
   MAX_TEXT_LENGTH,
   optionalText,
   type Parsed,
@@ -28,7 +32,7 @@ import {
   urduText,
 } from "./vocab-input";
 
-const PROPOSAL_FIELDS = new Set(["urdu", ...FILLABLE_FIELDS, "tags"]);
+const PROPOSAL_FIELDS = new Set(["urdu", ...FILLABLE_FIELDS, "topic", "cefr", "tags"]);
 const REVISION_FIELDS = new Set(["vocab_id", "urdu", ...FILLABLE_FIELDS]);
 const CORRECTION_FIELDS = new Set([...REVISION_FIELDS, "reason", "urdu_suggestion"]);
 const ACCEPT_FIELDS = new Set(["vocab_id", "fields", "reset"]);
@@ -76,9 +80,13 @@ function proposal(value: unknown): Parsed<HandoffProposal> {
   const extra = unknownKey(value, PROPOSAL_FIELDS);
   if (extra) return fail(extra, "is not a recognised field");
   if (!("urdu" in value)) return fail("urdu", "is required and must be a string");
-  const fields = parseFields(value);
+  const { topic, cefr, tags, ...rest } = value;
+  const fields = parseFields(rest);
   if (!fields.ok) return fields;
-  return { ok: true, value: fields.value as HandoffProposal };
+  const classified = lenientClassification(value);
+  const out: HandoffProposal = { ...(fields.value as HandoffProposal), ...classified.value };
+  if (classified.dropped.length > 0) out.dropped = classified.dropped;
+  return { ok: true, value: out };
 }
 
 export function parseHandoff(body: unknown): Parsed<HandoffRequest> {

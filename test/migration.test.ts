@@ -6,6 +6,7 @@
 // 0005 → 0006 (f13): filled_at arrives null on every row, the rows otherwise untouched.
 // 0006 → 0007 (f17): every existing row is released at its added_at and unlinked; nothing is
 // queued.
+// 0007 → 0008 (f18): topic and cefr arrive null on every row, the rows otherwise untouched.
 import { env } from "cloudflare:workers";
 import { beforeEach, describe, expect, it } from "vitest";
 
@@ -367,5 +368,49 @@ describe("migration 0007_vocab_intake", () => {
         .run();
     await insert("01J00000000000000000000001");
     await expect(insert("01J00000000000000000000002")).rejects.toThrow(/UNIQUE/);
+  });
+});
+
+describe("migration 0008_topic_coverage", () => {
+  it("adds topic and cefr as null on every row, keeps the rows, and indexes them", async () => {
+    for (const prefix of ["0002", "0003", "0004", "0005", "0006", "0007"]) await apply(prefix);
+    await db
+      .prepare(
+        `INSERT INTO vocab (id, urdu, urdu_key, kind, tags, ladder_id, ladder_step,
+           interval_seconds, added_at, source, released_at, created_at, updated_at)
+         VALUES ('01J00000000000000000000001', 'w', 'w', 'word', '["objects"]', 8, 2, 36327, ?,
+           'manual', ?, ?, ?)`,
+      )
+      .bind(NOW, NOW, NOW, NOW)
+      .run();
+    const before = (await db.prepare("SELECT * FROM vocab").all()).results;
+
+    await apply("0008");
+
+    const after = (await db.prepare("SELECT * FROM vocab").all()).results;
+    expect(after).toEqual(before.map((row) => ({ ...row, topic: null, cefr: null })));
+    const index = await db
+      .prepare("SELECT name FROM sqlite_master WHERE name = 'vocab_topic'")
+      .first<{ name: string }>();
+    expect(index?.name).toBe("vocab_topic");
+  });
+
+  it("refuses a level outside A1–C2 and an empty topic", async () => {
+    for (const prefix of ["0002", "0003", "0004", "0005", "0006", "0007", "0008"]) {
+      await apply(prefix);
+    }
+    const insert = (topic: string | null, cefr: string | null) =>
+      db
+        .prepare(
+          `INSERT INTO vocab (id, urdu, urdu_key, kind, ladder_id, ladder_step, interval_seconds,
+             added_at, source, created_at, updated_at, topic, cefr)
+           VALUES ('01J00000000000000000000001', 'w', 'w', 'word', 8, 2, 36327, ?, 'manual', ?, ?,
+             ?, ?)`,
+        )
+        .bind(NOW, NOW, NOW, topic, cefr)
+        .run();
+    await expect(insert("food", "A2+")).rejects.toThrow(/CHECK/);
+    await expect(insert("", "A1")).rejects.toThrow(/CHECK/);
+    await insert("food", "B2");
   });
 });

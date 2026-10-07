@@ -5,6 +5,7 @@ import type { Dash } from "./dash";
 import type { Ladder } from "./ladders";
 import type { Grade, LegacyLevel } from "./mastery";
 import type { VocabKind } from "./normalize";
+import type { CefrLevel } from "./topics";
 
 export const VOCAB_SOURCES = ["reading", "coach", "airtable", "manual"] as const;
 export type VocabSource = (typeof VOCAB_SOURCES)[number];
@@ -22,6 +23,10 @@ export type VocabItem = {
   notes: string | null;
   example_urdu: string | null;
   example_english: string | null;
+  // f18: one topic slug (shared/topics.ts) and a CEFR level; unclassified while either is null.
+  topic: string | null;
+  cefr: CefrLevel | null;
+  // 0–2 secondary topic slugs since f18; older rows may still hold free tags.
   tags: string[];
   favourite: boolean;
   // Schedule (f09): one state per item. The rung is a position on ladder_id's version, not a
@@ -59,6 +64,8 @@ export type VocabFields = {
   notes: string | null;
   example_urdu: string | null;
   example_english: string | null;
+  topic: string | null;
+  cefr: CefrLevel | null;
   tags: string[];
   favourite: boolean;
   // A correction on the active ladder: no review event, due recomputed from the last review.
@@ -198,6 +205,16 @@ export type SourceDetail = { source: Source; harvests: HarvestSummary[]; words: 
 // GET /api/harvests/:id.
 export type HarvestDetail = { harvest: HarvestSummary; source: Source };
 
+// f18: GET /api/coverage. counts[topic][level] for every classified item (topic and level set),
+// queued ones included; totals[topic] counts items with that topic whatever their level.
+// Topics with no items are absent. unclassified: topic or level null.
+export type CoverageResponse = {
+  counts: Record<string, Partial<Record<CefrLevel, number>>>;
+  totals: Record<string, number>;
+  unclassified: number;
+  total: number;
+};
+
 // The whole vault except sessions (PRD §6 Portability).
 export type ExportResponse = {
   exported_at: string;
@@ -300,7 +317,13 @@ export type HandoffProposal = {
   notes?: string | null;
   example_urdu?: string | null;
   example_english?: string | null;
+  // f18: lenient. An unknown topic or level becomes null and a bad tag is dropped, each noted in
+  // the result's `dropped`, so a chat that has not learnt the slug list never fails a paste.
+  topic?: string | null;
+  cefr?: CefrLevel | null;
   tags?: string[];
+  // Set by the Worker's parser (what the lenient rules left out); a client never sends it.
+  dropped?: string[];
 };
 
 export type HandoffRequest = {
@@ -310,7 +333,8 @@ export type HandoffRequest = {
 };
 
 export type ProposalResult =
-  | { index: number; urdu: string; outcome: "created"; id: string }
+  // dropped (f18): what the lenient topic, level and tag rules left out, e.g. "tag objects".
+  | { index: number; urdu: string; outcome: "created"; id: string; dropped?: string[] }
   | { index: number; urdu: string; outcome: "duplicate"; existing_id: string }
   | { index: number; urdu: string; outcome: "rejected"; reason: string };
 

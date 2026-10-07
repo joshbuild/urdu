@@ -16,6 +16,8 @@ const item: VocabItem = {
   notes: null,
   example_urdu: null,
   example_english: null,
+  topic: null,
+  cefr: null,
   tags: ["nouns", "reading"],
   favourite: false,
   ladder_id: 3,

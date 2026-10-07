@@ -61,7 +61,7 @@ describe("POST /api/vocab", () => {
       urdu: `  ${KITAB} `,
       roman: "kitaab",
       english: "book",
-      tags: ["nouns", " nouns ", "reading"],
+      tags: ["food", " Food ", "school"],
       source: "reading",
     });
 
@@ -73,7 +73,7 @@ describe("POST /api/vocab", () => {
       roman: "kitaab",
       english: "book",
       notes: null,
-      tags: ["nouns", "reading"],
+      tags: ["food", "school"],
       favourite: false,
       ladder_id: 8,
       ladder_step: 2,
@@ -101,12 +101,12 @@ describe("POST /api/vocab", () => {
   });
 
   it("auto-inserts unknown tags without touching existing ones", async () => {
-    await env.DB.prepare("INSERT INTO tags (name, description) VALUES ('nouns', 'kept')").run();
-    await create({ urdu: KITAB, tags: ["nouns", "home"] });
+    await env.DB.prepare("INSERT INTO tags (name, description) VALUES ('food', 'kept')").run();
+    await create({ urdu: KITAB, tags: ["food", "home"] });
     const { results } = await env.DB.prepare("SELECT * FROM tags ORDER BY name").all();
     expect(results).toEqual([
+      { name: "food", description: "kept" },
       { name: "home", description: null },
-      { name: "nouns", description: "kept" },
     ]);
   });
 
@@ -126,7 +126,7 @@ describe("POST /api/vocab", () => {
     ["punctuation-only urdu", { urdu: "\u{06D4}\u{060C}?" }, "urdu"],
     ["non-string roman", { urdu: KITAB, roman: 5 }, "roman"],
     ["bad kind", { urdu: KITAB, kind: "sentence" }, "kind"],
-    ["tags not an array", { urdu: KITAB, tags: "nouns" }, "tags"],
+    ["tags not an array", { urdu: KITAB, tags: "food" }, "tags"],
     ["blank tag", { urdu: KITAB, tags: ["ok", ""] }, "tags"],
     ["ladder_step on create", { urdu: KITAB, ladder_step: 3 }, "ladder_step"],
     ["legacy mastery", { urdu: KITAB, mastery: 3 }, "mastery"],
@@ -181,24 +181,24 @@ describe("GET /api/vocab", () => {
   });
 
   it("filters by tag and due, and reports the filtered total", async () => {
-    const a = await create({ urdu: KITAB, tags: ["nouns"] });
-    const b = await create({ urdu: PANI, tags: ["nouns", "drinks"] });
+    const a = await create({ urdu: KITAB, tags: ["food"] });
+    const b = await create({ urdu: PANI, tags: ["food", "body"] });
     await create({ urdu: GHAR, tags: ["places"] });
     await setReviewDates(b.id, inDays(-5), inDays(20));
 
     const nouns = await json<{ items: VocabItem[]; total: number }>(
-      await api("GET", "/api/vocab?tag=nouns"),
+      await api("GET", "/api/vocab?tag=food"),
     );
     expect(nouns.total).toBe(2);
     expect(nouns.items.map((i) => i.id).sort()).toEqual([a.id, b.id].sort());
 
     const dueNouns = await json<{ items: VocabItem[]; total: number }>(
-      await api("GET", "/api/vocab?tag=nouns&due=true"),
+      await api("GET", "/api/vocab?tag=food&due=true"),
     );
     expect(dueNouns.items.map((i) => i.id)).toEqual([a.id]);
     expect(dueNouns.total).toBe(1);
 
-    const noTag = await json<{ total: number }>(await api("GET", "/api/vocab?tag=nou"));
+    const noTag = await json<{ total: number }>(await api("GET", "/api/vocab?tag=foo"));
     expect(noTag.total).toBe(0);
   });
 
@@ -256,7 +256,7 @@ describe("PATCH /api/vocab/:id", () => {
         notes: null,
         english: "",
         favourite: true,
-        tags: ["new-tag"],
+        tags: ["time"],
       }),
     );
     expect(updated).toMatchObject({
@@ -264,12 +264,12 @@ describe("PATCH /api/vocab/:id", () => {
       notes: null,
       english: null,
       favourite: true,
-      tags: ["new-tag"],
+      tags: ["time"],
     });
     expect(updated.updated_at > "2026-01-01T00:00:00.000Z").toBe(true);
     expect(await json<VocabItem>(await api("GET", `/api/vocab/${item.id}`))).toEqual(updated);
 
-    const tag = await env.DB.prepare("SELECT name FROM tags WHERE name = 'new-tag'").first();
+    const tag = await env.DB.prepare("SELECT name FROM tags WHERE name = 'time'").first();
     expect(tag).not.toBeNull();
   });
 
@@ -400,16 +400,16 @@ describe("GET /api/vocab/due", () => {
   });
 
   it("honors limit and tag", async () => {
-    const a = await create({ urdu: KITAB, tags: ["t"] });
+    const a = await create({ urdu: KITAB, tags: ["time"] });
     await create({ urdu: PANI });
-    const c = await create({ urdu: GHAR, tags: ["t"] });
+    const c = await create({ urdu: GHAR, tags: ["time"] });
     await setAddedAt(a.id, "2026-01-01T00:00:00.000Z");
     await setAddedAt(c.id, "2026-01-02T00:00:00.000Z");
 
-    const tagged = await json<{ items: VocabItem[] }>(await api("GET", "/api/vocab/due?tag=t"));
+    const tagged = await json<{ items: VocabItem[] }>(await api("GET", "/api/vocab/due?tag=time"));
     expect(tagged.items.map((i) => i.id)).toEqual([a.id, c.id]);
     const limited = await json<{ items: VocabItem[] }>(
-      await api("GET", "/api/vocab/due?tag=t&limit=1"),
+      await api("GET", "/api/vocab/due?tag=time&limit=1"),
     );
     expect(limited.items.map((i) => i.id)).toEqual([a.id]);
     expect((await api("GET", "/api/vocab/due?limit=0")).status).toBe(400);
@@ -488,14 +488,14 @@ describe("GET /api/status", () => {
 
 describe("GET /api/tags", () => {
   it("lists every tag used on create and update, in name order", async () => {
-    const item = await create({ urdu: KITAB, tags: ["verbs", "nouns"] });
-    await json(await api("PATCH", `/api/vocab/${item.id}`, { tags: ["adjectives"] }));
+    const item = await create({ urdu: KITAB, tags: ["motion", "food"] });
+    await json(await api("PATCH", `/api/vocab/${item.id}`, { tags: ["body"] }));
 
     expect(await json(await api("GET", "/api/tags"))).toEqual({
       tags: [
-        { name: "adjectives", description: null },
-        { name: "nouns", description: null },
-        { name: "verbs", description: null },
+        { name: "body", description: null },
+        { name: "food", description: null },
+        { name: "motion", description: null },
       ],
     });
   });
@@ -507,7 +507,7 @@ describe("GET /api/tags", () => {
 
 describe("FR-A8: reads never write", () => {
   it("leaves updated_at, schedule and review instants unchanged", async () => {
-    const item = await create({ urdu: KITAB, tags: ["t"] });
+    const item = await create({ urdu: KITAB, tags: ["time"] });
     await setReviewDates(item.id, inDays(-30), inDays(-5));
     await env.DB.prepare(
       "UPDATE vocab SET ladder_step = 2, updated_at = '2026-01-01T00:00:00.000Z' WHERE id = ?",
@@ -520,7 +520,7 @@ describe("FR-A8: reads never write", () => {
     for (const path of [
       `/api/vocab/${item.id}`,
       "/api/vocab",
-      `/api/vocab?q=${encodeURIComponent(KITAB)}&due=true&tag=t&sort=mastery`,
+      `/api/vocab?q=${encodeURIComponent(KITAB)}&due=true&tag=time&sort=mastery`,
       "/api/vocab/due",
       "/api/status",
       "/api/tags",

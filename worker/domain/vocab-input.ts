@@ -10,10 +10,12 @@ import {
   type VocabSource,
 } from "../../shared/api";
 import { urduKey, VOCAB_KINDS, type VocabKind } from "../../shared/normalize";
+import { type CefrLevel, cefrLevel, topicSlug } from "../../shared/topics";
 
 export const MAX_URDU_LENGTH = 500;
 export const MAX_TEXT_LENGTH = 2000;
-export const MAX_TAGS = 20;
+// f18: tags are 0–2 secondary topic slugs.
+export const MAX_TAGS = 2;
 export const MAX_TAG_LENGTH = 50;
 
 const OPTIONAL_TEXT = ["roman", "english", "notes", "example_urdu", "example_english"] as const;
@@ -22,6 +24,8 @@ const EDITABLE = new Set<string>([
   "urdu",
   "kind",
   ...OPTIONAL_TEXT,
+  "topic",
+  "cefr",
   "tags",
   "favourite",
   "ladder_step",
@@ -56,21 +60,73 @@ export function urduText(value: unknown): Parsed<string> {
   return { ok: true, value: text };
 }
 
-// Trimmed, blank entries rejected, exact duplicates dropped, order kept.
+// f18, strict (direct writes): known topic slugs, trimmed and case-folded, duplicates dropped,
+// order kept, at most two.
 function tagList(value: unknown): Parsed<string[]> {
-  if (!Array.isArray(value)) return fail("tags", "must be an array of strings");
+  if (!Array.isArray(value)) return fail("tags", "must be an array of topic slugs");
   const tags: string[] = [];
   for (const entry of value) {
-    if (typeof entry !== "string" || entry.trim() === "") {
-      return fail("tags", "entries must be non-empty strings");
-    }
-    const tag = entry.trim();
-    if (tag.length > MAX_TAG_LENGTH)
-      return fail("tags", `entries must be at most ${MAX_TAG_LENGTH} characters`);
-    if (!tags.includes(tag)) tags.push(tag);
+    const slug = topicSlug(entry);
+    if (slug === null) return fail("tags", `${JSON.stringify(entry)} is not a known topic`);
+    if (!tags.includes(slug)) tags.push(slug);
   }
   if (tags.length > MAX_TAGS) return fail("tags", `must have at most ${MAX_TAGS} entries`);
   return { ok: true, value: tags };
+}
+
+function topicValue(value: unknown): Parsed<string | null> {
+  if (value === null) return { ok: true, value: null };
+  const slug = topicSlug(value);
+  return slug === null
+    ? fail("topic", `${JSON.stringify(value)} is not a known topic`)
+    : { ok: true, value: slug };
+}
+
+function cefrValue(value: unknown): Parsed<CefrLevel | null> {
+  if (value === null) return { ok: true, value: null };
+  const level = cefrLevel(value);
+  return level === null
+    ? fail("cefr", "must be one of A1, A2, B1, B2, C1, C2 or null")
+    : { ok: true, value: level };
+}
+
+export type Classification = {
+  topic?: string | null;
+  cefr?: CefrLevel | null;
+  tags?: string[];
+};
+
+// f18, lenient (pastes and other proposals): keeps what is valid and notes the rest, so a chat
+// that has not learnt the slug list never fails a paste. Only keys present are returned.
+export function lenientClassification(body: Record<string, unknown>): {
+  value: Classification;
+  dropped: string[];
+} {
+  const value: Classification = {};
+  const dropped: string[] = [];
+  const label = (v: unknown) => (typeof v === "string" ? v.trim() : JSON.stringify(v));
+  if ("topic" in body && body.topic !== null) {
+    value.topic = topicSlug(body.topic);
+    if (value.topic === null) dropped.push(`topic ${label(body.topic)}`);
+  } else if ("topic" in body) value.topic = null;
+  if ("cefr" in body && body.cefr !== null) {
+    value.cefr = cefrLevel(body.cefr);
+    if (value.cefr === null) dropped.push(`level ${label(body.cefr)}`);
+  } else if ("cefr" in body) value.cefr = null;
+  if (body.tags !== undefined && body.tags !== null) {
+    const tags: string[] = [];
+    for (const entry of Array.isArray(body.tags) ? body.tags : [body.tags]) {
+      const slug = topicSlug(entry);
+      if (slug !== null && tags.includes(slug)) continue;
+      if (slug === null || slug === value.topic || tags.length >= MAX_TAGS) {
+        dropped.push(`tag ${label(entry)}`);
+      } else {
+        tags.push(slug);
+      }
+    }
+    value.tags = tags;
+  }
+  return { value, dropped };
 }
 
 function kindValue(value: unknown): Parsed<VocabKind> {
@@ -97,9 +153,22 @@ export function parseFields(body: Record<string, unknown>): Parsed<Partial<Vocab
     if (!r.ok) return r;
     out[field] = r.value;
   }
+  if ("topic" in body) {
+    const r = topicValue(body.topic);
+    if (!r.ok) return r;
+    out.topic = r.value;
+  }
+  if ("cefr" in body) {
+    const r = cefrValue(body.cefr);
+    if (!r.ok) return r;
+    out.cefr = r.value;
+  }
   if ("tags" in body) {
     const r = tagList(body.tags);
     if (!r.ok) return r;
+    if (out.topic && r.value.includes(out.topic)) {
+      return fail("tags", "must not repeat the item's topic");
+    }
     out.tags = r.value;
   }
   if ("favourite" in body) {

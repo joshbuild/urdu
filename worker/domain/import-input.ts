@@ -6,15 +6,11 @@ import type { ImportTagRecord, ImportVocabRecord } from "../../shared/api";
 import { isIsoDate } from "../../shared/dates";
 import { isLegacyLevel } from "../../shared/mastery";
 import { VOCAB_KINDS, type VocabKind } from "../../shared/normalize";
-import {
-  MAX_TAG_LENGTH,
-  MAX_TAGS,
-  MAX_TEXT_LENGTH,
-  MAX_URDU_LENGTH,
-  type Parsed,
-} from "./vocab-input";
+import { MAX_TAG_LENGTH, MAX_TEXT_LENGTH, MAX_URDU_LENGTH, type Parsed } from "./vocab-input";
 
 export const MAX_AIRTABLE_ID_LENGTH = 64;
+// The Airtable import (f02) keeps its free tags; f18's slug rule covers the app's own writes.
+const MAX_TAGS = 20;
 
 const OPTIONAL_TEXT = ["roman", "english", "notes", "example_urdu", "example_english"] as const;
 
