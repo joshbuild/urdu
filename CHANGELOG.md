@@ -19,6 +19,9 @@
 
 ### Added
 
+- **Topic coverage** on the Harvest tab: every word can carry one of 50 topics and a CEFR level, and a grid shows how many words you have against a target for each topic at A1, A2 and B1 (about 2,575 words to B1). **Next batch** copies a ChatGPT prompt for the two emptiest topics, listing the words you already have so they aren't repeated; **Paste batch reply** queues the answer in a harvest of the built-in Topics source. Tap a cell to ask for that topic.
+- **Classify**: label existing words with a topic and level 100 at a time with **Copy classify prompt** and **Paste classify reply**, previewed before anything is saved.
+
 - **Vocab intake.** Pasted harvests go into a queue instead of straight into review. Each day the app tops up your new words to the daily batch (10 by default, set as **New words per day** in Settings), oldest first; **Intake** on the Review start screen pulls in another batch when you have time. Queued words are in your vault — searchable, editable, checkable — with a **Queued** badge, a **Queued only** filter and **Release now**.
 - **Harvest** tab: keep a list of sources (stories or pages, with URL and notes), see which you have harvested, and record each harvest's filter (such as "CEFR A2+") and date, with counts of words queued and started. **Copy harvest request** asks your ChatGPT Project for a word list from the source at that level, and **Start now** skips the queue for a paste.
 - A tank meter on the Harvest tab and the Review start screen shows how many days of new words are queued, and turns amber below three days, when it's time to harvest again.

@@ -1,6 +1,19 @@
 # f18 topic-coverage — journal
 
-**Current state (2026-10-06):** 🟡 opened, planning. The sponsor reviews the topic and quota table in the doc, then `/pm-stress-test`, then s01.
+**Current state (2026-10-06):** 🟡 s01–s03 built and committed (`212de33`, `c027615`, `2d2b3e4`); migration 0008 applied locally only. s04 (Vocab filters and chips, form pickers, review chip) is half built and parked in `git stash` ("f18 s04 wip": the draft logic, tests green). Next: pop the stash and finish s04, then s05. Before any deploy the sponsor applies 0008 remotely.
+
+## 261006b — approve, stress-test, orchestrate s01–s03
+
+The sponsor approved §Topics and quotas and asked for a totals row (685 / 955 / 935, 2,575; row sums and section subtotals agree). `/pm-stress-test`: 22 findings, all agent-resolved (two validation strictnesses, Worker-issued batch handoffs with paste-time harvests, unclassified = topic or level null, exclusions by topic or tag, B2+ counted untargeted), commit `3f338f4`.
+
+`/pm-orchestrate` ran s01–s03. Baseline `pnpm check` 94 s.
+- **s01** (`212de33`): `shared/topics.ts` generated from the doc table by a script, so the 50 scope lines and quotas match it exactly; migration 0008 (topic, cefr with a CHECK, index); strict `parseFields`, lenient `lenientClassification` for pastes with `dropped` notes in the result; `GET /api/coverage`; `?topic=`/`?cefr=`. Red recorded: 9 assertion fails (e.g. `expected 201 to be 400` for an unknown tag). The first green run still failed two tests on a real bug: `isError` in `api-vocab.ts` took any object for an error, so the new filter object made every list a 400; it now needs `message`. Ten existing tests used free tags and moved onto slugs. Review: no bugs; applied its single-query coverage count, `tags: null` handling and an AND-filter test; the Airtable import keeps its own free tags (spec now says so).
+- **s02** (`c027615`): `nextCells` in `shared/coverage.ts` (red against a stub, 6 fails), `POST /api/batches` and `POST /api/batches/handoffs` (the batch id comes from the reply, so nothing is held on the device; red: 10 × `expected 404 to be 200`), the batch and new-vocab prompts, and the coverage grid on the Harvest tab (`src/harvest/CoveragePanel.tsx`: folded sections, tappable open cells; headless 360 px screenshot clean). One test expectation was wrong (an A1 word made pronouns fuller, so it was not picked). Review found a real bug: a paste cut off mid-way left the batch `batch_pasting` for good. Now a claim older than 60 s can be taken over and the harvest id is saved as soon as it exists, so a retry reuses it; tests pin busy, takeover, harvest reuse and the plain-route repeat. Also fixed the batch prompt's "fill every field" against JSON_ONLY's "leave a field out".
+- **s03** (`2d2b3e4`): classify with its own statuses (`classify_issued`/`classified`) and routes, on the coverage panel rather than the f13 dialog (doc Decisions). Rows are judged one by one; apply is guarded on the issued topic and level; ids are looked up in chunks of 90. The domain was written before its tests could run (they needed the shared types after the s02 commit), so no red was recorded for it; the client prompt test went red on a missing import first. Review: no blockers; applied a pre-write stale check (so the stored outcome is right first time), a 200-row envelope, answered-vs-planned so a good row may follow a bad one, Apply disabled at 0 ticked, separate busy states, and tests for repeat-after-stale and deleted items. Open, unverified: the Workers Free limit of 50 queries per invocation for a 100-row apply; the existing 50-word paste already runs about 3 queries a word in daily use, and the sponsor's 100-word smoke settles it.
+
+`pnpm check` green at 810. Not pushed, not deployed.
+
+**Deploy note for the sponsor:** after s01 the old Vocab edit form sends free tags only when the Tags field is changed; such an edit, or a manual add with tags, gets a 400 until s04's pickers ship. Pastes are unaffected (lenient).
 
 ## 261006a — plan and open
 

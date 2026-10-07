@@ -1,6 +1,6 @@
 # Feature Plan — Topic Coverage
 
-**Status**: 🟡 IN PROGRESS — *opened 2026-10-06; planned from a sponsor grill the same day; topics approved and plan stress-tested the same day. Next: s01.*
+**Status**: 🟡 IN PROGRESS — *opened 2026-10-06; topics approved, stress-tested, s01–s03 built the same day. Next: finish s04 (parked in git stash), then s05.*
 **Handle**: `f18`
 **Created**: *2026-10-06* · **Updated**: *2026-10-06*
 
@@ -304,10 +304,17 @@ f18: if first, its `find_vocab` tag argument is renamed to topic in f18 s05; bot
 - 2026-10-06 — Sponsor approved §Topics and quotas (topics, boundaries, per-level numbers); a
   totals row added.
 - 2026-10-06 — Stress-tested: 22 findings, all resolved by the agent; none escalated.
+- 2026-10-06 — s01 topics and schema (`212de33`), s02 Next batch and the coverage grid
+  (`c027615`), s03 classify (`2d2b3e4`); migration 0008 local only.
 
 ### Next Steps
 
-1. Build s01 (stress-tested 2026-10-06, ready).
+1. `git stash pop` ("f18 s04 wip": draft logic for the pickers, tests green), then finish s04:
+   pickers in DraftFields, VocabEdit and AddVocabSheet; Vocab topic and level filters; chips in
+   list and detail; the review card's topic and level after reveal; headless screenshots.
+2. s05 prompts and docs (Project instructions, generated `prompts/vocab-tags.md`, PRD FR-L,
+   VISION §16, AGENTS, mp05 note), then smoke-test-18.
+3. Sponsor: `pnpm wrangler d1 migrations apply urdu --remote` before the next deploy.
 
 ### Open Questions
 
