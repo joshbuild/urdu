@@ -4,6 +4,7 @@
 // Project version of newVocabPrompt is prompts/urdu-coach-project-instructions.md; keep the two in step.
 
 import {
+  type BatchIssueResponse,
   type CheckOptions,
   FILLABLE_FIELDS,
   type FillableField,
@@ -11,6 +12,7 @@ import {
   MAX_HANDOFF_PROPOSALS,
   type VocabItem,
 } from "../../shared/api";
+import { TOPIC_BOUNDARIES, TOPICS, topicBySlug } from "../../shared/topics";
 import { ulid } from "../../shared/ulid";
 
 const CONVENTIONS = `Language conventions:
@@ -23,13 +25,25 @@ const CONVENTIONS = `Language conventions:
 // Chats break JSON by quoting a word inside a string value ("the hyphen and "haqiqat" look...").
 // Asking them to escape is unreliable, so the prompt forbids the character instead; the code block
 // gives ChatGPT's copy button, which copies the raw text rather than the rendered page.
-const JSON_ONLY = `Reply with the JSON document alone, in one json code block: no prose before or after it, no comments inside it. It must be strict JSON that parses as it stands. Inside a text value, never use a double quotation mark or a backslash: to quote a word or spelling, use single quotes ('like this') or none. Before replying, check that the whole document parses. Leave a field out rather than guess.`;
+const JSON_ONLY = `Reply with the JSON document alone, in one json code block: no prose before or after it, no comments inside it. It must be strict JSON that parses as it stands. Inside a text value, never use a double quotation mark or a backslash: to quote a word or spelling, use single quotes ('like this') or none. Before replying, check that the whole document parses.`;
+const NO_GUESS = "Leave a field out rather than guess.";
+
+// f18: the fixed topic list, one slug per line with its label and scope (shared/topics.ts).
+const TOPIC_LIST = TOPICS.map((t) => `- ${t.slug}: ${t.label} (${t.scope})`).join("\n");
+
+const CLASSIFY_RULES = `- "topic": the one slug from the topic list below where the entry belongs most.
+- "cefr": the CEFR level at which a learner usually meets it: A1, A2, B1, B2, C1 or C2.
+- "tags": optional, at most two other slugs from the list where it clearly also belongs; never the topic itself.
+Topic boundaries: ${TOPIC_BOUNDARIES}
+
+Topic list:
+${TOPIC_LIST}`;
 
 export function newVocabPrompt(handoffId: string = ulid(), sessionAt = new Date()): string {
   return `You are helping me add Urdu vocabulary to my learning app. For each word or phrase I give you below, draft one vocabulary entry. A phrase that is learned as a unit is one entry, not split into words.
 
 ${CONVENTIONS}
-- "tags": optional array of short lowercase topic tags.
+${CLASSIFY_RULES}
 
 Return exactly this JSON shape, copying handoff_id and session_at as given:
 
@@ -37,13 +51,48 @@ Return exactly this JSON shape, copying handoff_id and session_at as given:
   "handoff_id": "${handoffId}",
   "session_at": "${sessionAt.toISOString()}",
   "proposals": [
-    { "urdu": "کتاب", "roman": "kitaab", "english": "book", "notes": "...", "example_urdu": "...", "example_english": "...", "tags": ["..."] }
+    { "urdu": "کتاب", "roman": "kitaab", "english": "book", "notes": "...", "example_urdu": "...", "example_english": "...", "topic": "school", "cefr": "A1", "tags": [] }
   ]
 }
 
-"urdu" is required on every proposal; every other field is optional. At most ${MAX_HANDOFF_PROPOSALS} proposals. ${JSON_ONLY}
+"urdu" is required on every proposal; every other field is optional. At most ${MAX_HANDOFF_PROPOSALS} proposals. ${JSON_ONLY} ${NO_GUESS}
 
 My words (Urdu, Roman Urdu or English — if English, give the everyday Urdu for it):
+`;
+}
+
+// f18 (FR-L): Next batch. The Worker chose the cells and minted the id; this asks for each cell's
+// count at its level, fully filled, with the words already in those topics excluded.
+export function batchPrompt(batch: BatchIssueResponse, sessionAt = new Date()): string {
+  const total = batch.cells.reduce((sum, c) => sum + c.ask, 0);
+  const asks = batch.cells
+    .map((c) => {
+      const scope = topicBySlug(c.topic)?.scope ?? "";
+      const have = batch.exclusions[c.topic] ?? [];
+      return `- ${c.ask} words or phrases for topic ${c.topic} at CEFR ${c.level} (${scope}).
+  Already in my vault for ${c.topic}: ${have.length > 0 ? have.join("، ") : "none"}`;
+    })
+    .join("\n");
+  return `You are helping me build my Urdu vocabulary by topic, for my learning app. Give me new entries that a learner at the stated level actually needs, the most useful first. Leave out every word already in my vault, listed under each request, and do not repeat an entry.
+
+${asks}
+
+Fill in every field for every entry, following these conventions.
+
+${CONVENTIONS}
+${CLASSIFY_RULES}
+
+Return exactly this JSON shape, copying handoff_id and session_at as given:
+
+{
+  "handoff_id": "${batch.handoff_id}",
+  "session_at": "${sessionAt.toISOString()}",
+  "proposals": [
+    { "urdu": "کتاب", "roman": "kitaab", "english": "book", "notes": "...", "example_urdu": "...", "example_english": "...", "topic": "school", "cefr": "A1", "tags": [] }
+  ]
+}
+
+At most ${total} proposals. Before replying, review the whole list: every field is filled, no entry is already in my vault or repeated, each topic and level is honest (if an entry fits another topic or level better, label it so), and the JSON parses. ${JSON_ONLY}
 `;
 }
 
@@ -118,7 +167,7 @@ Return exactly this JSON shape, copying handoff_id as given:
   ]
 }
 
-If there is nothing to change, return "corrections": []. At most ${MAX_CHECK_BATCH} corrections. ${JSON_ONLY}
+If there is nothing to change, return "corrections": []. At most ${MAX_CHECK_BATCH} corrections. ${JSON_ONLY} ${NO_GUESS}
 `;
 }
 

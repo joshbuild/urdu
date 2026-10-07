@@ -1375,3 +1375,110 @@ button.harvest-row {
 .eyebrow.harvest-subhead {
   margin-top: 24px;
 }
+
+/* f18 coverage grid: have/target per topic and level, folded by section. An open cell is a
+   button whose teal fill grows with its share of the target; a full cell is plain text. */
+.coverage {
+  margin-top: 20px;
+}
+
+.coverage-summary {
+  margin-bottom: 8px;
+  font-weight: 600;
+}
+
+.coverage-totals {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+  font-variant-numeric: tabular-nums;
+}
+
+.coverage-sections {
+  margin-top: 16px;
+  border-top: 1px solid #d5dfd9;
+}
+
+.coverage-section {
+  border-bottom: 1px solid #d5dfd9;
+}
+
+.coverage-section summary {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 4px 12px;
+  min-height: 48px;
+  padding: 12px 0;
+  cursor: pointer;
+}
+
+.coverage-section-name {
+  font-weight: 600;
+}
+
+.coverage-section summary .coverage-totals {
+  color: #526967;
+  font-size: 0.875rem;
+}
+
+.coverage-table {
+  width: 100%;
+  margin-bottom: 12px;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.coverage-table th,
+.coverage-table td {
+  padding: 3px 2px;
+  text-align: center;
+}
+
+.coverage-table th[scope="row"] {
+  font-weight: 400;
+  text-align: left;
+  overflow-wrap: anywhere;
+}
+
+.coverage-table thead th {
+  color: #526967;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.coverage-table thead th:first-child {
+  text-align: left;
+}
+
+.coverage-cell {
+  width: 15%;
+}
+
+.coverage-cell button {
+  min-height: 36px;
+  margin: 0;
+  padding: 0 2px;
+  border: 1px solid #b7cdc5;
+  border-radius: 8px;
+  --btn-bg: linear-gradient(to right, #c6e0d8 var(--fill), white var(--fill));
+  --btn-bg-hover: linear-gradient(to right, #8cc4bc var(--fill), #e8f0ec var(--fill));
+  color: #173e40;
+  font-size: 0.8125rem;
+  font-weight: 600;
+}
+
+.coverage-cell--empty button {
+  border-color: #e0a86f;
+}
+
+.coverage-cell--full {
+  color: #1f5550;
+  font-weight: 600;
+}
+
+.coverage-cell--none {
+  color: #8aa09c;
+}

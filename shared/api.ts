@@ -1,11 +1,12 @@
 // Request and response shapes for the /api vocab, review and export routes (f01 s05, s06). Field names match the
 // D1 columns and the Coach contract (snake_case).
 
+import type { BatchCell } from "./coverage";
 import type { Dash } from "./dash";
 import type { Ladder } from "./ladders";
 import type { Grade, LegacyLevel } from "./mastery";
 import type { VocabKind } from "./normalize";
-import type { CefrLevel } from "./topics";
+import type { CefrLevel, QuotaLevel } from "./topics";
 
 export const VOCAB_SOURCES = ["reading", "coach", "airtable", "manual"] as const;
 export type VocabSource = (typeof VOCAB_SOURCES)[number];
@@ -215,6 +216,18 @@ export type CoverageResponse = {
   total: number;
 };
 
+// f18: POST /api/batches. With a tapped cell, that cell and the next pick at its level; without,
+// the two emptiest cells at the lowest unfinished level.
+export type BatchIssueRequest = { topic?: string; level?: QuotaLevel };
+// exclusions[topic]: the Urdu of every item whose topic or a secondary tag is that topic.
+export type BatchIssueResponse = {
+  handoff_id: string;
+  cells: BatchCell[];
+  exclusions: Record<string, string[]>;
+};
+// POST /api/batches/handoffs: the FR-F4 reply, imported into a new harvest of the Topics source.
+export type BatchPasteResponse = HandoffResponse & { harvest_id: string };
+
 // The whole vault except sessions (PRD §6 Portability).
 export type ExportResponse = {
   exported_at: string;
@@ -299,6 +312,7 @@ export const MAX_HANDOFF_ID_LENGTH = 100;
 // handoffs.status values (Appendix A leaves them to f06). The voice ones (f07) key one tool call
 // each, `voice:<session id>:<call id>`, so a retried call returns its first result. A check batch
 // (f11) is `check_issued` from Copy check prompt until its corrections are applied, then `checked`.
+// A Next batch request (f18) is `batch_issued` until its reply is pasted, then `applied`.
 export const HANDOFF_STATUSES = [
   "applied",
   "revised",
@@ -306,6 +320,9 @@ export const HANDOFF_STATUSES = [
   "voice_review",
   "check_issued",
   "checked",
+  "batch_issued",
+  // While a batch reply is being imported, so a second paste of it waits.
+  "batch_pasting",
 ] as const;
 export type HandoffStatus = (typeof HANDOFF_STATUSES)[number];
 

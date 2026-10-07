@@ -2,8 +2,9 @@
 // by latest harvest), each source's harvests, and a harvest's new-vocab round trip, moved here from
 // the Vocab tab. Fetched each time a view opens, so counts are fresh after a paste or a review.
 
-import { useCallback, useEffect, useState } from "react";
+import { useState } from "react";
 import type {
+  CoverageResponse,
   Harvest,
   HarvestDetail,
   HarvestOverview,
@@ -14,8 +15,10 @@ import type {
   SourceSummary,
 } from "../../shared/api";
 import { type Copied, CopiedNote, copy, InfoBox, InfoToggle, postJson } from "../handoff/clipboard";
-import { FindWordsSheet, PasteNewSheet } from "../handoff/NewVocabSheets";
+import { FindWordsSheet, PasteNewSheet, pastePath } from "../handoff/NewVocabSheets";
 import { newVocabPrompt } from "../handoff/prompts";
+import { CoveragePanel } from "../harvest/CoveragePanel";
+import { Unavailable, useFetched } from "../harvest/fetched";
 import { harvestRequest, hostOf } from "../harvest/request";
 import { TankMeter } from "../harvest/TankMeter";
 import { Sheet } from "../reader/Sheet";
@@ -27,50 +30,6 @@ type View =
   | { kind: "overview" }
   | { kind: "source"; id: string }
   | { kind: "harvest"; id: string; sourceId: string };
-
-type Loaded<T> = { state: "loading" } | { state: "error" } | { state: "ok"; data: T };
-
-// GET with the app's lock handling; `reload` refetches. `preloaded` seeds the state, so a static
-// render (tests, the headless layout check) shows a view without fetching.
-function useFetched<T>(path: string, onLocked: () => void, preloaded?: T) {
-  const [loaded, setLoaded] = useState<Loaded<T>>(
-    preloaded === undefined ? { state: "loading" } : { state: "ok", data: preloaded },
-  );
-  const load = useCallback(
-    async (signal?: AbortSignal) => {
-      try {
-        const response = await fetch(path, { cache: "no-store", signal });
-        if (signal?.aborted) return;
-        if (response.status === 401) return onLocked();
-        if (!response.ok) throw new Error(String(response.status));
-        const data = (await response.json()) as T;
-        if (!signal?.aborted) setLoaded({ state: "ok", data });
-      } catch {
-        if (!signal?.aborted) setLoaded({ state: "error" });
-      }
-    },
-    [path, onLocked],
-  );
-  useEffect(() => {
-    const controller = new AbortController();
-    void load(controller.signal);
-    return () => controller.abort();
-  }, [load]);
-  return { loaded, reload: () => void load() };
-}
-
-function Unavailable({ what, onRetry }: { what: string; onRetry: () => void }) {
-  return (
-    <>
-      <p className="error" role="alert">
-        Could not load {what}. Check your connection.
-      </p>
-      <button type="button" className="secondary" onClick={onRetry}>
-        Retry
-      </button>
-    </>
-  );
-}
 
 const dateOf = (iso: string) =>
   new Date(iso).toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" });
@@ -102,17 +61,30 @@ export function HarvestScreen({ onOpenVocab, onLocked, onChanged }: Props) {
       />
     );
   }
-  return <Overview onLocked={onLocked} onOpenSource={(id) => setView({ kind: "source", id })} />;
+  return (
+    <Overview
+      onLocked={onLocked}
+      onChanged={onChanged}
+      onOpenVocab={onOpenVocab}
+      onOpenSource={(id) => setView({ kind: "source", id })}
+    />
+  );
 }
 
 export function Overview({
   onLocked,
+  onChanged = () => {},
+  onOpenVocab = () => {},
   onOpenSource,
   preloaded,
+  preloadedCoverage,
 }: {
   onLocked: () => void;
+  onChanged?: () => void;
+  onOpenVocab?: (id: string) => void;
   onOpenSource: (id: string) => void;
   preloaded?: HarvestOverview;
+  preloadedCoverage?: CoverageResponse;
 }) {
   const { loaded, reload } = useFetched<HarvestOverview>("/api/harvest", onLocked, preloaded);
   const [adding, setAdding] = useState(false);
@@ -127,6 +99,16 @@ export function Overview({
       {loaded.state === "ok" && (
         <>
           <TankMeter intake={loaded.data.intake} />
+          <CoveragePanel
+            onLocked={onLocked}
+            onChanged={() => {
+              onChanged();
+              reload();
+            }}
+            onOpenVocab={onOpenVocab}
+            preloaded={preloadedCoverage}
+          />
+          <p className="eyebrow harvest-subhead">SOURCES</p>
           <button type="button" onClick={() => setAdding(true)}>
             Add source
           </button>
@@ -619,7 +601,7 @@ export function HarvestView({
       {sheet === "find" && <FindWordsSheet onClose={() => setSheet(null)} onOpen={onOpenVocab} />}
       {sheet === "paste" && (
         <PasteNewSheet
-          harvestId={harvest.id}
+          path={(start) => pastePath(harvest.id, start)}
           onClose={() => {
             setSheet(null);
             reload();

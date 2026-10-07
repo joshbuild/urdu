@@ -44,13 +44,17 @@ export function pasteSummary(results: readonly ProposalResult[], started: boolea
   return parts.join(" · ");
 }
 
+// `path` gives where the paste goes for the Start now tick: a harvest's (pastePath), or f18's
+// batch route.
 export function PasteNewSheet({
-  harvestId,
+  path,
+  title = "Paste new vocab",
   onClose,
   onChanged,
   onOpen,
 }: {
-  harvestId: string;
+  path: (start: boolean) => string;
+  title?: string;
   onClose: () => void;
   onChanged: () => void;
   onOpen: (id: string) => void;
@@ -66,7 +70,7 @@ export function PasteNewSheet({
     if (!pasted.ok) return setError(pasted.message);
     setBusy(true);
     setError("");
-    const posted = await postJson<HandoffResponse>(pastePath(harvestId, start), pasted.value);
+    const posted = await postJson<HandoffResponse>(path(start), pasted.value);
     setBusy(false);
     if (!posted.ok) return setError(posted.message);
     setResult(posted.body);
@@ -77,8 +81,8 @@ export function PasteNewSheet({
   const created = result?.repeat ? "Saved earlier" : start ? "Started" : "Queued";
 
   return (
-    <Sheet label="Paste new vocab" onClose={onClose}>
-      <p className="eyebrow">PASTE NEW VOCAB</p>
+    <Sheet label={title} onClose={onClose}>
+      <p className="eyebrow">{title.toUpperCase()}</p>
       {result ? (
         <>
           {result.repeat ? (
@@ -98,6 +102,9 @@ export function PasteNewSheet({
                   : r.outcome === "duplicate"
                     ? "Already in your vault"
                     : `Rejected (${r.reason})`}
+                {r.outcome === "created" && r.dropped && (
+                  <span className="hint"> (left out: {r.dropped.join(", ")})</span>
+                )}
                 {r.outcome !== "rejected" && (
                   <button
                     type="button"

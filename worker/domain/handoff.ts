@@ -2,6 +2,7 @@
 // recorded once in `handoffs`, and a repeat returns the stored outcome without writing.
 
 import type {
+  HandoffProposal,
   HandoffRequest,
   HandoffResponse,
   HandoffStatus,
@@ -57,8 +58,21 @@ export async function importHandoff(
   if (stored === ID_CONFLICT) return stored;
   if (stored) return { handoff_id: request.handoff_id, repeat: true, results: stored };
 
+  const results = await createProposals(db, request.proposals, now, activeLadderId, options);
+  await recordHandoff(db, request.handoff_id, request, "applied", results, now).run();
+  return { handoff_id: request.handoff_id, repeat: false, results };
+}
+
+// Each proposal created, or reported as a duplicate or rejected; shared with the f18 batch paste.
+export async function createProposals(
+  db: D1Database,
+  proposals: readonly HandoffProposal[],
+  now: Date,
+  activeLadderId: number,
+  options: CreateOptions = {},
+): Promise<ProposalResult[]> {
   const results: ProposalResult[] = [];
-  for (const [index, proposal] of request.proposals.entries()) {
+  for (const [index, proposal] of proposals.entries()) {
     const { dropped, ...fields } = proposal;
     const urdu = fields.urdu;
     const result = await createVocab(
@@ -87,6 +101,5 @@ export async function importHandoff(
       });
     }
   }
-  await recordHandoff(db, request.handoff_id, request, "applied", results, now).run();
-  return { handoff_id: request.handoff_id, repeat: false, results };
+  return results;
 }

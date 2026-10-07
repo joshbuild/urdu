@@ -59,7 +59,7 @@ next batch, no grading of the learner against a level.
   (A1–C2), per-topic totals, and the unclassified count. Counts use `topic` only, never secondary
   tags, and include queued items so a batch never re-asks for them. `GET /api/vocab` and
   `/api/vocab/due` gain `?topic=` (matches `topic` only) and `?cefr=`; the old `?tag=` stays.
-- **Batch round trip (s02).** Selection is a pure function in `shared/topics.ts`
+- **Batch round trip (s02).** Selection is a pure function in `shared/coverage.ts`
   (`nextCells(counts, tapped?)`). **Next batch** chooses up to two cells: the lowest level with any
   cell below quota (cells with quota 0 never count), then the cells there with the lowest fill
   ratio, ties by topic order; one open cell left at that level means a one-cell batch. Tapping a
@@ -74,7 +74,8 @@ next batch, no grading of the learner against a level.
     boundaries, the level, the full field list including `topic`, `cefr` and `tags`, a
     self-review instruction (every field filled, JSON parses, topic and level honest), and the
     exclusion lists.
-  - **Paste:** `POST /api/batches/:id/handoffs` (FR-F4 body, `?start=1` as f17). A repeat of
+  - **Paste:** `POST /api/batches/handoffs` (FR-F4 body, whose `handoff_id` names the batch;
+    `?start=1` as f17). A repeat of
     an applied id returns the stored result and creates nothing. An unknown id, or an id that
     is not a batch, is 404. Otherwise the route finds or creates the built-in **Topics** source
     (`settings.topics_source_id`; recreated if deleted), creates a harvest with filter text from

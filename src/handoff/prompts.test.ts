@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { FILLABLE_FIELDS, type VocabItem } from "../../shared/api";
-import { checkPrompt, describeInvalid, newVocabPrompt, parsePasted } from "./prompts";
+import { TOPICS } from "../../shared/topics";
+import { batchPrompt, checkPrompt, describeInvalid, newVocabPrompt, parsePasted } from "./prompts";
 
 const item = (over: Partial<VocabItem>): VocabItem => ({
   id: "01J0000000000000000000000A",
@@ -43,6 +44,14 @@ describe("newVocabPrompt", () => {
     }
     expect(text).toContain("Pakistani Urdu");
     expect(text).toContain("JSON document alone");
+  });
+
+  it("asks for a topic slug, a CEFR level and up to two secondary slugs from the list", () => {
+    const text = newVocabPrompt("H1");
+    for (const field of ["topic", "cefr"]) expect(text).toContain(`"${field}"`);
+    for (const t of TOPICS) expect(text).toContain(t.slug);
+    expect(text).toContain("A1, A2, B1, B2, C1 or C2");
+    expect(text).toContain("at most two");
   });
 
   it("makes a fresh id each time by default", () => {
@@ -107,10 +116,47 @@ describe("checkPrompt", () => {
   });
 });
 
+const ROTI = "\u{0631}\u{0648}\u{0679}\u{06CC}"; // روٹی
+
+const BATCH = {
+  handoff_id: "B123",
+  cells: [
+    { topic: "food", level: "A1" as const, have: 10, quota: 35, ask: 25 },
+    { topic: "body", level: "A1" as const, have: 15, quota: 20, ask: 5 },
+  ],
+  exclusions: { food: [ROTI], body: [] },
+};
+
+describe("batchPrompt", () => {
+  it("asks for each cell's count at its level, with the scope line and the exclusions", () => {
+    const text = batchPrompt(BATCH, new Date("2026-10-06T10:00:00Z"));
+    expect(text).toContain('"handoff_id": "B123"');
+    expect(text).toContain('"session_at": "2026-10-06T10:00:00.000Z"');
+    expect(text).toContain("25 words or phrases for topic food at CEFR A1");
+    expect(text).toContain("5 words or phrases for topic body at CEFR A1");
+    expect(text).toContain("ingredients, dishes, cooking, taste, eating out");
+    expect(text).toContain("body parts, looks");
+    expect(text).toContain(ROTI);
+    expect(text).toContain("Already in my vault for body: none");
+    expect(text).toContain("weather never to nature");
+  });
+
+  it("asks for every field, the self-review, and at most the total asked", () => {
+    const text = batchPrompt(BATCH);
+    for (const field of ["urdu", "roman", "english", "notes", "example_urdu", "topic", "cefr"]) {
+      expect(text).toContain(`"${field}"`);
+    }
+    expect(text).toContain("At most 30 proposals");
+    expect(text).toContain("Before replying, review");
+    expect(text).toContain("strict JSON");
+  });
+});
+
 describe("every prompt", () => {
   it("asks for strict JSON with no double quotes inside text values", () => {
     for (const text of [
       newVocabPrompt("H1"),
+      batchPrompt(BATCH),
       checkPrompt([item({})], "C1", { mode: "both", fields: ["notes"] }),
     ]) {
       expect(text).toContain("strict JSON");
