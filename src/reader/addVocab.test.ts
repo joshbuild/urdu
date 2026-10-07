@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { buildCreateRequest, initialDraft, parseTags, sourceSentence } from "./addVocab";
+import { buildCreateRequest, cleanTags, initialDraft, sourceSentence } from "./addVocab";
 
 describe("sourceSentence", () => {
   const paragraph = "میں گھر جا رہا ہوں۔ آپ کہاں ہیں؟ کل ملیں گے";
@@ -26,13 +26,11 @@ describe("sourceSentence", () => {
   });
 });
 
-describe("parseTags", () => {
-  it("splits on Latin and Urdu commas, trims and dedupes", () => {
-    expect(parseTags(" food, travel،food ,, ")).toEqual(["food", "travel"]);
-  });
-
-  it("is empty for blank input", () => {
-    expect(parseTags("")).toEqual([]);
+describe("cleanTags", () => {
+  it("keeps known slugs once, never the topic, at most two, dropping blanks and legacy tags", () => {
+    expect(cleanTags(["food", "", "food", "objects", "home"], "")).toEqual(["food", "home"]);
+    expect(cleanTags(["food", "home", "body"], "home")).toEqual(["food", "body"]);
+    expect(cleanTags(["food", "home", "body"], "")).toEqual(["food", "home"]);
   });
 });
 
@@ -60,15 +58,26 @@ describe("buildCreateRequest", () => {
       ...initialDraft("کہاں", ""),
       urdu: "آپ کہاں",
       english: " where ",
-      tags: "a, b",
+      topic: "questions",
+      cefr: "A1",
+      tags: ["space", ""],
     };
     expect(buildCreateRequest(draft)).toEqual({
       urdu: "آپ کہاں",
       kind: "phrase",
       source: "reading",
       english: "where",
-      tags: ["a", "b"],
+      topic: "questions",
+      cefr: "A1",
+      tags: ["space"],
     });
+  });
+
+  it("leaves out an unchosen topic, level and tags", () => {
+    const request = buildCreateRequest(initialDraft("پانی", ""));
+    expect(request).not.toHaveProperty("topic");
+    expect(request).not.toHaveProperty("cefr");
+    expect(request).not.toHaveProperty("tags");
   });
 
   it("marks manual entry from the Vocab tab (FR-D3) as manual", () => {

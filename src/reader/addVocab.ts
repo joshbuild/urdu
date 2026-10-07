@@ -3,6 +3,7 @@
 
 import type { CreateVocabRequest } from "../../shared/api";
 import { inferKind } from "../../shared/normalize";
+import { cefrLevel, isTopic } from "../../shared/topics";
 
 export type CreateSource = NonNullable<CreateVocabRequest["source"]>;
 
@@ -23,14 +24,14 @@ export function sourceSentence(paragraph: string, term: string): string {
   return text.includes(needle) ? text : "";
 }
 
-// Comma-separated, as typed on a phone keyboard; the Urdu comma (U+060C) counts too.
-export function parseTags(input: string): string[] {
-  const tags: string[] = [];
-  for (const raw of input.split(/[,\u{060C}]/u)) {
-    const tag = raw.trim();
-    if (tag && !tags.includes(tag)) tags.push(tag);
+// f18: the secondary topics chosen in the form, as the Worker accepts them: known slugs, each
+// once, never the item's topic, at most two. Blank pickers and legacy free tags fall away.
+export function cleanTags(tags: readonly string[], topic: string): string[] {
+  const out: string[] = [];
+  for (const tag of tags) {
+    if (isTopic(tag) && tag !== topic && !out.includes(tag) && out.length < 2) out.push(tag);
   }
-  return tags;
+  return out;
 }
 
 export interface AddDraft {
@@ -40,7 +41,11 @@ export interface AddDraft {
   notes: string;
   example_urdu: string;
   example_english: string;
-  tags: string;
+  // f18: a topic slug and a CEFR level, "" for none; up to two secondary slugs, "" for an empty
+  // picker.
+  topic: string;
+  cefr: string;
+  tags: string[];
 }
 
 export function initialDraft(term: string, sentence: string): AddDraft {
@@ -52,7 +57,9 @@ export function initialDraft(term: string, sentence: string): AddDraft {
     notes: sentence && sentence !== term ? sentence : "",
     example_urdu: "",
     example_english: "",
-    tags: "",
+    topic: "",
+    cefr: "",
+    tags: [],
   };
 }
 
@@ -68,7 +75,10 @@ export function buildCreateRequest(
     const value = draft[field].trim();
     if (value) request[field] = value;
   }
-  const tags = parseTags(draft.tags);
+  if (isTopic(draft.topic)) request.topic = draft.topic;
+  const cefr = cefrLevel(draft.cefr);
+  if (cefr) request.cefr = cefr;
+  const tags = cleanTags(draft.tags, draft.topic);
   if (tags.length) request.tags = tags;
   return request;
 }

@@ -306,15 +306,16 @@ f18: if first, its `find_vocab` tag argument is renamed to topic in f18 s05; bot
 - 2026-10-06 — Stress-tested: 22 findings, all resolved by the agent; none escalated.
 - 2026-10-06 — s01 topics and schema (`212de33`), s02 Next batch and the coverage grid
   (`c027615`), s03 classify (`2d2b3e4`); migration 0008 local only.
+- 2026-10-06 — s04 UI: topic, level and two "Also about" pickers in the add and edit forms
+  (legacy free tags shown struck through, dropped on save), topic and level filters on the Vocab
+  tab, topic chips on list rows, detail and the revealed review card; grid numbers checked against
+  `GET /api/coverage` on `pnpm dev`; headless 360 px shots (light theme only, the app has no dark).
 
 ### Next Steps
 
-1. `git stash pop` ("f18 s04 wip": draft logic for the pickers, tests green), then finish s04:
-   pickers in DraftFields, VocabEdit and AddVocabSheet; Vocab topic and level filters; chips in
-   list and detail; the review card's topic and level after reveal; headless screenshots.
-2. s05 prompts and docs (Project instructions, generated `prompts/vocab-tags.md`, PRD FR-L,
+1. s05 prompts and docs (Project instructions, generated `prompts/vocab-tags.md`, PRD FR-L,
    VISION §16, AGENTS, mp05 note), then smoke-test-18.
-3. Sponsor: `pnpm wrangler d1 migrations apply urdu --remote` before the next deploy.
+2. Sponsor: `pnpm wrangler d1 migrations apply urdu --remote` before the next deploy.
 
 ### Open Questions
 

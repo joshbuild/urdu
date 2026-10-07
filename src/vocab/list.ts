@@ -2,12 +2,15 @@
 
 import type { VocabItem, VocabSort } from "../../shared/api";
 import { formatInterval } from "../../shared/ladders";
+import { topicBySlug } from "../../shared/topics";
 
 export const PAGE_SIZE = 50;
 
 export interface ListFilters {
   q: string;
-  tag: string;
+  // f18: a topic slug and a CEFR level, "" for any; they replace the free-tag filter.
+  topic: string;
+  cefr: string;
   due: boolean;
   // f17: queued items only.
   queued: boolean;
@@ -16,7 +19,8 @@ export interface ListFilters {
 
 export const DEFAULT_FILTERS: ListFilters = {
   q: "",
-  tag: "",
+  topic: "",
+  cefr: "",
   due: false,
   queued: false,
   sort: "added",
@@ -33,7 +37,8 @@ export function listQuery(filters: ListFilters, offset = 0, limit = PAGE_SIZE): 
   const params = new URLSearchParams();
   const q = filters.q.trim();
   if (q) params.set("q", q);
-  if (filters.tag) params.set("tag", filters.tag);
+  if (filters.topic) params.set("topic", filters.topic);
+  if (filters.cefr) params.set("cefr", filters.cefr);
   if (filters.due) params.set("due", "true");
   if (filters.queued) params.set("queued", "true");
   if (filters.sort !== DEFAULT_FILTERS.sort) params.set("sort", filters.sort);
@@ -64,7 +69,15 @@ export function reviewLabel(item: Scheduled, now: string): string {
   return `Due in ${formatInterval((Date.parse(item.due_at) - Date.parse(now)) / 1000)}`;
 }
 
-// The chosen sort survives reloads on this device (sponsor request 2026-09-18). Search, tag and
+// f18: the topic chip, e.g. "Food & drink · A1"; the level alone when the topic is unset, null
+// when both are.
+export function topicChip(item: Pick<VocabItem, "topic" | "cefr">): string | null {
+  const label = item.topic ? (topicBySlug(item.topic)?.label ?? item.topic) : null;
+  const parts = [label, item.cefr].filter((part): part is string => Boolean(part));
+  return parts.length ? parts.join(" · ") : null;
+}
+
+// The chosen sort survives reloads on this device (sponsor request 2026-09-18). Search, topic and
 // due-only stay per visit: they narrow the list, and a stale narrowing would hide items.
 const SORT_KEY = "urdu.vocabSort";
 

@@ -1,8 +1,11 @@
-// f04 s02: the vault list (FR-D1) — search, tag filter, due-only, sort, "load more" paging.
+// f04 s02: the vault list (FR-D1) — search, topic and level filters (f18), due-only, sort, "load
+// more" paging.
 
 import { useEffect, useState } from "react";
-import type { TagsResponse, VocabItem, VocabListResponse, VocabSort } from "../../shared/api";
-import { isQueued, type ListFilters, listQuery, reviewLabel, SORT_LABELS } from "./list";
+import type { VocabItem, VocabListResponse, VocabSort } from "../../shared/api";
+import { CEFR_LEVELS } from "../../shared/topics";
+import { TopicOptions } from "../reader/DraftFields";
+import { isQueued, type ListFilters, listQuery, reviewLabel, SORT_LABELS, topicChip } from "./list";
 import { MasteryPill, QueuedBadge } from "./MasteryPill";
 
 const SEARCH_DELAY_MS = 250;
@@ -19,7 +22,6 @@ export function VocabList({
   onOpen: (id: string) => void;
 }) {
   const [search, setSearch] = useState(filters.q);
-  const [tags, setTags] = useState<string[]>([]);
   const [items, setItems] = useState<VocabItem[]>([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -31,15 +33,6 @@ export function VocabList({
     const timer = setTimeout(() => onFilters({ ...filters, q: search }), SEARCH_DELAY_MS);
     return () => clearTimeout(timer);
   }, [search, filters, onFilters]);
-
-  useEffect(() => {
-    const controller = new AbortController();
-    fetch("/api/tags", { signal: controller.signal })
-      .then((r) => (r.ok ? (r.json() as Promise<TagsResponse>) : { tags: [] }))
-      .then((body) => setTags(body.tags.map((t) => t.name)))
-      .catch(() => {});
-    return () => controller.abort();
-  }, []);
 
   // A new filter replaces the list; the abort drops responses to filters no longer showing.
   useEffect(() => {
@@ -92,17 +85,27 @@ export function VocabList({
       />
 
       <div className="vocab-filters">
-        <div>
-          <label htmlFor="vocab-tag">Tag</label>
+        <div className="vocab-filters-wide">
+          <label htmlFor="vocab-topic">Topic</label>
           <select
-            id="vocab-tag"
-            value={filters.tag}
-            onChange={(event) => onFilters({ ...filters, tag: event.target.value })}
+            id="vocab-topic"
+            value={filters.topic}
+            onChange={(event) => onFilters({ ...filters, topic: event.target.value })}
           >
-            <option value="">All tags</option>
-            {tags.map((tag) => (
-              <option key={tag} value={tag}>
-                {tag}
+            <TopicOptions none="All topics" />
+          </select>
+        </div>
+        <div>
+          <label htmlFor="vocab-cefr">Level</label>
+          <select
+            id="vocab-cefr"
+            value={filters.cefr}
+            onChange={(event) => onFilters({ ...filters, cefr: event.target.value })}
+          >
+            <option value="">All levels</option>
+            {CEFR_LEVELS.map((level) => (
+              <option key={level} value={level}>
+                {level}
               </option>
             ))}
           </select>
@@ -161,6 +164,7 @@ export function VocabList({
               <span className="vocab-row-meta">
                 {isQueued(item) ? <QueuedBadge /> : <MasteryPill item={item} />}{" "}
                 {isQueued(item) ? "Waiting to start" : reviewLabel(item, now)}
+                {topicChip(item) && <span className="chip chip--topic">{topicChip(item)}</span>}
               </span>
             </button>
           </li>

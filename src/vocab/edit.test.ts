@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { VocabItem } from "../../shared/api";
-import { buildUpdate as build, draftFromItem as draftFor } from "./edit";
+import { buildUpdate as build, draftFromItem as draftFor, legacyTags } from "./edit";
 
 const ACTIVE = 3;
 const draftFromItem = (i: VocabItem) => draftFor(i, ACTIVE);
@@ -16,9 +16,9 @@ const item: VocabItem = {
   notes: null,
   example_urdu: null,
   example_english: null,
-  topic: null,
-  cefr: null,
-  tags: ["nouns", "reading"],
+  topic: "school",
+  cefr: "A1",
+  tags: ["home", "nouns"],
   favourite: false,
   ladder_id: 3,
   ladder_step: 2,
@@ -37,39 +37,63 @@ const item: VocabItem = {
 };
 
 describe("draftFromItem", () => {
-  it("turns nulls into empty fields and tags into comma text", () => {
+  it("turns nulls into empty fields and keeps only known secondary slugs", () => {
     const draft = draftFromItem(item);
     expect(draft.notes).toBe("");
-    expect(draft.tags).toBe("nouns, reading");
+    expect(draft).toMatchObject({ topic: "school", cefr: "A1", tags: ["home"] });
     expect(draft.ladder_step).toBe(2);
+  });
+
+  it("names legacy free tags, which a save drops", () => {
+    expect(legacyTags(item)).toEqual(["nouns"]);
   });
 });
 
 describe("buildUpdate", () => {
   it("is null when nothing changed, including whitespace-only differences", () => {
-    const draft = { ...draftFromItem(item), english: " book ", tags: "nouns,reading" };
-    expect(buildUpdate(item, draft)).toBeNull();
+    const clean = { ...item, tags: ["home"] };
+    expect(buildUpdate(clean, { ...draftFromItem(clean), english: " book " })).toBeNull();
+  });
+
+  it("drops legacy tags with any other change", () => {
+    expect(buildUpdate(item, { ...draftFromItem(item), english: "a book" })).toEqual({
+      english: "a book",
+      tags: ["home"],
+    });
   });
 
   it("sends only changed fields", () => {
-    const draft = { ...draftFromItem(item), english: "a book", ladder_step: 4 };
-    expect(buildUpdate(item, draft)).toEqual({ english: "a book", ladder_step: 4 });
+    const clean = { ...item, tags: ["home"] };
+    const draft = { ...draftFromItem(clean), english: "a book", ladder_step: 4 };
+    expect(buildUpdate(clean, draft)).toEqual({ english: "a book", ladder_step: 4 });
+  });
+
+  it("sends a changed topic or level, null when cleared, and keeps tags off the topic", () => {
+    const clean = { ...item, tags: ["home"] };
+    expect(buildUpdate(clean, { ...draftFromItem(clean), topic: "home" })).toEqual({
+      topic: "home",
+      tags: [],
+    });
+    expect(buildUpdate(clean, { ...draftFromItem(clean), cefr: "" })).toEqual({ cefr: null });
   });
 
   it("clears an emptied optional field with null", () => {
-    expect(buildUpdate(item, { ...draftFromItem(item), roman: "  " })).toEqual({ roman: null });
+    const clean = { ...item, tags: ["home"] };
+    expect(buildUpdate(clean, { ...draftFromItem(clean), roman: "  " })).toEqual({ roman: null });
   });
 
   it("sends the whole tag list when tags change, order included", () => {
-    expect(buildUpdate(item, { ...draftFromItem(item), tags: "reading, nouns" })).toEqual({
-      tags: ["reading", "nouns"],
+    const clean = { ...item, tags: ["home", "food"] };
+    expect(buildUpdate(clean, { ...draftFromItem(clean), tags: ["food", "home"] })).toEqual({
+      tags: ["food", "home"],
     });
-    expect(buildUpdate(item, { ...draftFromItem(item), tags: "" })).toEqual({ tags: [] });
+    expect(buildUpdate(clean, { ...draftFromItem(clean), tags: ["", ""] })).toEqual({ tags: [] });
   });
 
   it("sends urdu and kind edits trimmed", () => {
-    const draft = { ...draftFromItem(item), urdu: " کتابیں ", kind: "phrase" as const };
-    expect(buildUpdate(item, draft)).toEqual({ urdu: "کتابیں", kind: "phrase" });
+    const clean = { ...item, tags: ["home"] };
+    const draft = { ...draftFromItem(clean), urdu: " کتابیں ", kind: "phrase" as const };
+    expect(buildUpdate(clean, draft)).toEqual({ urdu: "کتابیں", kind: "phrase" });
   });
 });
 
@@ -77,6 +101,7 @@ describe("rung edits across ladders", () => {
   // Legacy level 3 (25 days) sits nearest Moderate rung 6 (22.6 days).
   const legacy: VocabItem = {
     ...item,
+    tags: [],
     ladder_id: 1,
     ladder_step: 3,
     interval_seconds: 25 * 86_400,

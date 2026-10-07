@@ -3,8 +3,9 @@
 
 import { useEffect, useState } from "react";
 import type { VocabItem } from "../../shared/api";
+import { topicBySlug } from "../../shared/topics";
 import { speak } from "../reader/speech";
-import { isQueued, reviewLabel } from "./list";
+import { isQueued, reviewLabel, topicChip } from "./list";
 import { MasteryPill, QueuedBadge } from "./MasteryPill";
 
 type Load =
@@ -167,10 +168,19 @@ export function VocabDetail({
             </div>
           ) : null,
         )}
+        {topicChip(item) && (
+          <>
+            <dt>Topic</dt>
+            <dd>
+              <span className="chip chip--topic">{topicChip(item)}</span>
+            </dd>
+          </>
+        )}
+        {/* f18: secondary topics by label; a legacy free tag shows as typed until the next save. */}
         {item.tags.length > 0 && (
           <>
-            <dt>Tags</dt>
-            <dd>{item.tags.join(", ")}</dd>
+            <dt>Also about</dt>
+            <dd>{item.tags.map((tag) => topicBySlug(tag)?.label ?? tag).join(", ")}</dd>
           </>
         )}
         <dt>Added</dt>

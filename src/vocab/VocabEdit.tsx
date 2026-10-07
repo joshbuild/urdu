@@ -7,7 +7,7 @@ import { formatInterval, ladder } from "../../shared/ladders";
 import { bandForInterval, bandName } from "../../shared/mastery";
 import { VOCAB_KINDS, type VocabKind } from "../../shared/normalize";
 import { DraftFields } from "../reader/DraftFields";
-import { buildUpdate, draftFromItem } from "./edit";
+import { buildUpdate, draftFromItem, legacyTags } from "./edit";
 
 export function VocabEdit({
   item,
@@ -23,6 +23,7 @@ export function VocabEdit({
   onOpenExisting: (id: string) => void;
 }) {
   const [draft, setDraft] = useState(() => draftFromItem(item, activeLadderId));
+  const legacy = legacyTags(item);
   const rungs = ladder(activeLadderId).intervals_seconds;
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
@@ -65,6 +66,16 @@ export function VocabEdit({
     <form onSubmit={save}>
       <p className="eyebrow">EDIT</p>
       <DraftFields idPrefix="edit" draft={draft} onChange={setDraft} />
+      {legacy.length > 0 && (
+        <p className="hint">
+          Old tags, removed when you save:{" "}
+          {legacy.map((tag) => (
+            <span key={tag} className="chip chip--legacy">
+              {tag}
+            </span>
+          ))}
+        </p>
+      )}
 
       <label htmlFor="edit-kind">Kind</label>
       <select

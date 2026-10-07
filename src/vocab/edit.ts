@@ -5,7 +5,8 @@
 import type { UpdateVocabRequest, VocabItem } from "../../shared/api";
 import { ladder, nearestStep } from "../../shared/ladders";
 import type { VocabKind } from "../../shared/normalize";
-import { type AddDraft, parseTags } from "../reader/addVocab";
+import { cefrLevel, isTopic } from "../../shared/topics";
+import { type AddDraft, cleanTags } from "../reader/addVocab";
 
 export type EditDraft = AddDraft & { kind: VocabKind; ladder_step: number };
 
@@ -27,10 +28,17 @@ export function draftFromItem(item: VocabItem, activeLadderId: number): EditDraf
     notes: item.notes ?? "",
     example_urdu: item.example_urdu ?? "",
     example_english: item.example_english ?? "",
-    tags: item.tags.join(", "),
+    topic: item.topic ?? "",
+    cefr: item.cefr ?? "",
+    tags: cleanTags(item.tags, item.topic ?? ""),
     kind: item.kind,
     ladder_step: currentStep(item, activeLadderId),
   };
+}
+
+// f18: free tags from before the topic list, which the next save drops.
+export function legacyTags(item: VocabItem): string[] {
+  return item.tags.filter((tag) => !isTopic(tag));
 }
 
 // Only the fields that differ from the stored item, so an edit cannot overwrite a field it never
@@ -48,7 +56,12 @@ export function buildUpdate(
     const value = draft[field].trim() || null;
     if (value !== item[field]) update[field] = value;
   }
-  const tags = parseTags(draft.tags);
+  const topic = isTopic(draft.topic) ? draft.topic : null;
+  if (topic !== item.topic) update.topic = topic;
+  const cefr = cefrLevel(draft.cefr);
+  if (cefr !== item.cefr) update.cefr = cefr;
+  // Sent whenever it differs, so a save also drops legacy free tags (f18).
+  const tags = cleanTags(draft.tags, draft.topic);
   if (tags.join("\n") !== item.tags.join("\n")) update.tags = tags;
   if (draft.ladder_step !== currentStep(item, activeLadderId)) {
     update.ladder_step = draft.ladder_step;

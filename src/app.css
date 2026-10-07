@@ -495,6 +495,14 @@ textarea {
   gap: 12px;
 }
 
+.vocab-filters > * {
+  min-width: 0;
+}
+
+.vocab-filters-wide {
+  grid-column: 1 / -1;
+}
+
 label.check {
   display: flex;
   align-items: center;
@@ -1355,6 +1363,25 @@ button.harvest-row {
 .chip--harvested {
   background: #d7ebe3;
   color: #1f5550;
+}
+
+/* f18: a word's topic and level. */
+.chip--topic {
+  display: inline-block;
+  background: #e3e9f6;
+  color: #2b3f6b;
+}
+
+.vocab-row-meta .chip--topic {
+  margin-left: 8px;
+}
+
+.chip--legacy {
+  display: inline-block;
+  margin: 2px 4px 0 0;
+  background: #eceae4;
+  color: #5b5548;
+  text-decoration: line-through;
 }
 
 .harvest-title {

@@ -1,5 +1,13 @@
 import { describe, expect, it } from "vitest";
-import { DEFAULT_FILTERS, isDue, isQueued, listQuery, parseSort, reviewLabel } from "./list";
+import {
+  DEFAULT_FILTERS,
+  isDue,
+  isQueued,
+  listQuery,
+  parseSort,
+  reviewLabel,
+  topicChip,
+} from "./list";
 
 describe("listQuery", () => {
   it("is the bare route for default filters", () => {
@@ -8,13 +16,14 @@ describe("listQuery", () => {
 
   it("sends only what was chosen, with the search trimmed", () => {
     const url = listQuery(
-      { q: "  book ", tag: "nouns", due: true, queued: false, sort: "mastery" },
+      { q: "  book ", topic: "food", cefr: "A2", due: true, queued: false, sort: "mastery" },
       50,
     );
     const params = new URL(url, "http://x").searchParams;
     expect(Object.fromEntries(params)).toEqual({
       q: "book",
-      tag: "nouns",
+      topic: "food",
+      cefr: "A2",
       due: "true",
       sort: "mastery",
       offset: "50",
@@ -32,6 +41,15 @@ describe("listQuery", () => {
 
   it("drops a whitespace-only search", () => {
     expect(listQuery({ ...DEFAULT_FILTERS, q: "   " })).toBe("/api/vocab");
+  });
+});
+
+describe("topicChip (f18)", () => {
+  it("names the topic and level, either alone, or nothing", () => {
+    expect(topicChip({ topic: "questions", cefr: "A1" })).toBe("Question words · A1");
+    expect(topicChip({ topic: "questions", cefr: null })).toBe("Question words");
+    expect(topicChip({ topic: null, cefr: "B2" })).toBe("B2");
+    expect(topicChip({ topic: null, cefr: null })).toBeNull();
   });
 });
 

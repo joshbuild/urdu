@@ -34,6 +34,7 @@ import {
   shuffleSession,
 } from "../review/session";
 import { readSessionLimit } from "../settings/sessionLimit";
+import { topicChip } from "../vocab/list";
 
 const DIRECTION_LABELS: Record<Exclude<ReviewDirection, "oral">, string> = {
   ur_en: "Urdu → English",
@@ -414,6 +415,15 @@ export function ReviewScreen({
             </>
           )}
           {item.example_english && <dd>{item.example_english}</dd>}
+          {/* f18: after reveal only, so the topic is context, not a hint. */}
+          {topicChip(item) && (
+            <>
+              <dt>Topic</dt>
+              <dd>
+                <span className="chip chip--topic">{topicChip(item)}</span>
+              </dd>
+            </>
+          )}
         </dl>
       )}
 

@@ -1,6 +1,12 @@
 # f18 topic-coverage — journal
 
-**Current state (2026-10-06):** 🟡 s01–s03 built and committed (`212de33`, `c027615`, `2d2b3e4`); migration 0008 applied locally only. s04 (Vocab filters and chips, form pickers, review chip) is half built and parked in `git stash` ("f18 s04 wip": the draft logic, tests green). Next: pop the stash and finish s04, then s05. Before any deploy the sponsor applies 0008 remotely.
+**Current state (2026-10-06):** 🟡 s01–s04 built and committed; migration 0008 applied locally only. Next: s05 prompts and docs, then smoke-test-18. Before any deploy the sponsor applies 0008 remotely.
+
+## 261006c — s04 UI
+
+Popped the "f18 s04 wip" stash (`cleanTags`, `legacyTags`, draft topic/cefr/tags, tests green) and finished s04. `DraftFields` gained a topic picker grouped by section (`TopicOptions`, reused by the list filter), a level picker (A1–C2, None) and two "Also about" pickers; the edit form shows legacy free tags as struck-through chips, dropped on save. The Vocab list swaps the tag select for topic and level filters (`?topic=`/`?cefr=`); `/api/tags` stays on the Worker, now unused by the client. `topicChip` (tested) labels list rows, the detail page and the review card after reveal. The s02 grid already met the s04 spec, so it is unchanged.
+
+Headless check: `pnpm dev` on 5288 (5199 was held by a stray dev server from 2026-10-01, left alone) driven by headless Edge over CDP at 360 px. Grid totals and section lines matched `GET /api/coverage`. The first shot showed the half-width topic picker clipping "Food & dri", so the topic and secondary pickers now take the full width. A 20-card session never reached the seeded new words (new pile after due), so the local due items were given a topic to shoot the revealed card. The app has a light theme only. `pnpm check` green at 811.
 
 ## 261006b — approve, stress-test, orchestrate s01–s03
 
