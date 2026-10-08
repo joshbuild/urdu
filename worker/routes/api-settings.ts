@@ -1,12 +1,18 @@
-// Settings routes (f09 ladder, f07 s04 voice spend caps). Mounted behind requireSession in
+// Settings routes (f09 ladder, f07 s04 voice spend caps, f17 intake, f18 Next batch size). Mounted behind requireSession in
 // worker/index.ts. PATCH is partial: only the fields present are written.
 
 import { Hono } from "hono";
 import type { SettingsResponse } from "../../shared/api";
+import { isNextBatchSize, MAX_NEXT_BATCH_SIZE, MIN_NEXT_BATCH_SIZE } from "../../shared/coverage";
 import { isSelectableLadderId, LADDERS } from "../../shared/ladders";
 import { isCapUsd, MAX_CAP_USD, MIN_CAP_USD } from "../../shared/voice-cost";
 import { intakeBatchSize, isBatchSize, setIntakeBatchSize } from "../domain/intake";
-import { activeLadderId, setActiveLadderId } from "../domain/settings";
+import {
+  activeLadderId,
+  nextBatchSize,
+  setActiveLadderId,
+  setNextBatchSize,
+} from "../domain/settings";
 import { setVoiceCap, voiceCaps } from "../domain/voice-spend";
 import type { AppEnv } from "../env";
 import { invalid, readJson } from "./api-vocab";
@@ -14,21 +20,23 @@ import { invalid, readJson } from "./api-vocab";
 export const settingsRoutes = new Hono<AppEnv>();
 
 async function currentSettings(db: D1Database): Promise<SettingsResponse> {
-  const [active_ladder_id, caps, intake_batch_size] = await Promise.all([
+  const [active_ladder_id, caps, intake_batch_size, next_batch_size] = await Promise.all([
     activeLadderId(db),
     voiceCaps(db),
     intakeBatchSize(db),
+    nextBatchSize(db),
   ]);
   return {
     active_ladder_id,
     voice_soft_cap_usd: caps.soft_cap_usd,
     voice_hard_cap_usd: caps.hard_cap_usd,
     intake_batch_size,
+    next_batch_size,
   };
 }
 
 const CAP_FIELDS = ["voice_soft_cap_usd", "voice_hard_cap_usd"] as const;
-const FIELDS = ["active_ladder_id", ...CAP_FIELDS, "intake_batch_size"] as const;
+const FIELDS = ["active_ladder_id", ...CAP_FIELDS, "intake_batch_size", "next_batch_size"] as const;
 
 settingsRoutes.get("/api/settings", async (c) => c.json(await currentSettings(c.env.DB)));
 
@@ -53,6 +61,12 @@ settingsRoutes.patch("/api/settings", async (c) => {
     return invalid(c, {
       field: "intake_batch_size",
       message: "must be a whole number from 1 to 50",
+    });
+  }
+  if ("next_batch_size" in record && !isNextBatchSize(record.next_batch_size)) {
+    return invalid(c, {
+      field: "next_batch_size",
+      message: `must be a whole number from ${MIN_NEXT_BATCH_SIZE} to ${MAX_NEXT_BATCH_SIZE}`,
     });
   }
   for (const field of CAP_FIELDS) {
@@ -82,6 +96,9 @@ settingsRoutes.patch("/api/settings", async (c) => {
   // Applies from the next top-up or Intake; releases and hides nothing now.
   if ("intake_batch_size" in record)
     await setIntakeBatchSize(c.env.DB, record.intake_batch_size as number);
+  // Applies from the next Next batch; one already issued keeps its cells.
+  if ("next_batch_size" in record)
+    await setNextBatchSize(c.env.DB, record.next_batch_size as number);
 
   return c.json(await currentSettings(c.env.DB));
 });

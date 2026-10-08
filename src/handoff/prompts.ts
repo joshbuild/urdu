@@ -63,20 +63,21 @@ My words (Urdu, Roman Urdu or English — if English, give the everyday Urdu for
 }
 
 // f18 (FR-L): Next batch. The Worker chose the cells and minted the id; this asks for each cell's
-// count at its level, fully filled, with the words already in those topics excluded.
+// count at its level, with every word already in the vault excluded, whatever its topic.
 export function batchPrompt(batch: BatchIssueResponse, sessionAt = new Date()): string {
   const total = batch.cells.reduce((sum, c) => sum + c.ask, 0);
   const asks = batch.cells
     .map((c) => {
       const scope = topicBySlug(c.topic)?.scope ?? "";
-      const have = batch.exclusions[c.topic] ?? [];
-      return `- ${c.ask} words or phrases for topic ${c.topic} at CEFR ${c.level} (${scope}).
-  Already in my vault for ${c.topic}: ${have.length > 0 ? have.join("، ") : "none"}`;
+      return `- ${c.ask} words or phrases for topic ${c.topic} at CEFR ${c.level} (${scope}).`;
     })
     .join("\n");
-  return `You are helping me build my Urdu vocabulary by topic, for my learning app. Give me new entries that a learner at the stated level actually needs, the most useful first. Leave out every word already in my vault, listed under each request, and do not repeat an entry.
+  const vault = batch.exclusions.length > 0 ? batch.exclusions.join("، ") : "none";
+  return `You are helping me build my Urdu vocabulary by topic, for my learning app. Give me new entries that a learner at the stated level actually needs, the most useful first. Leave out every word already in my vault, whatever topic it is under, and do not repeat an entry. If a topic has run out of new entries at its level, give fewer rather than repeat one.
 
 ${asks}
+
+Already in my vault (leave all of these out): ${vault}
 
 Fill in every field for every entry, following these conventions.
 

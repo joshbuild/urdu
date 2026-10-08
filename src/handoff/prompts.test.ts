@@ -131,7 +131,7 @@ const BATCH = {
     { topic: "food", level: "A1" as const, have: 10, quota: 35, ask: 25 },
     { topic: "body", level: "A1" as const, have: 15, quota: 20, ask: 5 },
   ],
-  exclusions: { food: [ROTI], body: [] },
+  exclusions: [ROTI],
 };
 
 describe("batchPrompt", () => {
@@ -144,8 +144,15 @@ describe("batchPrompt", () => {
     expect(text).toContain("ingredients, dishes, cooking, taste, eating out");
     expect(text).toContain("body parts, looks");
     expect(text).toContain(ROTI);
-    expect(text).toContain("Already in my vault for body: none");
+    expect(text).toContain(`Already in my vault (leave all of these out): ${ROTI}`);
+    expect(text).toContain("give fewer rather than repeat one");
     expect(text).toContain("weather never to nature");
+  });
+
+  it("says none when the vault is empty", () => {
+    expect(batchPrompt({ ...BATCH, exclusions: [] })).toContain(
+      "Already in my vault (leave all of these out): none",
+    );
   });
 
   it("asks for every field, the self-review, and at most the total asked", () => {

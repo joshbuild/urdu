@@ -30,6 +30,7 @@ describe("GET/PATCH /api/settings", () => {
       voice_soft_cap_usd: 0.5,
       voice_hard_cap_usd: 1,
       intake_batch_size: 10,
+      next_batch_size: 25,
     });
   });
 
@@ -109,5 +110,22 @@ describe("switching ladders", () => {
     });
     const other = await json<VocabItem>(await api("GET", `/api/vocab/${untouched.id}`));
     expect(other.ladder_id).toBe(8);
+  });
+});
+
+describe("next_batch_size setting (f18)", () => {
+  it("defaults to 25, takes 1 to 50, and rejects anything else", async () => {
+    for (const n of [1, 50]) {
+      const body = await json<SettingsResponse>(
+        await api("PATCH", "/api/settings", { next_batch_size: n }),
+      );
+      expect(body.next_batch_size).toBe(n);
+    }
+    for (const bad of [0, 51, 2.5, "10", null]) {
+      expect((await api("PATCH", "/api/settings", { next_batch_size: bad })).status).toBe(400);
+    }
+    expect(await json<SettingsResponse>(await api("GET", "/api/settings"))).toMatchObject({
+      next_batch_size: 50,
+    });
   });
 });

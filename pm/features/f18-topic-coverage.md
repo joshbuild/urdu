@@ -153,8 +153,8 @@ next batch, no grading of the learner against a level.
   generator read it. Tests pin quota totals and slug uniqueness.
 - Batch and classify prompts stay comfortably inside a ChatGPT reply: 50 full entries out, 100 thin
   rows out.
-- The exclusion list in a batch prompt covers only the two requested topics (at most a few hundred
-  short lines).
+- The exclusion list in a batch prompt is the whole vault, one short Urdu word each (a few KB at
+  B1's 2,575; 261008a, was the two requested topics).
 - AI only proposes: topic, level and tags are validated against the list and written by Urdu
   Core; nothing about them touches the schedule.
 - Migration 0008 is additive (two nullable columns, one index); no table rebuild.
@@ -317,8 +317,8 @@ f18: if first, its `find_vocab` tag argument is renamed to topic in f18 s05; bot
 
 ### Next Steps
 
-1. Sponsor: back up, `pnpm wrangler d1 migrations apply urdu --remote`, deploy, re-paste the
-   Project instructions and upload `prompts/vocab-tags.md`, then run `smoke-test-18.md`.
+1. Sponsor: deploy the Next batch size change (261008a); a Next batch at the end of A1 should
+   fill to 25 and move into A2, with no stall.
 2. Close f18 on the smoke (or daily-use report).
 
 ### Open Questions
@@ -327,6 +327,10 @@ f18: if first, its `find_vocab` tag argument is renamed to topic in f18 s05; bot
 
 ## Decisions
 
+- 2026-10-08 — Next batch fills the **Next batch size** (Settings, 1–50, default 25) across as
+  many cells as it takes, walking into the next level, and excludes the whole vault (sponsor, after
+  batches stalled on two near-full A1 cells; DECISIONS 261008a). Supersedes the two-cell pick and
+  the per-topic exclusion lists in §Scope s02 above, which describe s02 as built.
 - 2026-10-06 — Batches come through a ChatGPT paste round trip, not a Worker API call (sponsor:
   avoid API cost; fewer round trips preferred). Rejected: Worker-generated batches via OpenAI
   (f08 territory, stays on hold); both.

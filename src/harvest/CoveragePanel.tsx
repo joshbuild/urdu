@@ -1,9 +1,10 @@
 // f18 (FR-L): the coverage grid on the Harvest tab. Have/target per topic and level, folded by
-// section; Next batch asks ChatGPT for the two emptiest cells, a tapped open cell for that cell,
-// and Paste batch reply brings the answer back into a harvest of the Topics source.
+// section; Next batch asks ChatGPT for the emptiest cells up to the Next batch size, a tapped open
+// cell for that cell first, and Paste batch reply brings the answer back into a harvest of the Topics source.
 
 import { useState } from "react";
 import type { BatchIssueResponse, ClassifyBatchResponse, CoverageResponse } from "../../shared/api";
+import { describeCells } from "../../shared/coverage";
 import type { QuotaLevel } from "../../shared/topics";
 import { type Copied, CopiedNote, copy, postJson } from "../handoff/clipboard";
 import { PasteNewSheet } from "../handoff/NewVocabSheets";
@@ -144,7 +145,8 @@ export function CoveragePanel({
     const posted = await postJson<BatchIssueResponse>("/api/batches", cell ?? {});
     setWorking(null);
     if (!posted.ok) return setError(posted.message);
-    const asked = posted.body.cells.map((c) => `${c.ask} ${c.level} ${c.topic}`).join(" + ");
+    const total = posted.body.cells.reduce((sum, c) => sum + c.ask, 0);
+    const asked = `${total}: ${describeCells(posted.body.cells, true)}`;
     setCopied(
       await copy(
         batchPrompt(posted.body),

@@ -1,6 +1,10 @@
 # f18 topic-coverage — journal
 
-**Current state (2026-10-07):** 🟡 deployed with 0008 applied remotely; smoke-test-18 steps 1, 2, 3 and 5 pass. Step 4 (topic chip on the revealed review card) not seen: the code path checks out, likely the session held no classified words. Next: sponsor reveals a word that shows a chip on Vocab; if it shows, close f18.
+**Current state (2026-10-08):** 🟡 deployed with 0008 applied remotely; smoke-test-18 steps 1, 2, 3 and 5 pass, step 4 (review chip) not yet seen. Next batch now fills a settable size (261008a), built and tested locally, not deployed. Next: sponsor deploys; a Next batch at the A1 tail should fill to 25 and move into A2.
+
+## 261008a — Next batch stalled at the end of A1
+
+Sponsor: Next batch kept asking for the same two words, both already in the vault. Cause: `nextCells` asked the two emptiest A1 cells for their 1–2 remaining words; the prompt excluded only words filed under those two topics, ChatGPT offered words the vault held elsewhere, the paste reported duplicates, counts didn't move, so the next batch was identical. Sponsor approved the fix and set the size: `nextCells(counts, size, tapped?)` takes cells until `size` words are asked, lowest level first and on into the next; `exclusions` is now one vault-wide list; `settings.next_batch_size` (1–50, default 25) with a **Words per Next batch** field under Settings › Harvest; the harvest filter and copy notice name three cells then "+ n more" (`describeCells`). The prompt also says to give fewer rather than repeat. Ripples: PRD FR-L4/FR-I1, DECISIONS 261008a, CHANGELOG.
 
 ## 261007a — smoke-test-18 and a slowness scare
 

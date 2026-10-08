@@ -1,10 +1,11 @@
-// f03 s01/s04, f04 s06, f09, f07 s04. Lock this device (from the f01 shell), the voice picker, the
-// review session limit (FR-I1), review spacing (the active ladder) and the voice Coach's spend
-// (today's total and the two daily caps, FR-G / FR-I1). About shows the commit this build came
+// f03 s01/s04, f04 s06, f09, f07 s04, f18. Lock this device (from the f01 shell), the voice picker,
+// the review session limit (FR-I1), review spacing (the active ladder), the Next batch size and the
+// voice Coach's spend (today's total and the two daily caps, FR-G / FR-I1). About shows the commit this build came
 // from, to match the deployed app against the repo.
 
 import { useEffect, useState } from "react";
-import type { VoiceSpendResponse } from "../../shared/api";
+import type { SettingsResponse, VoiceSpendResponse } from "../../shared/api";
+import { MAX_NEXT_BATCH_SIZE, MIN_NEXT_BATCH_SIZE } from "../../shared/coverage";
 import { LADDERS } from "../../shared/ladders";
 import { formatUsd, isCapUsd, MAX_CAP_USD } from "../../shared/voice-cost";
 import { isUrdu, speak } from "../reader/speech";
@@ -271,6 +272,9 @@ export function SettingsScreen({
         </p>
       )}
 
+      <h2>Harvest</h2>
+      <NextBatchField />
+
       <h2>Voice Coach</h2>
       {spend === null ? (
         <p className="hint">Reading today's spend…</p>
@@ -320,6 +324,80 @@ export function SettingsScreen({
         {when(__BUILD__.builtAt)}.
       </p>
     </section>
+  );
+}
+
+// f18: how many words one Next batch asks ChatGPT for. Read when Settings opens; saved when the
+// field is left, and the Worker validates 1–50. Only the Harvest tab uses it, so no status refresh.
+function NextBatchField() {
+  const [saved, setSaved] = useState<number | null>(null);
+  const [text, setText] = useState("");
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    let live = true;
+    void (async () => {
+      try {
+        const response = await fetch("/api/settings");
+        if (!response.ok || !live) return;
+        const { next_batch_size } = (await response.json()) as SettingsResponse;
+        setSaved(next_batch_size);
+        setText(String(next_batch_size));
+      } catch {}
+    })();
+    return () => {
+      live = false;
+    };
+  }, []);
+
+  async function save() {
+    const n = parseBatchSize(text);
+    if (n === null) {
+      setError(`A whole number from ${MIN_NEXT_BATCH_SIZE} to ${MAX_NEXT_BATCH_SIZE}.`);
+      return;
+    }
+    setError("");
+    setText(String(n));
+    if (n === saved) return;
+    try {
+      const response = await fetch("/api/settings", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ next_batch_size: n }),
+      });
+      if (response.ok) setSaved(((await response.json()) as SettingsResponse).next_batch_size);
+      else if (response.status === 401) setError("This device is locked. Unlock it and try again.");
+      else setError("Could not save. Please try again.");
+    } catch {
+      setError("Could not connect. Check your connection and try again.");
+    }
+  }
+
+  if (saved === null) return <p className="hint">Reading the Next batch size…</p>;
+  return (
+    <>
+      <label htmlFor="next-batch-size">Words per Next batch</label>
+      <input
+        id="next-batch-size"
+        type="number"
+        inputMode="numeric"
+        min={MIN_NEXT_BATCH_SIZE}
+        max={MAX_NEXT_BATCH_SIZE}
+        value={text}
+        onChange={(event) => setText(event.target.value)}
+        onBlur={() => void save()}
+        aria-describedby="next-batch-size-hint"
+      />
+      <p id="next-batch-size-hint" className="hint">
+        How many words one Next batch asks ChatGPT for, across as many topics as it takes. Larger
+        batches take ChatGPT longer and are harder for it to get right.
+      </p>
+      {error && (
+        <p className="error" role="alert">
+          {error}
+        </p>
+      )}
+    </>
   );
 }
 

@@ -108,6 +108,8 @@ export type SettingsResponse = {
   voice_hard_cap_usd: number;
   // f17: new words per day (the top-up target) and the size of Intake, 1–50.
   intake_batch_size: number;
+  // f18: how many words one Next batch asks for in all, 1–50.
+  next_batch_size: number;
 };
 export type UpdateSettingsRequest = Partial<SettingsResponse>;
 
@@ -216,14 +218,14 @@ export type CoverageResponse = {
   total: number;
 };
 
-// f18: POST /api/batches. With a tapped cell, that cell and the next pick at its level; without,
-// the two emptiest cells at the lowest unfinished level.
+// f18: POST /api/batches. Cells up to the Next batch size (settings.next_batch_size): the emptiest
+// at the lowest unfinished level, then on up; a tapped cell first, then the walk from its level.
 export type BatchIssueRequest = { topic?: string; level?: QuotaLevel };
-// exclusions[topic]: the Urdu of every item whose topic or a secondary tag is that topic.
+// exclusions: the Urdu of every item in the vault, queued ones too.
 export type BatchIssueResponse = {
   handoff_id: string;
   cells: BatchCell[];
-  exclusions: Record<string, string[]>;
+  exclusions: string[];
 };
 // POST /api/batches/handoffs: the FR-F4 reply, imported into a new harvest of the Topics source.
 export type BatchPasteResponse = HandoffResponse & { harvest_id: string };

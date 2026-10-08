@@ -8,15 +8,26 @@ import { type CefrLevel, QUOTA_LEVELS, type QuotaLevel, TOPICS, topicBySlug } fr
 // GET /api/coverage's counts: counts[topic][level].
 export type CoverageCounts = Record<string, Partial<Record<CefrLevel, number>>>;
 
-// The most one cell asks for in a batch; two cells fit the 50-proposal paste cap exactly.
-export const BATCH_CELL_MAX = 25;
+// The Next batch size: how many words one batch asks for in all (settings.next_batch_size). The
+// most is the 50-proposal paste cap; 25 keeps a reply within what ChatGPT does well.
+export const DEFAULT_NEXT_BATCH_SIZE = 25;
+export const MIN_NEXT_BATCH_SIZE = 1;
+export const MAX_NEXT_BATCH_SIZE = 50;
+
+export function isNextBatchSize(value: unknown): value is number {
+  return (
+    Number.isInteger(value) &&
+    (value as number) >= MIN_NEXT_BATCH_SIZE &&
+    (value as number) <= MAX_NEXT_BATCH_SIZE
+  );
+}
 
 export type BatchCell = {
   topic: string;
   level: QuotaLevel;
   have: number;
   quota: number;
-  // min(BATCH_CELL_MAX, quota - have)
+  // min(quota - have, what is left of the batch size)
   ask: number;
 };
 
@@ -26,7 +37,7 @@ function cell(counts: CoverageCounts, slug: string, level: QuotaLevel): BatchCel
   const quota = topic.quota[level];
   const have = counts[slug]?.[level] ?? 0;
   if (have >= quota) return null;
-  return { topic: slug, level, have, quota, ask: Math.min(BATCH_CELL_MAX, quota - have) };
+  return { topic: slug, level, have, quota, ask: quota - have };
 }
 
 // Open cells at a level, emptiest first (lowest have/quota), ties in topic order.
@@ -38,22 +49,46 @@ function openCells(counts: CoverageCounts, level: QuotaLevel): BatchCell[] {
     .map(({ c }) => c);
 }
 
-// Up to two cells: the two emptiest at the lowest level with any open cell, or a tapped cell
-// paired with the emptiest other cell at its own level. A tapped cell that is full, has quota 0
-// or is unknown gives nothing, as does a vault where every cell is full.
+// Cells until `size` words are asked for: from the lowest level with any open cell, emptiest first,
+// then on into the next level. Filling the whole size means a batch never shrinks to the last few
+// words of a level, and a cell ChatGPT cannot fill (it offers only words the vault already has)
+// cannot stall the batches behind it. A tapped open cell comes first, then the walk from its level.
+// A tapped cell that is full, has quota 0 or is unknown gives nothing, as does a full vault.
 export function nextCells(
   counts: CoverageCounts,
+  size: number,
   tapped?: { topic: string; level: QuotaLevel },
 ): BatchCell[] {
+  const picked: BatchCell[] = [];
+  let left = size;
+  const take = (c: BatchCell) => {
+    const ask = Math.min(c.ask, left);
+    picked.push({ ...c, ask });
+    left -= ask;
+  };
+  let levels: readonly QuotaLevel[] = QUOTA_LEVELS;
   if (tapped) {
     const first = cell(counts, tapped.topic, tapped.level);
     if (!first) return [];
-    const partner = openCells(counts, tapped.level).find((c) => c.topic !== tapped.topic);
-    return partner ? [first, partner] : [first];
+    take(first);
+    levels = QUOTA_LEVELS.slice(QUOTA_LEVELS.indexOf(tapped.level));
   }
-  for (const level of QUOTA_LEVELS) {
-    const open = openCells(counts, level);
-    if (open.length > 0) return open.slice(0, 2);
+  for (const level of levels) {
+    for (const c of openCells(counts, level)) {
+      if (left <= 0) return picked;
+      if (c.topic === tapped?.topic && c.level === tapped.level) continue;
+      take(c);
+    }
   }
-  return [];
+  return picked;
+}
+
+// A batch's cells in a few words, for its harvest's filter and the copy notice: the first three,
+// then how many more. With counts, each cell carries its ask ("20 A1 pronouns").
+export function describeCells(cells: readonly BatchCell[], counts = false): string {
+  const named = cells
+    .slice(0, 3)
+    .map((c) => `${counts ? `${c.ask} ` : ""}${c.level} ${c.topic}`)
+    .join(" + ");
+  return cells.length > 3 ? `${named} + ${cells.length - 3} more` : named;
 }

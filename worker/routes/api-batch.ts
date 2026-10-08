@@ -6,7 +6,7 @@ import type { ConflictResponse } from "../../shared/api";
 import { QUOTA_LEVELS, type QuotaLevel, topicSlug } from "../../shared/topics";
 import { issueBatch, pasteBatch } from "../domain/batch";
 import { parseHandoff } from "../domain/handoff-input";
-import { activeLadderId } from "../domain/settings";
+import { activeLadderId, nextBatchSize } from "../domain/settings";
 import { isRecord } from "../domain/vocab-input";
 import type { AppEnv } from "../env";
 import { invalid, readJson } from "./api-vocab";
@@ -29,7 +29,7 @@ batchRoutes.post("/api/batches", async (c) => {
     }
     tapped = { topic, level: level as QuotaLevel };
   }
-  const batch = await issueBatch(c.env.DB, tapped, new Date());
+  const batch = await issueBatch(c.env.DB, tapped, await nextBatchSize(c.env.DB), new Date());
   if (!batch) {
     return c.json(
       { error: "nothing_to_ask", message: "every cell asked for is already at its target" },

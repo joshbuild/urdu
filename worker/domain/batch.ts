@@ -9,7 +9,7 @@ import type {
   HandoffRequest,
   ProposalResult,
 } from "../../shared/api";
-import { type BatchCell, nextCells } from "../../shared/coverage";
+import { type BatchCell, describeCells, nextCells } from "../../shared/coverage";
 import type { QuotaLevel } from "../../shared/topics";
 import { ulid } from "../../shared/ulid";
 import { coverage } from "./coverage";
@@ -17,39 +17,32 @@ import { createProposals } from "./handoff";
 import { createHarvest, createSource, getHarvest } from "./harvest";
 
 const TOPICS_SOURCE_KEY = "topics_source_id";
-const HAS_SLUG =
-  "topic = ? OR EXISTS (SELECT 1 FROM json_each(vocab.tags) WHERE json_each.value = ?)";
 
 type BatchPayload = { cells: BatchCell[]; harvest_id?: string; request?: HandoffRequest };
 
-// Null when there is nothing to ask: every cell full, or a tapped cell full or with quota 0.
+// Null when there is nothing to ask: every cell full, or a tapped cell full or with quota 0. The
+// exclusions are the whole vault, queued items too: a word already filed under another topic is
+// still a duplicate, and one ChatGPT keeps offering would otherwise hold its cell open for good.
 export async function issueBatch(
   db: D1Database,
   tapped: { topic: string; level: QuotaLevel } | undefined,
+  size: number,
   now: Date,
 ): Promise<BatchIssueResponse | null> {
   const { counts } = await coverage(db);
-  const cells = nextCells(counts, tapped);
+  const cells = nextCells(counts, size, tapped);
   if (cells.length === 0) return null;
   const id = ulid(now.getTime());
   const payload: BatchPayload = { cells };
-  const [, ...lists] = await db.batch<{ urdu: string }>([
+  const [, vault] = await db.batch<{ urdu: string }>([
     db
       .prepare(
         "INSERT INTO handoffs (id, imported_at, payload, status, outcome) VALUES (?, ?, ?, 'batch_issued', NULL)",
       )
       .bind(id, now.toISOString(), JSON.stringify(payload)),
-    ...cells.map((c) =>
-      db
-        .prepare(`SELECT urdu FROM vocab WHERE ${HAS_SLUG} ORDER BY added_at ASC, id ASC`)
-        .bind(c.topic, c.topic),
-    ),
+    db.prepare("SELECT urdu FROM vocab ORDER BY added_at ASC, id ASC"),
   ]);
-  const exclusions: Record<string, string[]> = {};
-  cells.forEach((c, i) => {
-    exclusions[c.topic] = (lists[i]?.results ?? []).map((r) => r.urdu);
-  });
-  return { handoff_id: id, cells, exclusions };
+  return { handoff_id: id, cells, exclusions: (vault?.results ?? []).map((r) => r.urdu) };
 }
 
 // The Topics source, created on first use and again if it has been deleted.
@@ -132,7 +125,7 @@ export async function pasteBatch(
     let harvestId = batch.payload.harvest_id;
     if (!harvestId || !(await getHarvest(db, harvestId))) {
       const sourceId = await topicsSourceId(db, now);
-      const filter = batch.payload.cells.map((c) => `${c.level} ${c.topic}`).join(" + ");
+      const filter = describeCells(batch.payload.cells);
       const harvest = await createHarvest(db, sourceId, filter, now);
       if (!harvest) throw new Error("the Topics source vanished while pasting");
       harvestId = harvest.id;

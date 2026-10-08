@@ -31,7 +31,7 @@ export async function clearTables(): Promise<void> {
       "INSERT OR REPLACE INTO settings (key, value) VALUES ('voice_hard_cap_usd', '1')",
     ),
     env.DB.prepare(
-      "DELETE FROM settings WHERE key IN ('intake_topup', 'intake_batch_size', 'topics_source_id')",
+      "DELETE FROM settings WHERE key IN ('intake_topup', 'intake_batch_size', 'next_batch_size', 'topics_source_id')",
     ),
   ]);
 }

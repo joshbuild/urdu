@@ -48,33 +48,49 @@ async function row(sql: string, ...params: unknown[]) {
 }
 
 describe("POST /api/batches", () => {
-  it("asks for the two emptiest A1 cells and records the request", async () => {
+  it("fills the Next batch size from the emptiest A1 cells and records the request", async () => {
     const body = await json<BatchIssueResponse>(await issue());
     expect(body.cells).toEqual([
       { topic: "pronouns", level: "A1", have: 0, quota: 20, ask: 20 },
-      { topic: "questions", level: "A1", have: 0, quota: 14, ask: 14 },
+      { topic: "questions", level: "A1", have: 0, quota: 14, ask: 5 },
     ]);
-    expect(body.exclusions).toEqual({ pronouns: [], questions: [] });
+    expect(body.exclusions).toEqual([]);
     const stored = await row("SELECT status, payload FROM handoffs WHERE id = ?", body.handoff_id);
     expect(stored?.status).toBe("batch_issued");
     expect(JSON.parse(stored?.payload as string)).toEqual({ cells: body.cells });
   });
 
-  it("lists every word whose topic or secondary tag is a requested topic, queued ones too", async () => {
-    // At A2, so the A1 pick is unchanged.
-    await create({ urdu: MAIN, topic: "pronouns", cefr: "A2" });
-    await create({ urdu: KYA, topic: "discourse", tags: ["questions"] });
-    await create({ urdu: GHAR, topic: "home", cefr: "A1" });
-    await env.DB.prepare("UPDATE vocab SET released_at = NULL WHERE urdu = ?").bind(MAIN).run();
+  it("follows the next_batch_size setting", async () => {
+    await api("PATCH", "/api/settings", { next_batch_size: 40 });
     const body = await json<BatchIssueResponse>(await issue());
-    expect(body.exclusions).toEqual({ pronouns: [MAIN], questions: [KYA] });
+    expect(body.cells.map((c) => [c.topic, c.ask])).toEqual([
+      ["pronouns", 20],
+      ["questions", 14],
+      ["postpositions", 6],
+    ]);
+    expect(body.cells.reduce((sum, c) => sum + c.ask, 0)).toBe(40);
   });
 
-  it("pairs a tapped cell with the next pick at its level", async () => {
+  it("excludes every word in the vault, whatever its topic, queued ones too", async () => {
+    // At A2 or unclassified, so the A1 pick is unchanged.
+    await create({ urdu: MAIN, topic: "pronouns", cefr: "A2" });
+    await create({ urdu: KYA, topic: "discourse", tags: ["questions"] });
+    await create({ urdu: GHAR });
+    await env.DB.prepare("UPDATE vocab SET released_at = NULL WHERE urdu = ?").bind(MAIN).run();
+    const body = await json<BatchIssueResponse>(await issue());
+    expect(body.exclusions).toEqual([MAIN, KYA, GHAR]);
+  });
+
+  it("puts a tapped cell first, then fills from its level", async () => {
     const body = await json<BatchIssueResponse>(await issue({ topic: "Food", level: "B1" }));
-    expect(body.cells.map((c) => [c.topic, c.level, c.ask])).toEqual([
-      ["food", "B1", 25],
+    expect(body.cells.map((c) => [c.topic, c.level, c.ask])).toEqual([["food", "B1", 25]]);
+    await api("PATCH", "/api/settings", { next_batch_size: 50 });
+    const more = await json<BatchIssueResponse>(await issue({ topic: "Food", level: "B1" }));
+    expect(more.cells.map((c) => [c.topic, c.level, c.ask])).toEqual([
+      ["food", "B1", 30],
       ["pronouns", "B1", 8],
+      ["questions", "B1", 2],
+      ["postpositions", "B1", 10],
     ]);
   });
 
