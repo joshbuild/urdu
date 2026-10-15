@@ -1,6 +1,16 @@
 import { describe, expect, it } from "vitest";
 import type { BandPoint, CalendarDay } from "../../shared/dash";
-import { calendarWeeks, percent, recallHint, shortDate, stackedAreas, weekLabel } from "./view";
+import {
+  binLabel,
+  calendarWeeks,
+  intervalLines,
+  masteryStacks,
+  percent,
+  recallHint,
+  shortDate,
+  stackedAreas,
+  weekLabel,
+} from "./view";
 
 describe("recallHint", () => {
   it("words each band, with the ladder ends", () => {
@@ -80,5 +90,67 @@ describe("stackedAreas", () => {
     expect(stackedAreas([{ day: "2026-10-01", bands: [0, 0, 0, 0, 0, 0, 0] }], 100, 50)).toEqual(
       [],
     );
+  });
+});
+
+describe("intervalLines", () => {
+  it("puts each bin's count at its centre, scaled to the largest count", () => {
+    const { max, slot, lines } = intervalLines(
+      { bins: [0, 1], series: [{ level: "A1", counts: [2, 1] }] },
+      100,
+      50,
+    );
+    expect(max).toBe(2);
+    expect(slot).toBe(50);
+    expect(lines).toEqual([
+      {
+        level: "A1",
+        counts: [2, 1],
+        points: [
+          [25, 0],
+          [75, 25],
+        ],
+      },
+    ]);
+  });
+
+  it("draws nothing with no reviewed items", () => {
+    expect(intervalLines({ bins: [0, 1], series: [] }, 100, 50).lines).toEqual([]);
+  });
+
+  it("labels the first bin under a day", () => {
+    expect(binLabel(0)).toBe("<1");
+    expect(binLabel(1024)).toBe("1,024");
+  });
+});
+
+describe("masteryStacks", () => {
+  it("stacks Learning up from the axis, then hangs Not started and Queued below it", () => {
+    const { axis, stacks } = masteryStacks(
+      [
+        { level: "A1", bands: [1, 2, 0, 0, 0, 0, 1], queued: 1 },
+        { level: "A2", bands: [0, 0, 0, 0, 0, 0, 0], queued: 3 },
+      ],
+      60,
+    );
+    // 3 above at most, 3 below at most: 10 px per item.
+    expect(axis).toBe(30);
+    expect(stacks[0]).toEqual({
+      level: "A1",
+      total: 5,
+      peak: 0,
+      segments: [
+        { key: "b1", kind: 1, count: 2, y: 10, h: 20 },
+        { key: "b6", kind: 6, count: 1, y: 0, h: 10 },
+        { key: "not_started", kind: "not_started", count: 1, y: 30, h: 10 },
+        { key: "queued", kind: "queued", count: 1, y: 40, h: 10 },
+      ],
+    });
+    expect(stacks[1]).toEqual({
+      level: "A2",
+      total: 3,
+      peak: 30,
+      segments: [{ key: "queued", kind: "queued", count: 3, y: 30, h: 30 }],
+    });
   });
 });

@@ -18,6 +18,8 @@ describe("DashView", () => {
       "RECALL, LAST 30 DAYS",
       "TROUBLE ITEMS",
       "LEARNING BACKLOG",
+      "INTERVALS BY LEVEL",
+      "MASTERY BY LEVEL",
       "REVIEW CALENDAR",
     ].map((t) => html.indexOf(`>${t}<`));
     expect(titles.every((at) => at >= 0)).toBe(true);
@@ -26,6 +28,8 @@ describe("DashView", () => {
     expect(html).toContain("History builds as you review.");
     expect(count(html, "not enough reviews yet (n=0)")).toBe(2);
     expect(html).toContain("No trouble items in the last 30 days.");
+    expect(html).toContain("Intervals show once you review.");
+    expect(html).toContain("Levels show once you add words.");
     expect(count(html, 'class="dash-heat dash-heat--0"')).toBe(84);
     expect(html).not.toContain("NaN");
   });
@@ -34,7 +38,7 @@ describe("DashView", () => {
     const dash = sparseDash();
     expect(dash.known.history).toHaveLength(2);
     const html = render(dash);
-    expect(count(html, 'class="dash-band dash-band--')).toBe(7);
+    expect(count(html, '<path class="dash-band dash-band--')).toBe(7);
     expect(html).not.toContain("History builds as you review.");
     expect(html).toContain("not enough reviews yet");
     expect(html).not.toContain('class="dash-hint"');
@@ -51,6 +55,9 @@ describe("DashView", () => {
     expect(count(html, 'class="vocab-row"')).toBe(dash.trouble.length);
     expect(html).toContain("misses");
     expect(count(html, 'class="dash-bar dash-bar--added"')).toBeGreaterThan(0);
+    expect(count(html, "<polyline")).toBe(dash.levels.intervals.series.length);
+    expect(dash.levels.mastery.map((r) => r.level)).toEqual(["A1", "A2", "B1", "none"]);
+    expect(count(html, 'class="dash-queued"')).toBeGreaterThan(0);
     expect(html).not.toContain("NaN");
   });
 });

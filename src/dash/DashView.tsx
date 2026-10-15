@@ -1,11 +1,23 @@
-// The Dash's six elements (f16, PRD FR-J1–J6), top to bottom. Renders a DashResponse and nothing
+// The Dash's elements (f16, PRD FR-J1–J8), top to bottom. Renders a DashResponse and nothing
 // else: every number is derived in shared/dash.ts. Charts are hand-written SVG coloured from the
 // --chart-* tokens in app.css; labels that must stay readable are HTML, not SVG text.
 
 import type { DashResponse } from "../../shared/api";
 import { MIN_RECALL_SAMPLE, type RecallRate } from "../../shared/dash";
 import { bandName, MASTERY_BANDS } from "../../shared/mastery";
-import { calendarWeeks, percent, recallHint, shortDate, stackedAreas, weekLabel } from "./view";
+import {
+  binLabel,
+  calendarWeeks,
+  intervalLines,
+  levelName,
+  masteryStacks,
+  percent,
+  recallHint,
+  type StackSegment,
+  shortDate,
+  stackedAreas,
+  weekLabel,
+} from "./view";
 
 type Props = { dash: DashResponse; onOpenVocab: (id: string) => void };
 
@@ -17,6 +29,8 @@ export function DashView({ dash, onOpenVocab }: Props) {
       <RecallCard dash={dash} />
       <TroubleCard dash={dash} onOpenVocab={onOpenVocab} />
       <BacklogCard dash={dash} />
+      <LevelIntervalsCard dash={dash} />
+      <LevelMasteryCard dash={dash} />
       <CalendarCard dash={dash} />
     </>
   );
@@ -305,6 +319,166 @@ export function BacklogCard({ dash }: { dash: DashResponse }) {
         </li>
       </ul>
       <p className="hint">If you start words faster than they reach Known, the backlog grows.</p>
+    </section>
+  );
+}
+
+// J7
+export function LevelIntervalsCard({ dash }: { dash: DashResponse }) {
+  const { intervals } = dash.levels;
+  const w = 320;
+  const h = 100;
+  const top = 8;
+  const { max, slot, lines } = intervalLines(intervals, w, h);
+  return (
+    <section className="panel dash-card" aria-labelledby="dash-intervals">
+      <p className="eyebrow" id="dash-intervals">
+        INTERVALS BY LEVEL
+      </p>
+      {lines.length === 0 ? (
+        <p className="hint">Intervals show once you review.</p>
+      ) : (
+        <>
+          <svg
+            className="dash-chart"
+            viewBox={`0 0 ${w} ${top + h + 16}`}
+            role="img"
+            aria-label={`Reviewed items by interval in days, per level: ${intervals.series
+              .map((s) => `${levelName(s.level)} ${s.counts.join(", ")}`)
+              .join("; ")}`}
+          >
+            <line className="dash-grid" x1={0} x2={w} y1={top} y2={top} />
+            <text className="dash-tick dash-tick--start" x={2} y={top - 2}>
+              {max}
+            </text>
+            <line className="dash-baseline" x1={0} x2={w} y1={top + h} y2={top + h} />
+            {intervals.bins.map((edge, i) => (
+              <text key={edge} className="dash-tick" x={(i + 0.5) * slot} y={top + h + 13}>
+                {binLabel(edge)}
+              </text>
+            ))}
+            {lines.map((l) => (
+              <g key={l.level} className={`dash-level dash-level--${l.level}`}>
+                <polyline points={l.points.map(([x, y]) => `${x},${y + top}`).join(" ")} />
+                {l.points.map(([x, y], i) =>
+                  l.counts[i] ? <circle key={x} cx={x} cy={y + top} r={2.5} /> : null,
+                )}
+              </g>
+            ))}
+          </svg>
+          <p className="dash-axis dash-axis--end">
+            <span>Interval in days, each point up to the next</span>
+          </p>
+          <ul className="dash-legend">
+            {lines.map((l) => (
+              <li key={l.level}>
+                <span className={`dash-swatch dash-level--${l.level}`} />
+                {levelName(l.level)}
+              </li>
+            ))}
+          </ul>
+        </>
+      )}
+    </section>
+  );
+}
+
+function segmentClass(kind: StackSegment["kind"]): string {
+  if (kind === "queued") return "dash-queued";
+  return `dash-band dash-band--${kind === "not_started" ? 0 : kind}`;
+}
+
+function segmentName(kind: StackSegment["kind"]): string {
+  if (kind === "queued") return "Queued";
+  if (kind === "not_started") return "Not started";
+  return bandName(kind);
+}
+
+// J8
+export function LevelMasteryCard({ dash }: { dash: DashResponse }) {
+  const rows = dash.levels.mastery;
+  const w = 320;
+  const h = 170;
+  const top = 14;
+  const { axis, stacks } = masteryStacks(rows, h);
+  const slot = w / Math.max(1, stacks.length);
+  const bar = Math.min(56, slot * 0.6);
+  return (
+    <section className="panel dash-card" aria-labelledby="dash-level-mastery">
+      <p className="eyebrow" id="dash-level-mastery">
+        MASTERY BY LEVEL
+      </p>
+      {stacks.length === 0 ? (
+        <p className="hint">Levels show once you add words.</p>
+      ) : (
+        <>
+          <svg
+            className="dash-chart"
+            viewBox={`0 0 ${w} ${top + h + 18}`}
+            role="img"
+            aria-label={`Items per mastery by level: ${stacks
+              .map(
+                (s) =>
+                  `${levelName(s.level)} ${s.segments.map((seg) => `${segmentName(seg.kind)} ${seg.count}`).join(", ")}`,
+              )
+              .join("; ")}`}
+          >
+            {stacks.map((s, i) => {
+              const x = i * slot + (slot - bar) / 2;
+              return (
+                <g key={s.level}>
+                  {s.segments.map((seg) => (
+                    <g key={seg.key} className={segmentClass(seg.kind)}>
+                      <title>{`${levelName(s.level)}, ${segmentName(seg.kind)}: ${seg.count}`}</title>
+                      <rect x={x} y={top + seg.y} width={bar} height={seg.h} />
+                      {seg.h >= 13 && (
+                        <text
+                          className={
+                            seg.kind === 6
+                              ? "dash-seg-count dash-seg-count--light"
+                              : "dash-seg-count"
+                          }
+                          x={x + bar / 2}
+                          y={top + seg.y + seg.h / 2 + 4}
+                        >
+                          {seg.count}
+                        </text>
+                      )}
+                    </g>
+                  ))}
+                  <text className="dash-value" x={x + bar / 2} y={top + s.peak - 3}>
+                    {s.total}
+                  </text>
+                  <text className="dash-tick dash-tick--level" x={x + bar / 2} y={top + h + 15}>
+                    {levelName(s.level)}
+                  </text>
+                </g>
+              );
+            })}
+            <line className="dash-axis-line" x1={0} x2={w} y1={top + axis} y2={top + axis} />
+          </svg>
+          <ul className="dash-legend">
+            {MASTERY_BANDS.slice(1).map((b) => (
+              <li key={b.band}>
+                <span className={`dash-swatch dash-band--${b.band}`} />
+                {b.name}
+              </li>
+            ))}
+            <li>
+              <span className="dash-swatch dash-band--0" />
+              Not started
+            </li>
+            <li>
+              <span className="dash-swatch dash-queued" />
+              Queued
+            </li>
+          </ul>
+          <p className="hint">
+            Reviewed items stack above the line. Below it hang items released but never reviewed,
+            then items still in the queue. Each bar's total is over it.
+          </p>
+        </>
+      )}
     </section>
   );
 }

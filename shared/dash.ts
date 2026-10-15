@@ -2,7 +2,7 @@
 // history: the Worker reads both tables and calls buildDash, the client only draws the result.
 // Days are home-timezone calendar days; weeks start on Monday. Nothing here writes. Queued items
 // (f17, released_at null) are words waiting, not words in review: the vault-state blocks (J1, J2,
-// J5) leave them out, and an item exists from its released_at day.
+// J5, J7) leave them out, and an item exists from its released_at day. J8 counts them apart.
 
 import type { ReviewEvent, VocabItem } from "./api";
 import { addDays, dateIn, weekdayOf } from "./dates";
@@ -15,6 +15,7 @@ import {
   type MasteryBand,
   masteryBand,
 } from "./mastery";
+import { CEFR_LEVELS, type CefrLevel } from "./topics";
 
 export type DashVocab = Pick<
   VocabItem,
@@ -26,6 +27,7 @@ export type DashVocab = Pick<
   | "interval_seconds"
   | "last_reviewed_at"
   | "due_at"
+  | "cefr"
 >;
 export type DashEvent = Pick<
   ReviewEvent,
@@ -56,6 +58,18 @@ export type BacklogWeek = { week: string; started: number; known: number };
 export type CalendarLevel = 0 | 1 | 2 | 3 | 4;
 export type CalendarDay = { day: string; count: number; level: CalendarLevel };
 
+// A CEFR level, or "none" for items not yet classified (f18).
+export type DashLevel = CefrLevel | "none";
+// J7: bins[i] is a lower edge in days (0, 1, 2, 4, …); a bin runs to the next edge, the last one
+// open-ended. counts[i] is the level's reviewed items with an interval in bin i.
+export type LevelIntervals = {
+  bins: number[];
+  series: { level: DashLevel; counts: number[] }[];
+};
+// J8: bands[b] is the level's released items in mastery band b (band 0, New, is "not started");
+// queued counts its items still waiting in the queue.
+export type LevelMastery = { level: DashLevel; bands: number[]; queued: number };
+
 export type Dash = {
   today: string;
   known: { count: number; history: BandPoint[] };
@@ -64,6 +78,7 @@ export type Dash = {
   trouble: TroubleItem[];
   backlog: { now: number; weeks: BacklogWeek[] };
   calendar: CalendarDay[];
+  levels: { intervals: LevelIntervals; mastery: LevelMastery[] };
 };
 
 const DAY_MS = 86_400_000;
@@ -77,6 +92,8 @@ export const TROUBLE_MIN_LAPSES = 2;
 export const TROUBLE_LIMIT = 8;
 export const BACKLOG_WEEKS = 8;
 export const CALENDAR_DAYS = 84;
+// J7 draws at least the bins up to this many days, so a young vault still has a usable axis.
+export const MIN_INTERVAL_BIN_DAYS = 32;
 // History beyond this many days is drawn a point per week.
 export const DAILY_HISTORY_DAYS = 90;
 
@@ -150,6 +167,10 @@ export function buildDash(
     trouble: trouble(byId, timeline, windowStartMs),
     backlog: backlog(released, timeline, today, day),
     calendar: calendar(timeline, today),
+    levels: {
+      intervals: levelIntervals(released),
+      mastery: levelMastery(vocab),
+    },
   };
 }
 
@@ -346,4 +367,54 @@ function calendar(timeline: readonly TimedEvent[], today: string): CalendarDay[]
     const count = counts.get(d) ?? 0;
     return { day: d, count, level: calendarLevel(count) };
   });
+}
+
+const LEVEL_ORDER: readonly DashLevel[] = [...CEFR_LEVELS, "none"];
+const levelOf = (v: DashVocab): DashLevel => v.cefr ?? "none";
+
+// The levels that have at least one of these items, in CEFR order, unclassified last.
+function levelsOf(vocab: readonly DashVocab[]): DashLevel[] {
+  const present = new Set(vocab.map(levelOf));
+  return LEVEL_ORDER.filter((l) => present.has(l));
+}
+
+// Bin index for an interval: 0 under a day, then one bin per doubling (1–2, 2–4, … days).
+export function intervalBin(seconds: number): number {
+  const days = seconds / 86_400;
+  return days < 1 ? 0 : Math.floor(Math.log2(days)) + 1;
+}
+
+export function binEdge(bin: number): number {
+  return bin === 0 ? 0 : 2 ** (bin - 1);
+}
+
+// J7: reviewed released items per level by current interval, log-binned in days.
+function levelIntervals(released: readonly DashVocab[]): LevelIntervals {
+  const reviewed = released.filter((v) => v.last_reviewed_at !== null);
+  const minBins = intervalBin(MIN_INTERVAL_BIN_DAYS * 86_400) + 1;
+  const binCount = Math.max(minBins, ...reviewed.map((v) => intervalBin(v.interval_seconds) + 1));
+  const bins = Array.from({ length: binCount }, (_, i) => binEdge(i));
+  const series = levelsOf(reviewed).map((level) => ({ level, counts: bins.map(() => 0) }));
+  const index = new Map(series.map((s) => [s.level, s.counts]));
+  for (const v of reviewed) {
+    const counts = index.get(levelOf(v)) as number[];
+    const b = intervalBin(v.interval_seconds);
+    counts[b] = (counts[b] ?? 0) + 1;
+  }
+  return { bins, series };
+}
+
+// J8: every item per level, released ones by mastery band and queued ones apart.
+function levelMastery(vocab: readonly DashVocab[]): LevelMastery[] {
+  const rows = levelsOf(vocab).map((level) => ({ level, bands: emptyBands(), queued: 0 }));
+  const index = new Map(rows.map((r) => [r.level, r]));
+  for (const v of vocab) {
+    const row = index.get(levelOf(v)) as LevelMastery;
+    if (v.released_at === null) row.queued += 1;
+    else {
+      const band = masteryBand(v);
+      row.bands[band] = (row.bands[band] ?? 0) + 1;
+    }
+  }
+  return rows;
 }

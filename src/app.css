@@ -30,6 +30,16 @@
   --chart-heat-2: #8cc4bc;
   --chart-heat-3: #3f8f8a;
   --chart-heat-4: #054e51;
+  /* Dash J7 level lines, A1 amber through B1 dark teal; the upper levels rose and violet. */
+  --chart-level-A1: #d8913f;
+  --chart-level-A2: #3f8f8a;
+  --chart-level-B1: #173e40;
+  --chart-level-B2: #c96f62;
+  --chart-level-C1: #8a6fb3;
+  --chart-level-C2: #5f7fb0;
+  --chart-level-none: #9aa5a3;
+  --chart-queued: #d5dad6;
+  --chart-grid: #dde7e2;
 
   /* f17 tank meter: ok and full in the teal ramp, low in amber, empty in rose. */
   --tank-track: #e8f0ec;
@@ -1241,6 +1251,78 @@ button.link {
 .dash-heat--3 .dash-heat-count,
 .dash-heat--4 .dash-heat-count {
   fill: #fff;
+}
+
+/* Dash J7 and J8: intervals and mastery by level. */
+.dash-grid {
+  stroke: var(--chart-grid);
+  stroke-width: 1;
+  stroke-dasharray: 3 3;
+}
+
+.dash-level polyline {
+  fill: none;
+  stroke: var(--swatch);
+  stroke-width: 2;
+  stroke-linejoin: round;
+}
+
+.dash-level circle {
+  fill: var(--swatch);
+}
+
+.dash-level--A1 {
+  --swatch: var(--chart-level-A1);
+}
+.dash-level--A2 {
+  --swatch: var(--chart-level-A2);
+}
+.dash-level--B1 {
+  --swatch: var(--chart-level-B1);
+}
+.dash-level--B2 {
+  --swatch: var(--chart-level-B2);
+}
+.dash-level--C1 {
+  --swatch: var(--chart-level-C1);
+}
+.dash-level--C2 {
+  --swatch: var(--chart-level-C2);
+}
+.dash-level--none {
+  --swatch: var(--chart-level-none);
+}
+
+.dash-queued {
+  --swatch: var(--chart-queued);
+  fill: var(--swatch);
+}
+
+.dash-band rect,
+.dash-queued rect {
+  stroke: #fff;
+  stroke-width: 1;
+}
+
+.dash-seg-count {
+  fill: #173e40;
+  font-size: 11px;
+  font-weight: 600;
+  text-anchor: middle;
+}
+
+.dash-seg-count--light {
+  fill: #fff;
+}
+
+.dash-tick--level {
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.dash-axis-line {
+  stroke: var(--chart-mark);
+  stroke-width: 1.5;
 }
 
 /* f17: the Harvest tab. Source and harvest rows are full-width buttons like the Vocab list's. */

@@ -4,6 +4,7 @@
 import type { DashResponse } from "../../shared/api";
 import { buildDash, type DashEvent, type DashVocab } from "../../shared/dash";
 import { GRADES } from "../../shared/mastery";
+import type { CefrLevel } from "../../shared/topics";
 
 export const FIXTURE_NOW = new Date("2026-10-01T19:00:00.000Z");
 const TZ = "America/Vancouver";
@@ -65,6 +66,7 @@ export function sparseDash(): DashResponse {
       interval_seconds: reviewed ? DAY : 3600,
       last_reviewed_at: reviewed ? iso(at) : null,
       due_at: reviewed ? iso(at + DAY_MS) : null,
+      cefr: i % 2 ? "A1" : "A2",
     });
     if (reviewed) {
       events.push({
@@ -82,7 +84,9 @@ export function sparseDash(): DashResponse {
   return respond(vocab, events);
 }
 
-// Four months of reviews over 180 items: every block populated.
+const FULL_LEVELS: (CefrLevel | null)[] = ["A1", "A1", "A1", "A2", "A2", "B1", null];
+
+// Four months of reviews over 180 items, and 24 still queued: every block populated.
 export function fullDash(ladderId = 8): DashResponse {
   const random = rng(16);
   const now = FIXTURE_NOW.getTime();
@@ -133,6 +137,21 @@ export function fullDash(ladderId = 8): DashResponse {
       interval_seconds: Math.round(interval),
       last_reviewed_at: last === null ? null : iso(last),
       due_at: last === null ? null : iso(last + interval * 1000),
+      cefr: FULL_LEVELS[Math.floor(random() * FULL_LEVELS.length)] ?? null,
+    });
+  }
+  for (let i = 0; i < 24; i++) {
+    const [urdu, english] = WORDS[i % WORDS.length] as [string, string];
+    vocab.push({
+      id: `q${i}`,
+      urdu: `${urdu}q${i}`,
+      english,
+      added_at: iso(now - DAY_MS),
+      released_at: null,
+      interval_seconds: 6422,
+      last_reviewed_at: null,
+      due_at: null,
+      cefr: FULL_LEVELS[i % 4] ?? null,
     });
   }
   return respond(vocab, events, ladderId);

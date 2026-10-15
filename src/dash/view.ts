@@ -1,10 +1,18 @@
 // Pure view helpers for the Dash (f16 s03): wording, percentages and chart geometry. The numbers
 // themselves come from shared/dash.ts through GET /api/dash; nothing here derives a metric.
 
-import type { BandPoint, CalendarDay, RecallBand, RecallRate } from "../../shared/dash";
+import type {
+  BandPoint,
+  CalendarDay,
+  DashLevel,
+  LevelIntervals,
+  LevelMastery,
+  RecallBand,
+  RecallRate,
+} from "../../shared/dash";
 import { addDays, weekdayOf } from "../../shared/dates";
 import { LADDERS } from "../../shared/ladders";
-import { MASTERY_BANDS } from "../../shared/mastery";
+import { MASTERY_BANDS, type MasteryBand } from "../../shared/mastery";
 
 const SELECTABLE = LADDERS.filter((l) => l.selectable).map((l) => l.id);
 // Very dense and Very wide: the ends of the Settings picker.
@@ -81,6 +89,92 @@ export function stackedAreas(
     const bottom = lower.map((v, i) => `${x(i)},${y(v)}`).reverse();
     return { band, d: `M${top.join(" L")} L${bottom.join(" L")} Z` };
   });
+}
+
+export function levelName(level: DashLevel): string {
+  return level === "none" ? "No level" : level;
+}
+
+// J7's x-axis label for a bin: its lower edge in days, the first bin "<1".
+export function binLabel(edge: number): string {
+  return edge === 0 ? "<1" : edge.toLocaleString("en");
+}
+
+// J7: one polyline per level through its bin centres, scaled to the tallest bin of any level.
+export function intervalLines(
+  intervals: LevelIntervals,
+  width: number,
+  height: number,
+): {
+  max: number;
+  slot: number;
+  lines: { level: DashLevel; counts: number[]; points: [number, number][] }[];
+} {
+  const max = Math.max(0, ...intervals.series.flatMap((s) => s.counts));
+  const slot = width / Math.max(1, intervals.bins.length);
+  const lines =
+    max === 0
+      ? []
+      : intervals.series.map((s) => ({
+          level: s.level,
+          counts: s.counts,
+          points: s.counts.map(
+            (c, i) =>
+              [round((i + 0.5) * slot), round(height - (c / max) * height)] as [number, number],
+          ),
+        }));
+  return { max, slot, lines };
+}
+
+export type StackSegment = {
+  key: string;
+  // A mastery band 1–6, or the two segments that hang below the axis.
+  kind: Exclude<MasteryBand, 0> | "not_started" | "queued";
+  count: number;
+  y: number;
+  h: number;
+};
+
+// J8: per level, Learning to Permanent stacked up from the axis and, below it, Not started (band
+// 0) with Queued hanging under that, so each bar reads from the queue up to Permanent. Above and
+// below share one scale; axis is the axis's y, peak the top of a bar's reviewed part.
+export function masteryStacks(
+  rows: readonly LevelMastery[],
+  height: number,
+): {
+  axis: number;
+  stacks: { level: DashLevel; total: number; peak: number; segments: StackSegment[] }[];
+} {
+  const up = (r: LevelMastery) => r.bands.slice(1).reduce((a, b) => a + b, 0);
+  const down = (r: LevelMastery) => (r.bands[0] ?? 0) + r.queued;
+  const maxUp = Math.max(0, ...rows.map(up));
+  const maxDown = Math.max(0, ...rows.map(down));
+  const unit = maxUp + maxDown === 0 ? 0 : height / (maxUp + maxDown);
+  const axis = round(maxUp * unit);
+  const stacks = rows.map((r) => {
+    const segments: StackSegment[] = [];
+    let top = maxUp * unit;
+    for (const { band } of MASTERY_BANDS.slice(1) as { band: Exclude<MasteryBand, 0> }[]) {
+      const count = r.bands[band] ?? 0;
+      if (count === 0) continue;
+      const h = count * unit;
+      top -= h;
+      segments.push({ key: `b${band}`, kind: band, count, y: round(top), h: round(h) });
+    }
+    const peak = round(top);
+    let bottom = maxUp * unit;
+    for (const [kind, count] of [
+      ["not_started", r.bands[0] ?? 0],
+      ["queued", r.queued],
+    ] as const) {
+      if (count === 0) continue;
+      const h = count * unit;
+      segments.push({ key: kind, kind, count, y: round(bottom), h: round(h) });
+      bottom += h;
+    }
+    return { level: r.level, total: up(r) + down(r), peak, segments };
+  });
+  return { axis, stacks };
 }
 
 function round(n: number): number {

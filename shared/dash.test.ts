@@ -4,6 +4,7 @@ import {
   calendarLevel,
   type DashEvent,
   type DashVocab,
+  intervalBin,
   MIN_RECALL_SAMPLE,
   TROUBLE_LIMIT,
 } from "./dash";
@@ -32,6 +33,7 @@ function item(overrides: Partial<DashVocab> = {}): DashVocab {
     interval_seconds: 3600,
     last_reviewed_at: null,
     due_at: null,
+    cefr: null,
     ...overrides,
   };
 }
@@ -472,5 +474,64 @@ describe("queued items (f17)", () => {
       queued({ added_at: noon("2026-09-29") }),
     ]).backlog.weeks;
     expect(weeks.map((w) => w.started)).toEqual([0, 0, 0, 0, 0, 0, 0, 1]);
+  });
+});
+
+describe("intervals by level (J7)", () => {
+  it("bins under a day, then by doubling in days", () => {
+    expect(intervalBin(3600)).toBe(0);
+    expect(intervalBin(DAY)).toBe(1);
+    expect(intervalBin(2 * DAY - 1)).toBe(1);
+    expect(intervalBin(2 * DAY)).toBe(2);
+    expect(intervalBin(100 * DAY)).toBe(7);
+  });
+
+  it("counts reviewed released items per level, unclassified last, queued and new left out", () => {
+    const vocab = [
+      reviewed(3600, { cefr: "A2" }),
+      reviewed(DAY, { cefr: "A1" }),
+      reviewed(3 * DAY, { cefr: "A1" }),
+      reviewed(3 * DAY),
+      item({ cefr: "B1" }),
+      reviewed(3 * DAY, { cefr: "B1", released_at: null }),
+    ];
+    const { intervals } = buildDash(vocab, [], NOW, TZ).levels;
+    // At least 0–32 days: edges 0, 1, 2, 4, 8, 16, 32.
+    expect(intervals.bins).toEqual([0, 1, 2, 4, 8, 16, 32]);
+    expect(intervals.series).toEqual([
+      { level: "A1", counts: [0, 1, 1, 0, 0, 0, 0] },
+      { level: "A2", counts: [1, 0, 0, 0, 0, 0, 0] },
+      { level: "none", counts: [0, 0, 1, 0, 0, 0, 0] },
+    ]);
+  });
+
+  it("widens the axis to the longest interval", () => {
+    const { intervals } = buildDash([reviewed(400 * DAY, { cefr: "A1" })], [], NOW, TZ).levels;
+    expect(intervals.bins.at(-1)).toBe(256);
+    expect(intervals.series[0]?.counts.at(-1)).toBe(1);
+  });
+});
+
+describe("mastery by level (J8)", () => {
+  it("counts released items by band and queued ones apart, per level", () => {
+    const vocab = [
+      reviewed(3600, { cefr: "A1" }),
+      reviewed(20 * DAY, { cefr: "A1" }),
+      item({ cefr: "A1" }),
+      item({ cefr: "A1", released_at: null }),
+      item({ cefr: "A1", released_at: null }),
+      item({ released_at: null }),
+    ];
+    expect(buildDash(vocab, [], NOW, TZ).levels.mastery).toEqual([
+      { level: "A1", bands: [1, 1, 0, 1, 0, 0, 0], queued: 2 },
+      { level: "none", bands: [0, 0, 0, 0, 0, 0, 0], queued: 1 },
+    ]);
+  });
+
+  it("is empty for an empty vault", () => {
+    expect(buildDash([], [], NOW, TZ).levels).toEqual({
+      intervals: { bins: [0, 1, 2, 4, 8, 16, 32], series: [] },
+      mastery: [],
+    });
   });
 });
