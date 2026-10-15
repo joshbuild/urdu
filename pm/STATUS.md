@@ -11,12 +11,12 @@
 - f07 `coach-client` — 🟡 IN PROGRESS, s01–s04 built (migration 0003 applied remotely and deployed 2026-09-23); s05 prompt tuning next → `features/f07-coach-client.md`
 - f18 `topic-coverage` — 🟡 IN PROGRESS, opened 2026-10-06 (DECISIONS 261006a); s01–s05 built and deployed (0008 remote); smoke-test-18 steps 1–3, 5 pass, step 4 open → `features/f18-topic-coverage.md`
 - mp05 `voice-vocab-bucket` — 🟡 IN PROGRESS, opened and stress-tested 2026-10-02 (s01–s07; Voice words held from top-up, DECISIONS 261002a); s01 `find_vocab` build next (no migration) → `mini-plans/mp05-voice-vocab-bucket.md`
-- mp06 `mixed-direction` — 🟡 IN PROGRESS, opened 2026-10-15 (DECISIONS 261015a); s01 `shared/direction.ts` next (no migration) → `mini-plans/mp06-mixed-direction.md`
+- mp06 `mixed-direction` — 🟡 IN PROGRESS, opened 2026-10-15 (DECISIONS 261015a); s01–s03 built (`b600b71`, not deployed); s04 phone next → `mini-plans/mp06-mixed-direction.md`
 
 ## Next Session Pointers
 *The 1–3 concrete next actions for a cold start.*
 
-1. **mp06 `mixed-direction`**: s01 `shared/direction.ts` (`productionChance`, `chooseDirection`) and its tests, then s02 the session and start screen; no migration → `mini-plans/mp06-mixed-direction.md`.
+1. **mp06 `mixed-direction`**: built, not deployed. Sponsor runs `pnpm run deploy` (no migration; this also ships f18's Dash charts and batch fix) and uses Mixed in normal review; close on a report that the mix feels right and production recall fills in → `smoke-tests/smoke-test-mp06.md`.
 2. **mp05 `voice-vocab-bucket`**: s01 `find_vocab` build next (no migration) → `mini-plans/mp05-voice-vocab-bucket.md`.
 3. **f07 `coach-client`**: s04 spend is deployed; the sponsor compares Settings spend with the OpenAI dashboard later on 2026-09-23 (TODO). Then s05 prompt tuning. The rest of the s03 checks ride smoke-test-07. The OpenAI key is a Cloudflare secret only, so live voice checks run against the deployment, never `pnpm dev` (260921a). Once f07 closes, open f10 `coach-followups` (planned 2026-09-22 from the grill of the two Coach scope calls, DECISIONS 260922a): a vocab-edit voice tool, tappable Urdu in bubbles, the last transcript kept on the device. Toolchain: AVG Hardened Mode + CyberCapture off; never add exceptions.
 4. **f18 `topic-coverage`**: Next batch size fix (DECISIONS 261008a) and the two Dash charts by level (FR-J7/J8) committed, not deployed: sponsor runs `pnpm run deploy`; the next Next batch at the A1 tail should fill to 25 and move into A2. smoke-test-18 steps 1–3 and 5 pass. Step 4: sponsor reveals a word that shows a chip on Vocab (Topic filter); if the chip shows, reword step 4 and close f18; if not, debug with a screenshot → `features/f18-topic-coverage-journal.md`.

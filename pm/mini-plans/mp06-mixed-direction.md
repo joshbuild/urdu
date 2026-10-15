@@ -1,6 +1,6 @@
 # Mini-plan — Mixed-direction review
 
-**Status**: 🟡 IN PROGRESS — *opened 2026-10-15; Stage 1 build, s01 next.*
+**Status**: 🟡 IN PROGRESS — *opened 2026-10-15; s01–s03 built 2026-10-15 (`b600b71`, not deployed); s04 phone next.*
 **Handle**: `mp06`
 **Created**: 2026-10-15 · **Updated**: 2026-10-15
 
@@ -71,7 +71,7 @@ lets production misses pull intervals back, with no migration and no second due 
 ## Stages
 
 - **Stage 0 — plan** (this doc): done 2026-10-15.
-- **Stage 1 — build** s01–s03 on `main`.
+- **Stage 1 — build** s01–s03 on `main`: done 2026-10-15 (`b600b71`).
 - **Stage 2 — phone** s04, sponsor (daily use counts).
 
 ## Slices
@@ -93,11 +93,11 @@ lets production misses pull intervals back, with no migration and no second due 
 
 ## Done When
 
-- [ ] Mixed is the default on the review start screen; each card shows its direction; Back and
+- [x] Mixed is the default on the review start screen; each card shows its direction; Back and
       correction keep it.
-- [ ] Production reviews of items with no English are recorded as `ur_en`.
-- [ ] s01/s02 tests pass and `pnpm check` is green.
-- [ ] PRD §2 and FR-E1, and AGENTS.md, match the as-built.
+- [x] Production reviews of items with no English are recorded as `ur_en`.
+- [x] s01/s02 tests pass and `pnpm check` is green.
+- [x] PRD §2 and FR-E1, and AGENTS.md, match the as-built.
 - [ ] The sponsor has used Mixed on the phone and the Dash's production recall is accumulating.
 
 ---
@@ -118,3 +118,5 @@ lets production misses pull intervals back, with no migration and no second due 
   changes (agent).
 - 2026-10-15: Directions are drawn once at session start, so Back and correction see the card as
   it was shown (agent).
+- 2026-10-15: The card's direction label sits under the count in the top row, not beside it, so
+  Back, Skip and End still fit one row at 360 px (agent).
