@@ -1260,15 +1260,17 @@ button.link {
   stroke-dasharray: 3 3;
 }
 
-.dash-level polyline {
+.dash-level-line {
   fill: none;
   stroke: var(--swatch);
-  stroke-width: 2;
+  stroke-width: 2.5;
   stroke-linejoin: round;
+  stroke-linecap: round;
 }
 
-.dash-level circle {
+.dash-level-area {
   fill: var(--swatch);
+  fill-opacity: 0.14;
 }
 
 .dash-level--A1 {

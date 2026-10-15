@@ -477,13 +477,16 @@ describe("queued items (f17)", () => {
   });
 });
 
+const EDGES = Array.from({ length: 15 }, (_, i) => 2 ** i);
+
 describe("intervals by level (J7)", () => {
-  it("bins under a day, then by doubling in days", () => {
+  it("bins by doubling in hours, anything under 2 h in the first", () => {
+    expect(intervalBin(1800)).toBe(0);
     expect(intervalBin(3600)).toBe(0);
-    expect(intervalBin(DAY)).toBe(1);
-    expect(intervalBin(2 * DAY - 1)).toBe(1);
-    expect(intervalBin(2 * DAY)).toBe(2);
-    expect(intervalBin(100 * DAY)).toBe(7);
+    expect(intervalBin(2 * 3600)).toBe(1);
+    expect(intervalBin(DAY)).toBe(4);
+    expect(intervalBin(32 * 3600 - 1)).toBe(4);
+    expect(intervalBin(100 * DAY)).toBe(11);
   });
 
   it("counts reviewed released items per level, unclassified last, queued and new left out", () => {
@@ -496,18 +499,19 @@ describe("intervals by level (J7)", () => {
       reviewed(3 * DAY, { cefr: "B1", released_at: null }),
     ];
     const { intervals } = buildDash(vocab, [], NOW, TZ).levels;
-    // At least 0–32 days: edges 0, 1, 2, 4, 8, 16, 32.
-    expect(intervals.bins).toEqual([0, 1, 2, 4, 8, 16, 32]);
+    // At least 15 bins: edges 1, 2, 4 … 16,384 hours.
+    expect(intervals.bins).toEqual(EDGES);
+    const at = (...bins: number[]) => EDGES.map((_, i) => bins.filter((b) => b === i).length);
     expect(intervals.series).toEqual([
-      { level: "A1", counts: [0, 1, 1, 0, 0, 0, 0] },
-      { level: "A2", counts: [1, 0, 0, 0, 0, 0, 0] },
-      { level: "none", counts: [0, 0, 1, 0, 0, 0, 0] },
+      { level: "A1", counts: at(4, 6) },
+      { level: "A2", counts: at(0) },
+      { level: "none", counts: at(6) },
     ]);
   });
 
   it("widens the axis to the longest interval", () => {
-    const { intervals } = buildDash([reviewed(400 * DAY, { cefr: "A1" })], [], NOW, TZ).levels;
-    expect(intervals.bins.at(-1)).toBe(256);
+    const { intervals } = buildDash([reviewed(3650 * DAY, { cefr: "A1" })], [], NOW, TZ).levels;
+    expect(intervals.bins.at(-1)).toBe(65_536);
     expect(intervals.series[0]?.counts.at(-1)).toBe(1);
   });
 });
@@ -530,7 +534,7 @@ describe("mastery by level (J8)", () => {
 
   it("is empty for an empty vault", () => {
     expect(buildDash([], [], NOW, TZ).levels).toEqual({
-      intervals: { bins: [0, 1, 2, 4, 8, 16, 32], series: [] },
+      intervals: { bins: EDGES, series: [] },
       mastery: [],
     });
   });

@@ -6,9 +6,8 @@ import type { DashResponse } from "../../shared/api";
 import { MIN_RECALL_SAMPLE, type RecallRate } from "../../shared/dash";
 import { bandName, MASTERY_BANDS } from "../../shared/mastery";
 import {
-  binLabel,
   calendarWeeks,
-  intervalLines,
+  intervalCurves,
   levelName,
   masteryStacks,
   percent,
@@ -329,13 +328,13 @@ export function LevelIntervalsCard({ dash }: { dash: DashResponse }) {
   const w = 320;
   const h = 100;
   const top = 8;
-  const { max, slot, lines } = intervalLines(intervals, w, h);
+  const { dividers, spans, curves } = intervalCurves(intervals, w, h);
   return (
     <section className="panel dash-card" aria-labelledby="dash-intervals">
       <p className="eyebrow" id="dash-intervals">
         INTERVALS BY LEVEL
       </p>
-      {lines.length === 0 ? (
+      {curves.length === 0 ? (
         <p className="hint">Intervals show once you review.</p>
       ) : (
         <>
@@ -343,40 +342,37 @@ export function LevelIntervalsCard({ dash }: { dash: DashResponse }) {
             className="dash-chart"
             viewBox={`0 0 ${w} ${top + h + 16}`}
             role="img"
-            aria-label={`Reviewed items by interval in days, per level: ${intervals.series
-              .map((s) => `${levelName(s.level)} ${s.counts.join(", ")}`)
+            aria-label={`How far apart reviews are, roughly, per level: ${intervals.series
+              .map((s) => `${levelName(s.level)} ${s.counts.reduce((a, b) => a + b, 0)} items`)
               .join("; ")}`}
           >
-            <line className="dash-grid" x1={0} x2={w} y1={top} y2={top} />
-            <text className="dash-tick dash-tick--start" x={2} y={top - 2}>
-              {max}
-            </text>
+            {dividers.map((x) => (
+              <line key={x} className="dash-grid" x1={x} x2={x} y1={top} y2={top + h} />
+            ))}
+            <g transform={`translate(0 ${top})`}>
+              {curves.map((c) => (
+                <g key={c.level} className={`dash-level dash-level--${c.level}`}>
+                  <path className="dash-level-area" d={c.area} />
+                  <path className="dash-level-line" d={c.line} />
+                </g>
+              ))}
+            </g>
             <line className="dash-baseline" x1={0} x2={w} y1={top + h} y2={top + h} />
-            {intervals.bins.map((edge, i) => (
-              <text key={edge} className="dash-tick" x={(i + 0.5) * slot} y={top + h + 13}>
-                {binLabel(edge)}
+            {spans.map((s) => (
+              <text key={s.label} className="dash-tick" x={s.x} y={top + h + 13}>
+                {s.label}
               </text>
             ))}
-            {lines.map((l) => (
-              <g key={l.level} className={`dash-level dash-level--${l.level}`}>
-                <polyline points={l.points.map(([x, y]) => `${x},${y + top}`).join(" ")} />
-                {l.points.map(([x, y], i) =>
-                  l.counts[i] ? <circle key={x} cx={x} cy={y + top} r={2.5} /> : null,
-                )}
-              </g>
-            ))}
           </svg>
-          <p className="dash-axis dash-axis--end">
-            <span>Interval in days, each point up to the next</span>
-          </p>
           <ul className="dash-legend">
-            {lines.map((l) => (
-              <li key={l.level}>
-                <span className={`dash-swatch dash-level--${l.level}`} />
-                {levelName(l.level)}
+            {curves.map((c) => (
+              <li key={c.level}>
+                <span className={`dash-swatch dash-level--${c.level}`} />
+                {levelName(c.level)}
               </li>
             ))}
           </ul>
+          <p className="hint">Roughly how far apart each level's reviews are now.</p>
         </>
       )}
     </section>

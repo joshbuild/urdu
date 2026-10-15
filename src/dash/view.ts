@@ -95,35 +95,62 @@ export function levelName(level: DashLevel): string {
   return level === "none" ? "No level" : level;
 }
 
-// J7's x-axis label for a bin: its lower edge in days, the first bin "<1".
-export function binLabel(edge: number): string {
-  return edge === 0 ? "<1" : edge.toLocaleString("en");
-}
+// J7's time scale names, each from its start in hours to the next one's; hours start at 1 h.
+export const INTERVAL_SPANS: readonly { label: string; from: number }[] = [
+  { label: "hours", from: 1 },
+  { label: "days", from: 24 },
+  { label: "weeks", from: 24 * 7 },
+  { label: "months", from: 24 * 30 },
+  { label: "years", from: 24 * 365 },
+];
 
-// J7: one polyline per level through its bin centres, scaled to the tallest bin of any level.
-export function intervalLines(
+// How far one bin's count spreads, in doublings: wide enough to read as a general shape.
+const SMOOTHING = 1.1;
+const SAMPLES = 64;
+
+// J7: one smoothed curve per level over a log-time x axis (bin i spans log2 hours i to i + 1),
+// each bin's count spread as a Gaussian so the lines read as rough shapes, not exact tallies. All
+// levels share one height scale. dividers are the x of each span's start after the first; spans
+// centre each label in its stretch of axis.
+export function intervalCurves(
   intervals: LevelIntervals,
   width: number,
   height: number,
 ): {
-  max: number;
-  slot: number;
-  lines: { level: DashLevel; counts: number[]; points: [number, number][] }[];
+  dividers: number[];
+  spans: { label: string; x: number }[];
+  curves: { level: DashLevel; line: string; area: string }[];
 } {
-  const max = Math.max(0, ...intervals.series.flatMap((s) => s.counts));
-  const slot = width / Math.max(1, intervals.bins.length);
-  const lines =
+  const domain = Math.max(1, intervals.bins.length);
+  const xOf = (log: number) => round((log / domain) * width);
+  const starts = INTERVAL_SPANS.map((s) => Math.log2(s.from));
+  const spans = INTERVAL_SPANS.map((s, i) => ({
+    label: s.label,
+    x: xOf(((starts[i] as number) + Math.min(domain, starts[i + 1] ?? domain)) / 2),
+  }));
+  const dividers = starts.slice(1).map(xOf);
+  const xs = Array.from({ length: SAMPLES + 1 }, (_, k) => (k / SAMPLES) * domain);
+  const densities = intervals.series.map((s) =>
+    xs.map((x) =>
+      s.counts.reduce(
+        (sum, c, i) => sum + c * Math.exp(-((x - i - 0.5) ** 2) / (2 * SMOOTHING ** 2)),
+        0,
+      ),
+    ),
+  );
+  const max = Math.max(0, ...densities.flat());
+  const curves =
     max === 0
       ? []
-      : intervals.series.map((s) => ({
-          level: s.level,
-          counts: s.counts,
-          points: s.counts.map(
-            (c, i) =>
-              [round((i + 0.5) * slot), round(height - (c / max) * height)] as [number, number],
-          ),
-        }));
-  return { max, slot, lines };
+      : intervals.series.map((s, j) => {
+          const pts = xs.map((x, k) => {
+            const d = (densities[j] as number[])[k] as number;
+            return `${xOf(x)},${round(height - (d / max) * height)}`;
+          });
+          const line = `M${pts.join(" L")}`;
+          return { level: s.level, line, area: `${line} L${width},${height} L0,${height} Z` };
+        });
+  return { dividers, spans, curves };
 }
 
 export type StackSegment = {

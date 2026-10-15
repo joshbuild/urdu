@@ -1,9 +1,8 @@
 import { describe, expect, it } from "vitest";
 import type { BandPoint, CalendarDay } from "../../shared/dash";
 import {
-  binLabel,
   calendarWeeks,
-  intervalLines,
+  intervalCurves,
   masteryStacks,
   percent,
   recallHint,
@@ -93,34 +92,44 @@ describe("stackedAreas", () => {
   });
 });
 
-describe("intervalLines", () => {
-  it("puts each bin's count at its centre, scaled to the largest count", () => {
-    const { max, slot, lines } = intervalLines(
-      { bins: [0, 1], series: [{ level: "A1", counts: [2, 1] }] },
-      100,
-      50,
-    );
-    expect(max).toBe(2);
-    expect(slot).toBe(50);
-    expect(lines).toEqual([
+describe("intervalCurves", () => {
+  const bins = Array.from({ length: 15 }, (_, i) => 2 ** i);
+  const one = (bin: number) => bins.map((_, i) => (i === bin ? 1 : 0));
+
+  it("peaks a smoothed curve at the full height over its bin, shared across levels", () => {
+    const { curves } = intervalCurves(
       {
-        level: "A1",
-        counts: [2, 1],
-        points: [
-          [25, 0],
-          [75, 25],
+        bins,
+        series: [
+          { level: "A1", counts: one(4) },
+          { level: "A2", counts: one(10).map((c) => c / 2) },
         ],
       },
-    ]);
+      150,
+      50,
+    );
+    const ys = (d: string) =>
+      d
+        .slice(1)
+        .split(" L")
+        .map((p) => Number(p.split(",")[1]));
+    const [a1, a2] = curves.map((c) => ys(c.line)) as [number[], number[]];
+    expect(Math.min(...a1)).toBeLessThan(1);
+    expect(Math.min(...a2)).toBeGreaterThan(20);
+    expect(a1.at(-1)).toBeCloseTo(50, 0);
+    expect(curves[0]?.area.endsWith("L150,50 L0,50 Z")).toBe(true);
+  });
+
+  it("labels hours to years, each centred in its stretch", () => {
+    const { spans, dividers } = intervalCurves({ bins, series: [] }, 150, 50);
+    expect(spans.map((s) => s.label)).toEqual(["hours", "days", "weeks", "months", "years"]);
+    expect(dividers).toHaveLength(4);
+    expect(spans.map((s) => s.x)).toEqual([...spans.map((s) => s.x)].sort((a, b) => a - b));
+    expect(spans[0]?.x).toBeCloseTo((dividers[0] as number) / 2, 0);
   });
 
   it("draws nothing with no reviewed items", () => {
-    expect(intervalLines({ bins: [0, 1], series: [] }, 100, 50).lines).toEqual([]);
-  });
-
-  it("labels the first bin under a day", () => {
-    expect(binLabel(0)).toBe("<1");
-    expect(binLabel(1024)).toBe("1,024");
+    expect(intervalCurves({ bins, series: [] }, 100, 50).curves).toEqual([]);
   });
 });
 

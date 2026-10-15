@@ -55,7 +55,7 @@ describe("DashView", () => {
     expect(count(html, 'class="vocab-row"')).toBe(dash.trouble.length);
     expect(html).toContain("misses");
     expect(count(html, 'class="dash-bar dash-bar--added"')).toBeGreaterThan(0);
-    expect(count(html, "<polyline")).toBe(dash.levels.intervals.series.length);
+    expect(count(html, 'class="dash-level-line"')).toBe(dash.levels.intervals.series.length);
     expect(dash.levels.mastery.map((r) => r.level)).toEqual(["A1", "A2", "B1", "none"]);
     expect(count(html, 'class="dash-queued"')).toBeGreaterThan(0);
     expect(html).not.toContain("NaN");

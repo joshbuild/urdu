@@ -128,7 +128,7 @@ A sixth tab, **Dash**, read-only. Every element measures knowledge rather than a
 - **FR-J4** **Trouble items**: up to 8 items with two or more Wrong or Partially correct grades in the last 30 days, most first; each opens on the Vocab tab.
 - **FR-J5** **Learning backlog**: released items in New, Learning or Basic now, with items **started** (by `released_at`; was items added, f17) and items reaching Known per week.
 - **FR-J6** **Review calendar**: 12 weeks of days shaded by tracked reviews. No streak count.
-- **FR-J7** **Intervals by level** *(2026-10-15)*: one line per CEFR level (f18; unclassified items as "No level") counting reviewed, released items by current interval, binned in days under 1, then 1, 2, 4, 8 … (each bin up to the next), at least to 32.
+- **FR-J7** **Intervals by level** *(2026-10-15)*: one smoothed curve per CEFR level (f18; unclassified items as "No level") showing roughly how reviewed, released items spread by current interval, over a log-time axis labelled hours, days, weeks, months, years. A general shape, not exact counts: binned by doubling in hours from 1 h, at least to about 3.7 years, then smoothed.
 - **FR-J8** **Mastery by level** *(2026-10-15)*: one stacked bar per level, a segment per band Learning to Permanent with its count inside, stacked up from the axis; below the axis hang Not started (released, never reviewed) and, under it, Queued. Shown after J5, before the calendar.
 
 ### FR-K Vocab intake *(f17, shipped 2026-10-02; DECISIONS 261001b)*

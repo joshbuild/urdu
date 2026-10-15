@@ -60,8 +60,9 @@ export type CalendarDay = { day: string; count: number; level: CalendarLevel };
 
 // A CEFR level, or "none" for items not yet classified (f18).
 export type DashLevel = CefrLevel | "none";
-// J7: bins[i] is a lower edge in days (0, 1, 2, 4, …); a bin runs to the next edge, the last one
-// open-ended. counts[i] is the level's reviewed items with an interval in bin i.
+// J7: bins[i] is a lower edge in hours (1, 2, 4, …); a bin runs to the next edge, the first one
+// takes anything shorter and the last one is open-ended. counts[i] is the level's reviewed items
+// with an interval in bin i. The client smooths these into curves; the bins are just the sample.
 export type LevelIntervals = {
   bins: number[];
   series: { level: DashLevel; counts: number[] }[];
@@ -92,8 +93,9 @@ export const TROUBLE_MIN_LAPSES = 2;
 export const TROUBLE_LIMIT = 8;
 export const BACKLOG_WEEKS = 8;
 export const CALENDAR_DAYS = 84;
-// J7 draws at least the bins up to this many days, so a young vault still has a usable axis.
-export const MIN_INTERVAL_BIN_DAYS = 32;
+// J7 draws at least this many bins (1 hour to about 3.7 years), so the axis reaches years even
+// for a young vault.
+export const MIN_INTERVAL_BINS = 15;
 // History beyond this many days is drawn a point per week.
 export const DAILY_HISTORY_DAYS = 90;
 
@@ -378,21 +380,24 @@ function levelsOf(vocab: readonly DashVocab[]): DashLevel[] {
   return LEVEL_ORDER.filter((l) => present.has(l));
 }
 
-// Bin index for an interval: 0 under a day, then one bin per doubling (1–2, 2–4, … days).
+// Bin index for an interval: one bin per doubling in hours (1–2, 2–4, … h), anything under 2 h
+// in bin 0.
 export function intervalBin(seconds: number): number {
-  const days = seconds / 86_400;
-  return days < 1 ? 0 : Math.floor(Math.log2(days)) + 1;
+  const hours = seconds / 3600;
+  return hours < 2 ? 0 : Math.floor(Math.log2(hours));
 }
 
 export function binEdge(bin: number): number {
-  return bin === 0 ? 0 : 2 ** (bin - 1);
+  return 2 ** bin;
 }
 
-// J7: reviewed released items per level by current interval, log-binned in days.
+// J7: reviewed released items per level by current interval, log-binned in hours.
 function levelIntervals(released: readonly DashVocab[]): LevelIntervals {
   const reviewed = released.filter((v) => v.last_reviewed_at !== null);
-  const minBins = intervalBin(MIN_INTERVAL_BIN_DAYS * 86_400) + 1;
-  const binCount = Math.max(minBins, ...reviewed.map((v) => intervalBin(v.interval_seconds) + 1));
+  const binCount = Math.max(
+    MIN_INTERVAL_BINS,
+    ...reviewed.map((v) => intervalBin(v.interval_seconds) + 1),
+  );
   const bins = Array.from({ length: binCount }, (_, i) => binEdge(i));
   const series = levelsOf(reviewed).map((level) => ({ level, counts: bins.map(() => 0) }));
   const index = new Map(series.map((s) => [s.level, s.counts]));
