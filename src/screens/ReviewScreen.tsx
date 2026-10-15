@@ -4,7 +4,6 @@
 import { useCallback, useEffect, useReducer, useRef, useState } from "react";
 import type {
   DueResponse,
-  ReviewDirection,
   ReviewRequest,
   ReviewResponse,
   StatusResponse,
@@ -25,21 +24,28 @@ import {
   AHEAD_STOPS,
   type AheadStop,
   aheadStop,
+  type CardDirection,
+  cardDirections,
   countWithin,
+  currentDirection,
   currentItem,
   dueQuery,
   initialSession,
   promptSide,
+  type ReviewMode,
   sessionReducer,
   shuffleSession,
 } from "../review/session";
 import { readSessionLimit } from "../settings/sessionLimit";
 import { topicChip } from "../vocab/list";
 
-const DIRECTION_LABELS: Record<Exclude<ReviewDirection, "oral">, string> = {
+const DIRECTION_LABELS: Record<CardDirection, string> = {
   ur_en: "Urdu → English",
   en_ur: "English → Urdu",
 };
+
+// mp06: Mixed first and the default.
+const MODE_LABELS: Record<ReviewMode, string> = { mixed: "Mixed", ...DIRECTION_LABELS };
 
 function aheadHint(ahead: AheadStop, upcoming: UpcomingResponse | null): string {
   if (ahead.seconds === 0) return "Only items due now.";
@@ -60,7 +66,7 @@ export function ReviewScreen({
   onChanged: () => void;
 }) {
   const [state, dispatch] = useReducer(sessionReducer, initialSession);
-  const [direction, setDirection] = useState<ReviewDirection>("ur_en");
+  const [mode, setMode] = useState<ReviewMode>("mixed");
   const [stop, setStop] = useState(0);
   const ahead = aheadStop(stop);
   // A touch on the slider holds its value until the gesture is a tap or a sideways drag, so a
@@ -144,7 +150,8 @@ export function ReviewScreen({
       if (response.status === 401) return onChanged();
       if (!response.ok) throw new Error("due failed");
       const data: DueResponse = await response.json();
-      dispatch({ type: "start", items: shuffleSession(data.items), direction });
+      const items = shuffleSession(data.items);
+      dispatch({ type: "start", items, directions: cardDirections(items, mode) });
     } catch {
       setStartError("Could not load your due items. Check your connection and try again.");
     } finally {
@@ -156,7 +163,7 @@ export function ReviewScreen({
     if (state.phase !== "card" || state.pending) return;
     const previous = state.history[state.index];
     dispatch({ type: "submit" });
-    const body: ReviewRequest = { grade: value, direction: state.direction };
+    const body: ReviewRequest = { grade: value, direction: currentDirection(state) };
     try {
       const response = await fetch(
         previous?.kind === "graded"
@@ -229,18 +236,23 @@ export function ReviewScreen({
         )}
         <fieldset className="direction">
           <legend>Direction</legend>
-          {(Object.keys(DIRECTION_LABELS) as (keyof typeof DIRECTION_LABELS)[]).map((key) => (
+          {(Object.keys(MODE_LABELS) as ReviewMode[]).map((key) => (
             <label key={key}>
               <input
                 type="radio"
                 name="direction"
                 value={key}
-                checked={direction === key}
-                onChange={() => setDirection(key)}
+                checked={mode === key}
+                onChange={() => setMode(key)}
               />
-              {DIRECTION_LABELS[key]}
+              {MODE_LABELS[key]}
             </label>
           ))}
+          {mode === "mixed" && (
+            <p className="hint">
+              Mostly Urdu → English for new words, mostly English → Urdu for words you know.
+            </p>
+          )}
         </fieldset>
         <label htmlFor="review-ahead" className="ahead-label">
           Review ahead <output htmlFor="review-ahead">{ahead.label}</output>
@@ -319,7 +331,8 @@ export function ReviewScreen({
 
   const item = currentItem(state);
   if (!item) return null;
-  const prompt = promptSide(item, state.direction);
+  const direction = currentDirection(state);
+  const prompt = promptSide(item, direction);
   const completed = state.history[state.index];
   const urduWord = (
     <button
@@ -339,6 +352,7 @@ export function ReviewScreen({
       <div className="review-top">
         <p className="eyebrow">
           {state.index + 1} OF {state.queue.length}
+          <span className="review-direction">{DIRECTION_LABELS[direction]}</span>
         </p>
         <div className="review-top-actions">
           {state.index > 0 && (

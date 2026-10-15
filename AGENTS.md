@@ -23,7 +23,7 @@ owner wins — edit the owner first, then ripple to the surfaces named below.
 | `pm/VISION.md` | intent, why we're building this | wins on intent; defers to PRD on scope |
 | `pm/PRD.md` | v0 scope, requirements, data model, Coach contract | **wins on scope over every other doc** |
 | `AGENTS.md` (this file) | architecture shape, invariants, commands, agent process | defers to PRD/VISION on scope and intent |
-| `shared/` (`ladders.ts`, `mastery.ts`, `dates.ts`, `normalize.ts`, `ulid.ts`, `topics.ts`) | as-built domain rules — review ladders, intervals, grading, mastery bands, normalization, IDs, the topic list and coverage quotas (f18) | code + its tests win over prose; ripple a rule change into PRD and this file |
+| `shared/` (`ladders.ts`, `mastery.ts`, `direction.ts`, `dates.ts`, `normalize.ts`, `ulid.ts`, `topics.ts`) | as-built domain rules — review ladders, intervals, grading, mastery bands, Mixed review's direction weighting (mp06), normalization, IDs, the topic list and coverage quotas (f18) | code + its tests win over prose; ripple a rule change into PRD and this file |
 | `pm/DECISIONS.md` | cross-cutting decisions and what was rejected | append/prepend-only; correct by a new dated entry |
 | `pm/pm-glossary.md` | process vocabulary, work types, identifier ladder | process terms defer here |
 | `pm/PLAN.md` | phases and the Features Index | roster mirrors each feature doc's badge |

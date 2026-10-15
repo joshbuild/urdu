@@ -2,7 +2,12 @@
 // Mastery arithmetic stays in the Worker: the client only records which grade was tapped.
 
 import type { ReviewDirection, VocabItem } from "../../shared/api";
+import { chooseDirection } from "../../shared/direction";
 import type { Grade } from "../../shared/mastery";
+
+// mp06: the start screen's Direction choice. Mixed draws each card's way on its own.
+export type ReviewMode = "mixed" | "ur_en" | "en_ur";
+export type CardDirection = Exclude<ReviewDirection, "oral">;
 
 export type Tally = { graded: number; skipped: number };
 export type CompletedCard =
@@ -10,7 +15,7 @@ export type CompletedCard =
   | { kind: "skipped"; revealed: boolean };
 type SessionProgress = {
   queue: VocabItem[];
-  direction: ReviewDirection;
+  directions: CardDirection[];
   history: CompletedCard[];
   tally: Tally;
 };
@@ -21,7 +26,7 @@ export type SessionState =
       phase: "card";
       queue: VocabItem[];
       index: number;
-      direction: ReviewDirection;
+      directions: CardDirection[];
       revealed: boolean;
       pending: boolean;
       error: string | null;
@@ -31,7 +36,8 @@ export type SessionState =
   | ({ phase: "done" } & SessionProgress);
 
 export type SessionAction =
-  | { type: "start"; items: VocabItem[]; direction: ReviewDirection }
+  // `directions` lines up with `items` (cardDirections), fixed for the whole session.
+  | { type: "start"; items: VocabItem[]; directions: CardDirection[] }
   | { type: "reveal" }
   | { type: "submit" }
   | { type: "recorded"; eventId: string; grade: Grade }
@@ -59,7 +65,7 @@ function advance(
   };
   const index = state.index + 1;
   if (index >= state.queue.length)
-    return { phase: "done", queue: state.queue, direction: state.direction, history, tally };
+    return { phase: "done", queue: state.queue, directions: state.directions, history, tally };
   return {
     ...state,
     history,
@@ -76,12 +82,12 @@ export function sessionReducer(state: SessionState, action: SessionAction): Sess
   if (action.type === "start") {
     if (state.phase === "card") return state;
     if (action.items.length === 0)
-      return { phase: "done", queue: [], direction: action.direction, history: [], tally: EMPTY };
+      return { phase: "done", queue: [], directions: [], history: [], tally: EMPTY };
     return {
       phase: "card",
       queue: action.items,
       index: 0,
-      direction: action.direction,
+      directions: action.directions,
       revealed: false,
       pending: false,
       error: null,
@@ -140,7 +146,7 @@ export function sessionReducer(state: SessionState, action: SessionAction): Sess
       return {
         phase: "done",
         queue: state.queue,
-        direction: state.direction,
+        directions: state.directions,
         history: state.history,
         tally: state.tally,
       };
@@ -149,6 +155,24 @@ export function sessionReducer(state: SessionState, action: SessionAction): Sess
 
 export function currentItem(state: SessionState): VocabItem | null {
   return state.phase === "card" ? (state.queue[state.index] ?? null) : null;
+}
+
+export function currentDirection(state: SessionState): CardDirection {
+  return state.phase === "card" ? (state.directions[state.index] ?? "ur_en") : "ur_en";
+}
+
+// mp06: each card's direction, drawn once when the session starts so Back and grade correction
+// see the card the way it was first shown. An item with no English can only show its Urdu, so it
+// is always Urdu → English, even in a fixed English → Urdu session.
+export function cardDirections(
+  items: readonly VocabItem[],
+  mode: ReviewMode,
+  random: () => number = Math.random,
+): CardDirection[] {
+  return items.map((item) => {
+    if (mode === "mixed") return chooseDirection(item, random);
+    return mode === "en_ur" && item.english?.trim() ? "en_ur" : "ur_en";
+  });
 }
 
 // Session order (sponsor request 2026-10-02): the Worker picks the cards by FR-A7, then each group
@@ -171,8 +195,8 @@ export function shuffleSession(
   ];
 }
 
-// What the card shows before Reveal. English→Urdu falls back to the Urdu side when the item
-// has no English yet, rather than showing a blank card.
+// What the card shows before Reveal. cardDirections never gives English→Urdu to an item with no
+// English; the Urdu fallback stays as a guard against a blank card.
 export function promptSide(
   item: VocabItem,
   direction: ReviewDirection,

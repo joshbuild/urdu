@@ -649,6 +649,10 @@ button.danger {
   display: contents;
 }
 
+.direction .hint {
+  margin: 4px 0 0;
+}
+
 .direction input {
   width: 22px;
   min-height: 22px;
@@ -717,6 +721,14 @@ button.review-speak-word:focus-visible {
 
 .review-card .review-top .eyebrow {
   margin: 0;
+}
+
+/* mp06: which way this card runs, under the count, so the top row stays one row wide. */
+.review-direction {
+  display: block;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: none;
 }
 
 .review-card .review-top-actions {

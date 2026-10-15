@@ -3,7 +3,9 @@ import type { VocabItem } from "../../shared/api";
 import {
   AHEAD_STOPS,
   aheadStop,
+  cardDirections,
   countWithin,
+  currentDirection,
   currentItem,
   dueQuery,
   initialSession,
@@ -49,7 +51,11 @@ function item(id: string, english: string | null = "book"): VocabItem {
 const run = (actions: SessionAction[], from: SessionState = initialSession) =>
   actions.reduce(sessionReducer, from);
 
-const start: SessionAction = { type: "start", items: [item("a"), item("b")], direction: "ur_en" };
+const start: SessionAction = {
+  type: "start",
+  items: [item("a"), item("b")],
+  directions: ["en_ur", "ur_en"],
+};
 const recorded: SessionAction = { type: "recorded", eventId: "event-a", grade: "correct" };
 
 describe("sessionReducer", () => {
@@ -61,7 +67,7 @@ describe("sessionReducer", () => {
   });
 
   it("an empty queue goes straight to the tally", () => {
-    const state = run([{ type: "start", items: [], direction: "ur_en" }]);
+    const state = run([{ type: "start", items: [], directions: [] }]);
     expect(state).toMatchObject({ phase: "done", tally: { graded: 0, skipped: 0 } });
   });
 
@@ -160,6 +166,17 @@ describe("sessionReducer", () => {
     expect(currentItem(state)?.id).toBe("b");
   });
 
+  it("keeps each card's direction through Back and from the tally", () => {
+    const first = run([start]);
+    expect(currentDirection(first)).toBe("en_ur");
+    const second = run([{ type: "skip" }], first);
+    expect(currentDirection(second)).toBe("ur_en");
+    expect(currentDirection(run([{ type: "back" }], second))).toBe("en_ur");
+    const done = run([{ type: "skip" }, { type: "back" }], second);
+    expect(currentItem(done)?.id).toBe("b");
+    expect(currentDirection(done)).toBe("ur_en");
+  });
+
   it("reset returns to the start panel", () => {
     expect(run([start, { type: "end" }, { type: "reset" }])).toEqual(initialSession);
   });
@@ -177,6 +194,27 @@ describe("promptSide", () => {
   it("falls back to Urdu when the item has no English", () => {
     expect(promptSide(item("a", null), "en_ur").side).toBe("urdu");
     expect(promptSide(item("a", "  "), "en_ur").side).toBe("urdu");
+  });
+});
+
+describe("cardDirections", () => {
+  const DAY = 86_400;
+  const at = (id: string, interval: number, english: string | null = "book") => ({
+    ...item(id, english),
+    interval_seconds: interval,
+  });
+
+  it("fills a fixed mode, but never English → Urdu for an item with no English", () => {
+    const items = [item("a"), item("b", null), item("c", " ")];
+    expect(cardDirections(items, "ur_en")).toEqual(["ur_en", "ur_en", "ur_en"]);
+    expect(cardDirections(items, "en_ur")).toEqual(["en_ur", "ur_en", "ur_en"]);
+  });
+
+  it("draws Mixed per card from the injected random, weighted by interval", () => {
+    // 0.2 is under a 1-day item's 0.3 but over a new item's 0.1.
+    const items = [at("new", 3_600), at("day", DAY), at("bare", 365 * DAY, null)];
+    expect(cardDirections(items, "mixed", () => 0.2)).toEqual(["ur_en", "en_ur", "ur_en"]);
+    expect(cardDirections(items, "mixed", () => 0)).toEqual(["en_ur", "en_ur", "ur_en"]);
   });
 });
 

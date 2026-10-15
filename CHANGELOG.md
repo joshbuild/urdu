@@ -4,6 +4,7 @@
 
 ### Changed
 
+- Review starts in **Mixed** direction by default: each card runs Urdu → English or English → Urdu, mostly Urdu → English for new words and mostly English → Urdu for words you know well, and the card says which way it runs. Urdu → English and English → Urdu are still there. A word with no English is always shown Urdu first, and now counts as an Urdu → English review.
 - A revealed review card fits on one screen: the header is a single slim row, and the grades sit at the foot of the card in two rows (**Wrong**, **Partly** on top; **Hesitant**, **Correct**, **Confident** below), where Reveal was. **Skip**, **Keep grade** and **End** (was End session) moved to the card's top row.
 - New words now come after due ones in a review session, so stopping early on a heavy day leaves new words for later instead of overdue ones.
 - A review session shuffles its cards: the due ones in random order, then the new ones in random order, so words added together no longer come up back to back.
