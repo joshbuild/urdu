@@ -1,6 +1,10 @@
 # f18 topic-coverage — journal
 
-**Current state (2026-10-08):** 🟡 deployed with 0008 applied remotely; smoke-test-18 steps 1, 2, 3 and 5 pass, step 4 (review chip) not yet seen. Next batch now fills a settable size (261008a), built and tested locally, not deployed. Next: sponsor deploys; a Next batch at the A1 tail should fill to 25 and move into A2.
+**Current state (2026-10-15):** 🟡 deployed with 0008 applied remotely; smoke-test-18 steps 1, 2, 3 and 5 pass, step 4 (review chip) not yet seen. Next batch now fills a settable size (261008a), built and tested locally, not deployed. Next: sponsor deploys; a Next batch at the A1 tail should fill to 25 and move into A2. Two Dash charts by level (FR-J7/J8, `d1605f6`) ride the same deploy.
+
+## 261015a — Dash charts by level
+
+Sponsor asked for two Dash charts by CEFR level, riding f18's `cefr` column (f16 is archived). **Intervals by level** (J7): a line per level, unclassified as "No level", counting reviewed released items by current interval in log2 day bins (<1, 1, 2, 4 …, at least to 32 d); a linear day axis would crush everything under a month into one corner. **Mastery by level** (J8): a stacked bar per level, Learning to Permanent up from the axis with counts inside (hidden under 13 px, kept in the tooltip), Not started then Queued hanging below, total over each bar. "Not queued" in the request was read as still-queued items; labelled Queued, flagged to the sponsor. `buildDash` gained `levels` (the Dash read now selects `cefr`); geometry in `src/dash/view.ts` (`intervalLines`, `masteryStacks`); fixtures gained levels and 24 queued items. Headless Edge at 360 px via a `renderToStaticMarkup` page: both cards read cleanly. Ripples: PRD FR-J7/J8, CHANGELOG. `pnpm check` green at 827; `d1605f6`, not deployed.
 
 ## 261008a — Next batch stalled at the end of A1
 
