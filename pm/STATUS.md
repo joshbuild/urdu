@@ -11,6 +11,7 @@
 - f07 `coach-client` — 🟡 IN PROGRESS, s01–s04 built (migration 0003 applied remotely and deployed 2026-09-23); s05 prompt tuning next → `features/f07-coach-client.md`
 - f18 `topic-coverage` — 🟡 IN PROGRESS, opened 2026-10-06 (DECISIONS 261006a); s01–s05 built and deployed (0008 remote); smoke-test-18 steps 1–3, 5 pass, step 4 open → `features/f18-topic-coverage.md`
 - mp05 `voice-vocab-bucket` — 🟡 IN PROGRESS, opened and stress-tested 2026-10-02 (s01–s07; Voice words held from top-up, DECISIONS 261002a); s01 `find_vocab` build next (no migration) → `mini-plans/mp05-voice-vocab-bucket.md`
+- mp06 `mixed-direction` — 🟡 IN PROGRESS, opened 2026-10-15 (DECISIONS 261015a); s01 `shared/direction.ts` next (no migration) → `mini-plans/mp06-mixed-direction.md`
 
 ## Next Session Pointers
 *The 1–3 concrete next actions for a cold start.*

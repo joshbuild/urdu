@@ -7,6 +7,7 @@
 
 | Handle | Slug / doc | Status | Stage | One-line |
 |---|---|---|---|---|
+| mp06 | `mini-plans/mp06-mixed-direction.md` | 🟡 IN PROGRESS | Stage 1 build (s01 next; s01–s04) | Mixed review direction, the default: each card draws Urdu → English or English → Urdu, production more likely the longer its interval; one shared schedule. |
 | mp05 | `mini-plans/mp05-voice-vocab-bucket.md` | 🟡 IN PROGRESS | Stage 1 build (s01 next; stress-tested, s01–s07) | Voice Coach: `find_vocab` looks up the whole vault; voice adds land queued and held in a per-day Voice harvest, listed, filled and released from the harvest detail. |
 
 ## Archived
