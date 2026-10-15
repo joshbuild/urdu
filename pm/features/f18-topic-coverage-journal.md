@@ -1,6 +1,10 @@
 # f18 topic-coverage — journal
 
-**Current state (2026-10-15):** 🟡 deployed with 0008 applied remotely; smoke-test-18 steps 1, 2, 3 and 5 pass, step 4 (review chip) not yet seen. Next batch now fills a settable size (261008a), built and tested locally, not deployed. Next: sponsor deploys; a Next batch at the A1 tail should fill to 25 and move into A2. Two Dash charts by level (FR-J7/J8, `d1605f6`) ride the same deploy.
+**Current state (2026-10-15):** 🟡 deployed with 0008 applied remotely; smoke-test-18 steps 1, 2, 3 and 5 pass, step 4 (review chip) not yet seen. Next batch now fills a settable size (261008a), built and tested locally, not deployed. Next: sponsor deploys; a Next batch at the A1 tail should fill to 25 and move into A2. Two Dash charts by level (FR-J7/J8, `d1605f6`, J7 smoothed `04c387b`) ride the same deploy.
+
+## 261015b — Intervals by level, smoothed
+
+Sponsor wanted J7 to read as a rough shape ("going for vibe"), with an x axis of hours, days, weeks, months, years. Bins moved from log2 days (first bin "<1") to doublings in hours from 1 h (`intervalBin`, anything under 2 h in bin 0), at least 15 bins (`MIN_INTERVAL_BINS`, about 3.7 years) so the axis always reaches the years stretch. `intervalCurves` in `src/dash/view.ts` replaces `intervalLines`/`binLabel`: each bin's count spreads as a Gaussian (σ 1.1 doublings, 64 samples), with one height scale shared across levels. Each level is drawn as a soft filled area plus a line, with faint dividers at day/week/month/year and span names centred between them. No y number or points. Headless Edge at 360 px on the full and sparse fixtures read cleanly. J8 untouched. Ripples: PRD FR-J7, CHANGELOG. `pnpm check` green; `04c387b`, not deployed.
 
 ## 261015a — Dash charts by level
 
