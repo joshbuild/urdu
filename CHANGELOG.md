@@ -2,7 +2,15 @@
 
 ## [Unreleased]
 
+### Added
+
+- **Suss** on review cards: tap it to flag a card that looks wrong, with an optional comment on what's off. **Vocab › Suss cards** lists every flagged card; **Copy suss prompt** sends them to ChatGPT with your comments, and **Paste suss reply** shows its fixes to tick (and why it kept the rest). Applying clears the flags.
+- A **Verb conjugation** topic under Grammar, for tense and person forms such as karta hoon, kar raha hai, kiya and karega. Re-upload `prompts/vocab-tags.md` to the ChatGPT Project.
+
 ### Changed
+
+- Search is the first thing on the Vocab tab, also finds words in notes and example sentences, and while you type the buttons above the list step aside so results come straight under the box.
+- The review calendar keeps darkening past 40 reviews a day, through nine shades to black at 400.
 
 - Review starts in **Mixed** direction by default: each card runs Urdu → English or English → Urdu, mostly Urdu → English for new words and mostly English → Urdu for words you know well, and the card says which way it runs. Urdu → English and English → Urdu are still there. A word with no English is always shown Urdu first, and now counts as an Urdu → English review.
 - A revealed review card fits on one screen: the header is a single slim row, and the grades sit at the foot of the card in two rows (**Wrong**, **Partly** on top; **Hesitant**, **Correct**, **Confident** below), where Reveal was. **Skip**, **Keep grade** and **End** (was End session) moved to the card's top row.

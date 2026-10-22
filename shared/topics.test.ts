@@ -11,10 +11,10 @@ import {
 } from "./topics";
 
 describe("topics", () => {
-  it("are 50, with unique kebab-case slugs", () => {
-    expect(TOPICS).toHaveLength(50);
+  it("are 51, with unique kebab-case slugs", () => {
+    expect(TOPICS).toHaveLength(51);
     const slugs = TOPICS.map((t) => t.slug);
-    expect(new Set(slugs).size).toBe(50);
+    expect(new Set(slugs).size).toBe(51);
     for (const slug of slugs) expect(slug).toMatch(/^[a-z]+(-[a-z]+)*$/);
   });
 
@@ -36,8 +36,9 @@ describe("topics", () => {
     expect(runs).toEqual(TOPIC_SECTIONS.map((s) => s.id));
   });
 
-  it("have the approved quotas: A1 685, A2 955, B1 935 (2,575 in all)", () => {
-    expect(quotaTotals()).toEqual({ A1: 685, A2: 955, B1: 935 });
+  // mp07 added conjugation (12/15/10) to f18's A1 685, A2 955, B1 935.
+  it("have the approved quotas: A1 697, A2 970, B1 945 (2,612 in all)", () => {
+    expect(quotaTotals()).toEqual({ A1: 697, A2: 970, B1: 945 });
     for (const t of TOPICS) {
       for (const level of QUOTA_LEVELS) {
         expect(Number.isInteger(t.quota[level]) && t.quota[level] >= 0).toBe(true);

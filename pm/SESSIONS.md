@@ -7,6 +7,7 @@
 
 ## Log
 *Newest at top.*
+- 261022a · mp07 review-tweaks · opened and built s01–s04 from four sponsor tweaks: suss cards (review-card flag + comment, Vocab › Suss cards, ChatGPT round trip over the check batch, migration 0009), search first on Vocab (+ notes/examples), 51st topic `conjugation`, nine-shade calendar to black at 400; DECISIONS 261022a; `pnpm check` green at 849; no headless shots (local server access denied); not deployed → `mini-plans/mp07-review-tweaks-journal.md`
 - 261015d · mp06 mixed-direction · built s01–s03: `shared/direction.ts` interval-weighted draw, per-card directions fixed at start (Back/correction keep them), Mixed the default with a card label, no-English items recorded `ur_en`; headless 360 px shots; PRD FR-E1/§2, AGENTS, CHANGELOG, smoke-test-mp06; `pnpm check` green at 833; `b600b71`, not deployed → `mini-plans/mp06-mixed-direction-journal.md`
 - 261015c · mp06 mixed-direction · opened after production reviews turned out never due (one shared schedule): Mixed default, per-card direction weighted by interval (0.1 → 0.8), no migration; en_ur-with-no-English mislabel found; DECISIONS 261015a; `4e6b2b9` → `mini-plans/mp06-mixed-direction-journal.md`
 - 261015b · f18 topic-coverage · Intervals by level smoothed for vibe: hour-doubling bins to ~3.7 y, Gaussian-smoothed filled curves per level on a log axis labelled hours/days/weeks/months/years, no y numbers; PRD FR-J7, CHANGELOG; `pnpm check` green; `04c387b`, not deployed → `features/f18-topic-coverage-journal.md`

@@ -538,10 +538,10 @@ export function CalendarCard({ dash }: { dash: DashResponse }) {
       </svg>
       <p className="dash-axis dash-axis--end">
         <span>Less</span>
-        {[0, 1, 2, 3, 4].map((l) => (
+        {[0, 1, 2, 3, 4, 5, 6, 7, 8].map((l) => (
           <span key={l} className={`dash-swatch dash-heat--${l}`} />
         ))}
-        <span>More</span>
+        <span>400+</span>
       </p>
     </section>
   );

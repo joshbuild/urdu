@@ -180,6 +180,26 @@ describe("GET /api/vocab", () => {
     expect(await ids("%")).toEqual([]);
   });
 
+  it("also searches notes and the example sentences (mp07)", async () => {
+    const kitab = await create({ urdu: KITAB, notes: "Feminine noun" });
+    const pani = await create({
+      urdu: PANI,
+      example_urdu: `${GHAR} mein`,
+      example_english: "Cold water please",
+    });
+    await create({ urdu: GHAR });
+    const ids = async (q: string) =>
+      (
+        await json<{ items: VocabItem[] }>(
+          await api("GET", `/api/vocab?q=${encodeURIComponent(q)}`),
+        )
+      ).items.map((i) => i.id);
+
+    expect(await ids("feminine")).toEqual([kitab.id]);
+    expect(await ids("cold")).toEqual([pani.id]);
+    expect((await ids(GHAR)).length).toBe(2);
+  });
+
   it("filters by tag and due, and reports the filtered total", async () => {
     const a = await create({ urdu: KITAB, tags: ["food"] });
     const b = await create({ urdu: PANI, tags: ["food", "body"] });

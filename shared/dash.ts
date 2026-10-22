@@ -55,7 +55,7 @@ export type TroubleItem = {
 };
 // started: items released into review that week (f17; was items added).
 export type BacklogWeek = { week: string; started: number; known: number };
-export type CalendarLevel = 0 | 1 | 2 | 3 | 4;
+export type CalendarLevel = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8;
 export type CalendarDay = { day: string; count: number; level: CalendarLevel };
 
 // A CEFR level, or "none" for items not yet classified (f18).
@@ -103,13 +103,12 @@ const RECALLED: ReadonlySet<Grade> = new Set(["hesitant", "correct", "confident"
 const LAPSES: ReadonlySet<Grade> = new Set(["wrong", "partial"]);
 const BACKLOG_BANDS: ReadonlySet<MasteryBand> = new Set([0, 1, 2]);
 
-// Calendar shading: 0, 1–9, 10–19, 20–39, 40+.
+// Calendar shading (mp07): the lower bound of each shade above 0, teal darkening to black at 400
+// reviews a day.
+export const CALENDAR_STEPS = [1, 10, 25, 50, 100, 175, 275, 400] as const;
+
 export function calendarLevel(count: number): CalendarLevel {
-  if (count <= 0) return 0;
-  if (count < 10) return 1;
-  if (count < 20) return 2;
-  if (count < 40) return 3;
-  return 4;
+  return CALENDAR_STEPS.filter((step) => count >= step).length as CalendarLevel;
 }
 
 export function recallBand(recognition: RecallRate): RecallBand {

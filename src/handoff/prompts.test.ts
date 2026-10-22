@@ -8,6 +8,7 @@ import {
   describeInvalid,
   newVocabPrompt,
   parsePasted,
+  sussPrompt,
 } from "./prompts";
 
 const item = (over: Partial<VocabItem>): VocabItem => ({
@@ -36,6 +37,8 @@ const item = (over: Partial<VocabItem>): VocabItem => ({
   filled_at: null,
   harvest_id: null,
   released_at: "2026-09-01T00:00:00.000Z",
+  suss_at: null,
+  suss_note: null,
   created_at: "2026-09-18T00:00:00.000Z",
   updated_at: "2026-09-18T00:00:00.000Z",
   ...over,
@@ -133,6 +136,26 @@ const BATCH = {
   ],
   exclusions: [ROTI],
 };
+
+describe("sussPrompt", () => {
+  it("lists each card's fields and comment, and asks for every card back with a reason", () => {
+    const text = sussPrompt(
+      [
+        item({ english: "water", suss_at: "2026-10-22T00:00:00.000Z", suss_note: "too formal?" }),
+        item({ id: "01J0000000000000000000000B", suss_at: "2026-10-22T00:00:00.000Z" }),
+      ],
+      "H9",
+    );
+    expect(text).toContain('"handoff_id": "H9"');
+    expect(text).toContain('"comment": "too formal?"');
+    expect(text).toContain('"english": "water"');
+    // The one card with a comment, plus two mentions in the instructions.
+    expect(text.match(/"comment"/g)).toHaveLength(3);
+    expect(text).toContain("Return every item, changed or not");
+    expect(text).toContain("urdu_suggestion");
+    expect(text).toContain("JSON document alone");
+  });
+});
 
 describe("batchPrompt", () => {
   it("asks for each cell's count at its level, with the scope line and the exclusions", () => {

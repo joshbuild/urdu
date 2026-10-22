@@ -7,6 +7,7 @@
 // 0006 → 0007 (f17): every existing row is released at its added_at and unlinked; nothing is
 // queued.
 // 0007 → 0008 (f18): topic and cefr arrive null on every row, the rows otherwise untouched.
+// 0008 → 0009 (mp07): suss_at and suss_note arrive null on every row, the rows otherwise untouched.
 import { env } from "cloudflare:workers";
 import { beforeEach, describe, expect, it } from "vitest";
 
@@ -412,5 +413,29 @@ describe("migration 0008_topic_coverage", () => {
     await expect(insert("food", "A2+")).rejects.toThrow(/CHECK/);
     await expect(insert("", "A1")).rejects.toThrow(/CHECK/);
     await insert("food", "B2");
+  });
+});
+
+describe("migration 0009_suss", () => {
+  it("adds suss_at and suss_note as null on every row, the rows otherwise untouched", async () => {
+    for (const prefix of ["0002", "0003", "0004", "0005", "0006", "0007", "0008"]) {
+      await apply(prefix);
+    }
+    await db
+      .prepare(
+        `INSERT INTO vocab (id, urdu, urdu_key, kind, ladder_id, ladder_step, interval_seconds,
+           added_at, source, released_at, created_at, updated_at, topic, cefr)
+         VALUES ('01J00000000000000000000001', 'w', 'w', 'word', 8, 2, 36327, ?, 'manual', ?, ?,
+           ?, 'food', 'A1')`,
+      )
+      .bind(NOW, NOW, NOW, NOW)
+      .run();
+    const before = (await db.prepare("SELECT * FROM vocab").all()).results;
+
+    await apply("0009");
+
+    const after = (await db.prepare("SELECT * FROM vocab").all()).results;
+    expect(after).toEqual(before.map((row) => ({ ...row, suss_at: null, suss_note: null })));
+    await expect(db.prepare("UPDATE vocab SET suss_note = ''").run()).rejects.toThrow(/CHECK/);
   });
 });

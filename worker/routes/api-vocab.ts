@@ -8,6 +8,7 @@ import {
   type InvalidRequestResponse,
   type MatchResponse,
   type StatusResponse,
+  type SussRequest,
   type TagsResponse,
   type UpcomingResponse,
   VOCAB_SORTS,
@@ -21,6 +22,7 @@ import { coverage } from "../domain/coverage";
 import { intakeCounts, safeTopUp } from "../domain/intake";
 import { activeLadderId } from "../domain/settings";
 import {
+  clearSuss,
   createVocab,
   deleteVocab,
   dueVocab,
@@ -28,13 +30,20 @@ import {
   listTags,
   listVocab,
   matchVocab,
+  setSuss,
   upcomingDueTimes,
   updateVocab,
   type VocabFilter,
   vocabCounts,
   type WriteResult,
 } from "../domain/vocab";
-import { type InputError, parseCreate, parseMatch, parseUpdate } from "../domain/vocab-input";
+import {
+  type InputError,
+  parseCreate,
+  parseMatch,
+  parseSuss,
+  parseUpdate,
+} from "../domain/vocab-input";
 import type { AppEnv } from "../env";
 
 export const DEFAULT_LIST_LIMIT = 50;
@@ -188,6 +197,8 @@ vocabRoutes.get("/api/vocab", async (c) => {
   if (isError(due)) return invalid(c, due);
   const queued = boolParam(c, "queued");
   if (isError(queued)) return invalid(c, queued);
+  const suss = boolParam(c, "suss");
+  if (isError(suss)) return invalid(c, suss);
   const sort = c.req.query("sort") ?? "added";
   if (!(VOCAB_SORTS as readonly string[]).includes(sort)) {
     return invalid(c, { field: "sort", message: `must be one of ${VOCAB_SORTS.join(", ")}` });
@@ -202,6 +213,7 @@ vocabRoutes.get("/api/vocab", async (c) => {
       ...filter,
       due,
       queued,
+      suss,
       sort: sort as VocabSort,
       limit,
       offset,
@@ -259,6 +271,22 @@ vocabRoutes.patch("/api/vocab/:id", async (c) => {
     await activeLadderId(c.env.DB),
   );
   return result.ok ? c.json(result.item) : writeFailure(c, result);
+});
+
+// mp07: flag as suss with an optional comment, or clear the flag. Neither is an edit.
+vocabRoutes.put("/api/vocab/:id/suss", async (c) => {
+  const body = await readJson(c);
+  if (body === undefined) return invalid(c, { message: "body must be valid JSON" });
+  const parsed = parseSuss(body);
+  if (!parsed.ok) return invalid(c, parsed.error);
+  const request: SussRequest = parsed.value;
+  const item = await setSuss(c.env.DB, c.req.param("id"), request.note, new Date());
+  return item ? c.json(item) : c.json({ error: "not_found" }, 404);
+});
+
+vocabRoutes.delete("/api/vocab/:id/suss", async (c) => {
+  const item = await clearSuss(c.env.DB, c.req.param("id"));
+  return item ? c.json(item) : c.json({ error: "not_found" }, 404);
 });
 
 vocabRoutes.delete("/api/vocab/:id", async (c) => {

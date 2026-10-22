@@ -19,9 +19,9 @@ describe("coverageGrid", () => {
       { level: "B1", have: 0, quota: 30, open: true },
     ]);
     expect(grid.totals).toEqual([
-      { level: "A1", have: 0, quota: 685 },
-      { level: "A2", have: 0, quota: 955 },
-      { level: "B1", have: 0, quota: 935 },
+      { level: "A1", have: 0, quota: 697 },
+      { level: "A2", have: 0, quota: 970 },
+      { level: "B1", have: 0, quota: 945 },
     ]);
   });
 
@@ -39,7 +39,7 @@ describe("coverageGrid", () => {
     expect(food?.total).toBe(46);
     // Over-target words don't fill other topics' gaps: totals count at most each target.
     expect(daily?.totals[0]).toEqual({ level: "A1", have: 35, quota: 163 });
-    expect(grid.totals[0]).toEqual({ level: "A1", have: 35, quota: 685 });
+    expect(grid.totals[0]).toEqual({ level: "A1", have: 35, quota: 697 });
     const idioms = grid.sections[1]?.rows.find((r) => r.slug === "idioms");
     expect(idioms?.cells[0]).toEqual({ level: "A1", have: 0, quota: 0, open: false });
     expect(grid.unclassified).toBe(7);

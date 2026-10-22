@@ -4,7 +4,7 @@
 // and the prompts quote its scope lines. Order is display order; the slug is the identity, so
 // topics can be reordered freely, but renaming a slug needs a migration of `vocab.topic`.
 //
-// Quotas are coverage targets per level (not cumulative), not a curriculum: about 2,575 words to
+// Quotas are coverage targets per level (not cumulative), not a curriculum: about 2,600 words to
 // B1, after the usual 2,500–3,000 for European languages (no CEFR list exists for Urdu).
 
 export const CEFR_LEVELS = ["A1", "A2", "B1", "B2", "C1", "C2"] as const;
@@ -70,6 +70,13 @@ export const TOPICS: readonly Topic[] = [
     section: "grammar",
     scope: "sakna, chahiye, parna, chahna, lagna, hona",
     quota: { A1: 8, A2: 10, B1: 7 },
+  },
+  {
+    slug: "conjugation",
+    label: "Verb conjugation",
+    section: "grammar",
+    scope: "tense and person forms: karta hoon, kar raha hai, kiya, karega, karo/kijiye, kare",
+    quota: { A1: 12, A2: 15, B1: 10 },
   },
   {
     slug: "compound-verbs",
@@ -393,7 +400,8 @@ export const TOPIC_BOUNDARIES =
   "Frequency words go to adverbs; time words (already, still, yet, soon) to time; size to " +
   "qualities; money of any kind to money; weather never to nature; spatial relations to space, " +
   "places themselves to places; set social formulas to social; fillers and interjections to " +
-  "discourse; verbs of speaking to communication.";
+  "discourse; verbs of speaking to communication; a conjugated or tense form to conjugation, the " +
+  "verb's dictionary form to the topic of its meaning.";
 
 const BY_SLUG: ReadonlyMap<string, Topic> = new Map(TOPICS.map((t) => [t.slug, t]));
 

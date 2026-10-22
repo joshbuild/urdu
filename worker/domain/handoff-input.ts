@@ -36,7 +36,8 @@ import {
 
 const PROPOSAL_FIELDS = new Set(["urdu", ...FILLABLE_FIELDS, "topic", "cefr", "tags"]);
 const REVISION_FIELDS = new Set(["vocab_id", "urdu", ...FILLABLE_FIELDS]);
-const CORRECTION_FIELDS = new Set([...REVISION_FIELDS, "reason", "urdu_suggestion"]);
+// mp07: a chat may echo a suss card's "comment" back; it is read and ignored.
+const CORRECTION_FIELDS = new Set([...REVISION_FIELDS, "reason", "urdu_suggestion", "comment"]);
 const ACCEPT_FIELDS = new Set(["vocab_id", "fields", "reset"]);
 
 const fail = (field: string | undefined, message: string) =>
@@ -245,7 +246,7 @@ export function parseCorrections(body: unknown, preview: boolean): Parsed<Correc
 // check of every field, 20 items, rotation over the whole vault.
 export function parseCheckOptions(body: unknown): Parsed<CheckOptions> {
   if (!isRecord(body)) return fail(undefined, "body must be a JSON object");
-  const extra = unknownKey(body, new Set(["mode", "fields", "count", "only_unchecked"]));
+  const extra = unknownKey(body, new Set(["mode", "fields", "count", "only_unchecked", "suss"]));
   if (extra) return fail(extra, "is not a recognised field");
 
   const mode = body.mode ?? "correctness";
@@ -272,6 +273,21 @@ export function parseCheckOptions(body: unknown): Parsed<CheckOptions> {
   }
   const onlyUnchecked = body.only_unchecked ?? false;
   if (typeof onlyUnchecked !== "boolean") return fail("only_unchecked", "must be a boolean");
+  const suss = body.suss ?? false;
+  if (typeof suss !== "boolean") return fail("suss", "must be a boolean");
+  // mp07: a suss batch may change anything, whatever the rest of the body says.
+  if (suss) {
+    return {
+      ok: true,
+      value: {
+        mode: "both",
+        fields: [...FILLABLE_FIELDS],
+        count: count as number,
+        only_unchecked: false,
+        suss: true,
+      },
+    };
+  }
   return {
     ok: true,
     value: {

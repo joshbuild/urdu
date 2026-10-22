@@ -37,6 +37,8 @@ import {
   shuffleSession,
 } from "../review/session";
 import { readSessionLimit } from "../settings/sessionLimit";
+import { SussSheet } from "../suss/SussSheet";
+import { isSuss } from "../suss/suss";
 import { topicChip } from "../vocab/list";
 
 const DIRECTION_LABELS: Record<CardDirection, string> = {
@@ -83,6 +85,10 @@ export function ReviewScreen({
   const [loading, setLoading] = useState(false);
   const [startError, setStartError] = useState("");
   const [intaking, setIntaking] = useState(false);
+  // mp07: items flagged or cleared during this session, as the Worker returned them; the queue
+  // holds the snapshot taken at start.
+  const [sussed, setSussed] = useState<Readonly<Record<string, VocabItem>>>({});
+  const [sussOpen, setSussOpen] = useState(false);
   // A fresh status (new intake counts) ends an Intake in flight.
   const intakeCounts = status.intake;
   useEffect(() => {
@@ -329,8 +335,9 @@ export function ReviewScreen({
     );
   }
 
-  const item = currentItem(state);
-  if (!item) return null;
+  const queued = currentItem(state);
+  if (!queued) return null;
+  const item = sussed[queued.id] ?? queued;
   const direction = currentDirection(state);
   const prompt = promptSide(item, direction);
   const completed = state.history[state.index];
@@ -385,6 +392,15 @@ export function ReviewScreen({
               Skip
             </button>
           )}
+          {/* mp07: flag the card as questionable; it doesn't advance the card. */}
+          <button
+            type="button"
+            className={isSuss(item) ? "back suss-on" : "back"}
+            onClick={() => setSussOpen(true)}
+            aria-pressed={isSuss(item)}
+          >
+            Suss
+          </button>
           <button
             type="button"
             className="back"
@@ -441,6 +457,13 @@ export function ReviewScreen({
         </dl>
       )}
 
+      {/* After reveal only: the comment may name the answer. */}
+      {state.revealed && isSuss(item) && (
+        <p className="hint suss-flag">
+          Suss{item.suss_note ? `: ${item.suss_note}` : ""} (see Vocab › Suss cards)
+        </p>
+      )}
+
       {completed?.kind === "graded" && (
         <p className="hint" role="status">
           Recorded: {GRADE_LABELS[completed.grade]}. Choose another grade to correct it.
@@ -471,6 +494,14 @@ export function ReviewScreen({
           </button>
         )}
       </div>
+
+      {sussOpen && (
+        <SussSheet
+          item={item}
+          onSaved={(saved) => setSussed((current) => ({ ...current, [saved.id]: saved }))}
+          onClose={() => setSussOpen(false)}
+        />
+      )}
     </section>
   );
 }

@@ -173,6 +173,42 @@ If there is nothing to change, return "corrections": []. At most ${MAX_CHECK_BAT
 `;
 }
 
+// mp07: the suss cards, flagged during review, each with the sponsor's comment. The Worker issued
+// the batch in mode both over every field, so any fix or fill the chat proposes can be ticked.
+export function sussPrompt(items: readonly VocabItem[], handoffId: string): string {
+  const listed = items.map((item) => {
+    const entry: Record<string, string> = { vocab_id: item.id, urdu: item.urdu };
+    for (const field of FILLABLE_FIELDS) {
+      const value = item[field];
+      if (value !== null) entry[field] = value;
+    }
+    if (item.suss_note) entry.comment = item.suss_note;
+    return entry;
+  });
+  return `While reviewing my Urdu vocabulary app, I flagged these entries as questionable. Where I left a "comment", it says what looked wrong to me. Follow these conventions:
+
+${CONVENTIONS}
+
+Check each entry, starting from my comment: is anything wrong, misleading, unnatural or missing? Correct a wrong value, set it to null to remove it, or supply a missing field.
+
+Items:
+${JSON.stringify(listed, null, 2)}
+
+Return every item, changed or not. For each, copy vocab_id and urdu exactly as given; include only the fields you change or supply, with their values; and give a "reason" of one or two plain sentences that answers my comment (say why the entry is right if you change nothing; single quotes, never double, around any spelling you cite). Never change "urdu". If you think its spelling is wrong, put the spelling you suggest in "urdu_suggestion". Never copy "comment" into the reply.
+
+Return exactly this JSON shape, copying handoff_id as given:
+
+{
+  "handoff_id": "${handoffId}",
+  "corrections": [
+    { "vocab_id": "...", "urdu": "...", "english": "...", "reason": "..." }
+  ]
+}
+
+At most ${MAX_CHECK_BATCH} corrections. ${JSON_ONLY} ${NO_GUESS}
+`;
+}
+
 export type Pasted = { ok: true; value: unknown } | { ok: false; message: string };
 
 // Chat replies often come wrapped in a markdown code fence; the fence is packaging, so it is

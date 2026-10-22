@@ -1,7 +1,8 @@
 // f04 s02: the vault list (FR-D1) — search, topic and level filters (f18), due-only, sort, "load
-// more" paging.
+// more" paging. mp07: search heads the Vocab tab; the tab's actions (`children`) sit under it and
+// step aside while a search is typed, so the results come straight after the box.
 
-import { useEffect, useState } from "react";
+import { type ReactNode, useEffect, useState } from "react";
 import type { VocabItem, VocabListResponse, VocabSort } from "../../shared/api";
 import { CEFR_LEVELS } from "../../shared/topics";
 import { TopicOptions } from "../reader/DraftFields";
@@ -15,11 +16,13 @@ export function VocabList({
   onFilters,
   now,
   onOpen,
+  children,
 }: {
   filters: ListFilters;
   onFilters: (next: ListFilters) => void;
   now: string;
   onOpen: (id: string) => void;
+  children?: ReactNode;
 }) {
   const [search, setSearch] = useState(filters.q);
   const [items, setItems] = useState<VocabItem[]>([]);
@@ -73,16 +76,19 @@ export function VocabList({
 
   return (
     <>
-      <label htmlFor="vocab-search">Search</label>
       <input
         id="vocab-search"
+        className="vocab-search"
         type="search"
-        placeholder="Urdu, Roman or English"
+        aria-label="Search vocabulary"
+        placeholder="Search Urdu, Roman, English or notes"
         value={search}
         onChange={(event) => setSearch(event.target.value)}
         autoCapitalize="none"
         spellCheck={false}
       />
+
+      {search === "" && children}
 
       <div className="vocab-filters">
         <div className="vocab-filters-wide">

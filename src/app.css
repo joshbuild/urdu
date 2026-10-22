@@ -28,8 +28,12 @@
   --chart-heat-0: #ebeee8;
   --chart-heat-1: #c6e0d8;
   --chart-heat-2: #8cc4bc;
-  --chart-heat-3: #3f8f8a;
-  --chart-heat-4: #054e51;
+  --chart-heat-3: #5fa8a2;
+  --chart-heat-4: #3f8f8a;
+  --chart-heat-5: #1f6e6c;
+  --chart-heat-6: #0b4f51;
+  --chart-heat-7: #05302f;
+  --chart-heat-8: #000;
   /* Dash J7 level lines, A1 amber through B1 dark teal; the upper levels rose and violet. */
   --chart-level-A1: #d8913f;
   --chart-level-A2: #3f8f8a;
@@ -573,6 +577,36 @@ button.vocab-row {
   font-size: 0.875rem;
 }
 
+/* mp07: search heads the Vocab tab; New item and Suss cards share a row under it. */
+input.vocab-search {
+  margin-bottom: 12px;
+}
+
+.vocab-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.vocab-actions button {
+  margin: 0;
+}
+
+/* mp07: suss cards. The review card's Suss button turns rust once flagged. */
+.suss-note {
+  color: #9a4a2c;
+  font-size: 0.875rem;
+}
+
+.review-top .back.suss-on {
+  color: #9a4a2c;
+  font-weight: 700;
+}
+
+.suss-flag {
+  color: #9a4a2c;
+}
+
 button.back {
   --btn-bg: transparent;
   --btn-bg-hover: transparent;
@@ -731,8 +765,11 @@ button.review-speak-word:focus-visible {
   text-transform: none;
 }
 
+/* mp07: four actions with Suss; a narrow phone wraps them rather than overflow. */
 .review-card .review-top-actions {
-  gap: 16px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  column-gap: 12px;
 }
 
 .review-card .review-top .back {
@@ -1252,16 +1289,31 @@ button.link {
 .dash-heat--4 {
   --swatch: var(--chart-heat-4);
 }
+.dash-heat--5 {
+  --swatch: var(--chart-heat-5);
+}
+.dash-heat--6 {
+  --swatch: var(--chart-heat-6);
+}
+.dash-heat--7 {
+  --swatch: var(--chart-heat-7);
+}
+.dash-heat--8 {
+  --swatch: var(--chart-heat-8);
+}
 
 .dash-heat-count {
-  fill: var(--chart-heat-4);
+  fill: var(--chart-heat-6);
   font-size: 11px;
   font-weight: 600;
   text-anchor: middle;
 }
 
-.dash-heat--3 .dash-heat-count,
-.dash-heat--4 .dash-heat-count {
+.dash-heat--4 .dash-heat-count,
+.dash-heat--5 .dash-heat-count,
+.dash-heat--6 .dash-heat-count,
+.dash-heat--7 .dash-heat-count,
+.dash-heat--8 .dash-heat-count {
   fill: #fff;
 }
 

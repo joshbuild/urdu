@@ -52,9 +52,18 @@ export type VocabItem = {
   // UTC instant the item entered review; null means queued (in the vault, never due). Release is
   // not an edit, so it leaves updated_at alone.
   released_at: string | null;
+  // mp07: UTC instant the item was flagged as questionable (suss), null when not; suss_note is
+  // the comment on what looks wrong. A flag is not an edit: it leaves updated_at and the schedule
+  // alone. Applying a suss check batch clears both.
+  suss_at: string | null;
+  suss_note: string | null;
   created_at: string;
   updated_at: string;
 };
+
+// mp07: the body of PUT /api/vocab/:id/suss. A blank note stores null.
+export const MAX_SUSS_NOTE = 500;
+export type SussRequest = { note: string | null };
 
 // Fields a client can edit. All optional text fields accept null (or "") to clear.
 export type VocabFields = {
@@ -454,6 +463,9 @@ export type CheckOptions = {
   count: number;
   // Only items never checked in this mode (checked_at or filled_at null).
   only_unchecked: boolean;
+  // mp07: the suss cards, oldest flag first, instead of the rotation; forces mode both over every
+  // field and ignores only_unchecked. Applying the batch clears their flags.
+  suss?: boolean;
 };
 
 export type CheckBatchResponse = {

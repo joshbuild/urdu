@@ -3,8 +3,10 @@
 
 import {
   MAX_MATCH_WORDS,
+  MAX_SUSS_NOTE,
   type MatchRequest,
   PWA_VOCAB_SOURCES,
+  type SussRequest,
   type UpdateVocabRequest,
   type VocabFields,
   type VocabSource,
@@ -242,4 +244,19 @@ export function parseUpdate(body: unknown): Parsed<UpdateVocabRequest> {
   }
   if (keys.length === 0) return fail(undefined, "no fields to update");
   return parseFields(body);
+}
+
+// mp07: {note?}, a string or null; trimmed, and blank stores null.
+export function parseSuss(body: unknown): Parsed<SussRequest> {
+  if (!isRecord(body)) return fail(undefined, "body must be a JSON object");
+  for (const key of Object.keys(body)) {
+    if (key !== "note") return fail(key, "is not a recognised field");
+  }
+  const raw = body.note ?? null;
+  if (raw !== null && typeof raw !== "string") return fail("note", "must be a string or null");
+  const note = raw?.trim() || null;
+  if (note !== null && note.length > MAX_SUSS_NOTE) {
+    return fail("note", `must be at most ${MAX_SUSS_NOTE} characters`);
+  }
+  return { ok: true, value: { note } };
 }

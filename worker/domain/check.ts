@@ -27,7 +27,12 @@ type Selection = { candidates: string; unchecked: string; order: string };
 
 // Each mode rotates on its own stamp: never stamped first, then the longest since. Field names
 // come from FILLABLE_FIELDS, never from the request, so they are safe to interpolate.
-function selection({ mode, fields }: CheckOptions): Selection {
+function selection({ mode, fields, suss }: CheckOptions): Selection {
+  // mp07: the flagged cards, oldest flag first.
+  if (suss) {
+    const flagged = "suss_at IS NOT NULL";
+    return { candidates: flagged, unchecked: flagged, order: "suss_at ASC, added_at ASC, id ASC" };
+  }
   const missing = `(${fields.map((f) => `${f} IS NULL`).join(" OR ")})`;
   const present = `(${fields.map((f) => `${f} IS NOT NULL`).join(" OR ")})`;
   const tail = "added_at ASC, id ASC";
@@ -81,6 +86,8 @@ export async function issueCheckBatch(
     vocab_ids: items.map((i) => i.id),
     mode: options.mode,
     fields: options.fields,
+    // mp07: applying clears the flags set up to now; a card flagged again later keeps its flag.
+    ...(options.suss ? { suss_before: now.toISOString() } : {}),
   };
   await db
     .prepare(
@@ -91,15 +98,21 @@ export async function issueCheckBatch(
   return { handoff_id, items, ...counts };
 }
 
-// A batch issued by f11, before modes, has no mode or fields.
-type BatchPayload = { vocab_ids: string[]; mode?: CheckMode; fields?: FillableField[] };
+// A batch issued by f11, before modes, has no mode or fields. A suss batch (mp07) carries the
+// instant it was issued.
+type BatchPayload = {
+  vocab_ids: string[];
+  mode?: CheckMode;
+  fields?: FillableField[];
+  suss_before?: string;
+};
 
 // The handoff_id names no batch this app issued.
 export const NOT_ISSUED = "not_issued";
 
 // What a batch may change. `fields` null is a batch issued by f11, before modes: every field,
-// no mode rule, stamped as a correctness check.
-export type Scope = { mode: CheckMode; fields: FillableField[] | null };
+// no mode rule, stamped as a correctness check. `suss_before` marks a suss batch (mp07).
+export type Scope = { mode: CheckMode; fields: FillableField[] | null; suss_before?: string };
 
 type Batch = Scope &
   (
@@ -117,8 +130,12 @@ async function readBatch(
     .first<{ status: string; payload: string; outcome: string | null }>();
   if (!row) return NOT_ISSUED;
   if (row.status !== "check_issued" && row.status !== "checked") return ID_CONFLICT;
-  const { vocab_ids, mode, fields } = JSON.parse(row.payload) as BatchPayload;
-  const scope: Scope = { mode: mode ?? "correctness", fields: fields ?? null };
+  const { vocab_ids, mode, fields, suss_before } = JSON.parse(row.payload) as BatchPayload;
+  const scope: Scope = {
+    mode: mode ?? "correctness",
+    fields: fields ?? null,
+    ...(suss_before !== undefined ? { suss_before } : {}),
+  };
   return row.status === "checked"
     ? { ...scope, status: "checked", vocab_ids, results: JSON.parse(row.outcome ?? "[]") }
     : { ...scope, status: "check_issued", vocab_ids };
@@ -305,6 +322,25 @@ const STAMPS: Readonly<Record<CheckMode, string>> = {
   both: "checked_at = ?1, filled_at = ?1",
 };
 
+// mp07: a suss batch clears the flag and comment of its cards flagged before it was issued. Like
+// the stamps it is not an edit, so updated_at is left alone.
+function sussClear(
+  db: D1Database,
+  ids: readonly string[],
+  before: string | undefined,
+  handoffId: string,
+): D1PreparedStatement[] {
+  if (before === undefined) return [];
+  return [
+    db
+      .prepare(
+        `UPDATE vocab SET suss_at = NULL, suss_note = NULL
+         WHERE id IN (${ids.map(() => "?").join(", ")}) AND suss_at <= ? AND ${OPEN}`,
+      )
+      .bind(...ids, before, handoffId),
+  ];
+}
+
 // The plan is made from `items`, a read taken just before the write; the SQL guards are the
 // backstop. Exported so a test can pass a read that has gone stale.
 export async function applyCorrections(
@@ -333,6 +369,7 @@ export async function applyCorrections(
   const payload = {
     vocab_ids: vocabIds,
     ...(batch.fields !== null ? { mode, fields: batch.fields } : {}),
+    ...(batch.suss_before !== undefined ? { suss_before: batch.suss_before } : {}),
     corrections: request.corrections,
     accept: request.accept,
   };
@@ -348,6 +385,7 @@ export async function applyCorrections(
            AND ${OPEN.replace("?", `?${vocabIds.length + 2}`)}`,
       )
       .bind(at, ...vocabIds, handoff_id),
+    ...sussClear(db, vocabIds, batch.suss_before, handoff_id),
     db
       .prepare(
         `UPDATE handoffs SET status = 'checked', imported_at = ?, payload = ?, outcome = ?

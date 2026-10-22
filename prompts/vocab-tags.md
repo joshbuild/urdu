@@ -4,7 +4,7 @@ The topic list for my vocabulary app. Every entry has one `topic` slug from this
 one where it belongs most, and 0 to 2 `tags`: other slugs from this list where it clearly also
 belongs, never the topic itself. Use the slugs exactly as written.
 
-Boundaries: Frequency words go to adverbs; time words (already, still, yet, soon) to time; size to qualities; money of any kind to money; weather never to nature; spatial relations to space, places themselves to places; set social formulas to social; fillers and interjections to discourse; verbs of speaking to communication.
+Boundaries: Frequency words go to adverbs; time words (already, still, yet, soon) to time; size to qualities; money of any kind to money; weather never to nature; spatial relations to space, places themselves to places; set social formulas to social; fillers and interjections to discourse; verbs of speaking to communication; a conjugated or tense form to conjugation, the verb's dictionary form to the topic of its meaning.
 
 ## Grammar & function words
 
@@ -13,6 +13,7 @@ Boundaries: Frequency words go to adverbs; time words (already, still, yet, soon
 - `postpositions` (Postpositions): mein, par, se, tak, ke liye, ka/ki/ke, ke paas, ke andar, ke baad
 - `connectors` (Connectors): aur, lekin, ya, kyunke, agar, to, halanke, warna
 - `modals` (Modals & auxiliaries): sakna, chahiye, parna, chahna, lagna, hona
+- `conjugation` (Verb conjugation): tense and person forms: karta hoon, kar raha hai, kiya, karega, karo/kijiye, kare
 - `compound-verbs` (Compound verbs): vector verbs (kha lena, ho jana) and noun + karna/hona
 - `negation` (Negation & certainty): nahin, mat, kabhi nahin, zaroor, shayad, yaqeenan
 - `adverbs` (Frequency, degree & manner): hamesha, aksar, kabhi kabhi, bohat, kaafi, taqreeban

@@ -99,6 +99,31 @@ export async function getVocab(db: D1Database, id: string): Promise<VocabItem | 
   return row ? toItem(row) : null;
 }
 
+// mp07: flag an item as suss, or change its comment; the first flag's time is kept. A flag is not
+// an edit, so updated_at stays (a grade is guarded on it) and the schedule is never touched.
+export async function setSuss(
+  db: D1Database,
+  id: string,
+  note: string | null,
+  now: Date,
+): Promise<VocabItem | null> {
+  const row = await db
+    .prepare(
+      "UPDATE vocab SET suss_at = coalesce(suss_at, ?), suss_note = ? WHERE id = ? RETURNING *",
+    )
+    .bind(now.toISOString(), note, id)
+    .first<VocabRow>();
+  return row ? toItem(row) : null;
+}
+
+export async function clearSuss(db: D1Database, id: string): Promise<VocabItem | null> {
+  const row = await db
+    .prepare("UPDATE vocab SET suss_at = NULL, suss_note = NULL WHERE id = ? RETURNING *")
+    .bind(id)
+    .first<VocabRow>();
+  return row ? toItem(row) : null;
+}
+
 // f17: a harvest paste creates queued items (released_at null) linked to its harvest; every other
 // path releases the item when it is created.
 export type CreateOptions = { queued?: boolean; harvestId?: string | null };
@@ -148,6 +173,8 @@ export async function createVocab(
     filled_at: null,
     harvest_id: options.harvestId ?? null,
     released_at: options.queued ? null : at,
+    suss_at: null,
+    suss_note: null,
     created_at: at,
     updated_at: at,
   };
@@ -300,6 +327,8 @@ export type ListQuery = VocabFilter & {
   due?: boolean;
   // f17: queued items only.
   queued?: boolean;
+  // mp07: suss items only, oldest flag first whatever the sort.
+  suss?: boolean;
   sort: VocabSort;
   limit: number;
   offset: number;
@@ -320,11 +349,14 @@ export async function listVocab(
   const q = query.q?.trim();
   if (q) {
     // Urdu matches on the normalized key, so tashkeel and letter variants don't defeat search.
-    // SQLite LIKE is case-insensitive for ASCII, which covers Roman and English.
+    // SQLite LIKE is case-insensitive for ASCII, which covers Roman and English. mp07: notes and
+    // the examples match too, raw, so an Urdu word inside an example sentence is found.
     const text = `%${escapeLike(q)}%`;
     const key = urduKey(q);
-    const clauses = ["roman LIKE ? ESCAPE '\\'", "english LIKE ? ESCAPE '\\'"];
-    params.push(text, text);
+    const clauses = ["roman", "english", "notes", "example_urdu", "example_english"].map(
+      (column) => `${column} LIKE ? ESCAPE '\\'`,
+    );
+    params.push(...clauses.map(() => text));
     if (key !== "") {
       clauses.unshift("urdu_key LIKE ? ESCAPE '\\'");
       params.unshift(`%${escapeLike(key)}%`);
@@ -337,13 +369,13 @@ export async function listVocab(
     params.push(now);
   }
   if (query.queued) where.push("released_at IS NULL");
+  if (query.suss) where.push("suss_at IS NOT NULL");
+  const order = query.suss ? "suss_at ASC, id ASC" : SORT_ORDER[query.sort];
 
   const whereSql = where.length > 0 ? `WHERE ${where.join(" AND ")}` : "";
   const [rows, count] = await db.batch([
     db
-      .prepare(
-        `SELECT * FROM vocab ${whereSql} ORDER BY ${SORT_ORDER[query.sort]} LIMIT ? OFFSET ?`,
-      )
+      .prepare(`SELECT * FROM vocab ${whereSql} ORDER BY ${order} LIMIT ? OFFSET ?`)
       .bind(...params, query.limit, query.offset),
     db.prepare(`SELECT count(*) AS n FROM vocab ${whereSql}`).bind(...params),
   ]);

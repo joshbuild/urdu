@@ -348,11 +348,15 @@ function ResultLine({
 type Previewed = Extract<CorrectionsResponse, { preview: true }>;
 type Applied = Extract<CorrectionsResponse, { preview: false }>;
 
-function PasteCheckSheet({
+// mp07: also the Suss view's paste, which names itself suss and lists the cards the chat kept,
+// with its reasons, since a suss comment wants an answer even when nothing changes.
+export function PasteCheckSheet({
+  suss = false,
   onClose,
   onChanged,
   onOpen,
 }: {
+  suss?: boolean;
   onClose: () => void;
   onChanged: () => void;
   onOpen: (id: string) => void;
@@ -414,7 +418,7 @@ function PasteCheckSheet({
         <p className="hint">
           {applied.repeat
             ? "This reply was already applied; nothing changed."
-            : `${applied.batch_size} ${applied.batch_size === 1 ? "item" : "items"} ${MARKED[applied.mode]}.`}
+            : `${applied.batch_size} ${applied.batch_size === 1 ? "item" : "items"} ${MARKED[applied.mode]}${suss ? ", suss cleared" : ""}.`}
         </p>
         {reported.length > 0 && (
           <ul className="handoff-results">
@@ -433,6 +437,7 @@ function PasteCheckSheet({
   if (plan) {
     const shown = plan.results.filter(isShown);
     const suggested = shown.filter((p) => p.outcome !== "rejected").length;
+    const kept = suss ? plan.results.filter((p) => !isShown(p)) : [];
     return (
       <Sheet label="Preview corrections" onClose={onClose}>
         <p className="eyebrow">PREVIEW CORRECTIONS</p>
@@ -449,16 +454,33 @@ function PasteCheckSheet({
             ))}
           </ul>
         )}
+        {kept.length > 0 && (
+          <>
+            <p className="hint">Kept as they are:</p>
+            <ul className="handoff-results">
+              {kept.map((p) => (
+                <li key={p.vocab_id}>
+                  <span className="urdu-inline" dir="rtl" lang="ur">
+                    {p.urdu}
+                  </span>
+                  <p className="hint">{p.reason}</p>
+                </li>
+              ))}
+            </ul>
+          </>
+        )}
         {errorLine}
         <button type="button" onClick={apply} disabled={busy}>
           {busy
             ? "Saving…"
             : accept.length === 0
-              ? plan.mode === "correctness"
-                ? "Mark checked"
-                : plan.mode === "completeness"
-                  ? "Mark filled"
-                  : "Mark checked and filled"
+              ? suss
+                ? "Clear suss"
+                : plan.mode === "correctness"
+                  ? "Mark checked"
+                  : plan.mode === "completeness"
+                    ? "Mark filled"
+                    : "Mark checked and filled"
               : `Apply to ${accept.length} ${accept.length === 1 ? "item" : "items"}`}
         </button>
         <button type="button" className="secondary" onClick={onClose}>
@@ -469,8 +491,8 @@ function PasteCheckSheet({
   }
 
   return (
-    <Sheet label="Paste check reply" onClose={onClose}>
-      <p className="eyebrow">PASTE CHECK REPLY</p>
+    <Sheet label={suss ? "Paste suss reply" : "Paste check reply"} onClose={onClose}>
+      <p className="eyebrow">{suss ? "PASTE SUSS REPLY" : "PASTE CHECK REPLY"}</p>
       <PasteBox value={text} onChange={setText} />
       {errorLine}
       <button type="button" onClick={preview} disabled={busy}>

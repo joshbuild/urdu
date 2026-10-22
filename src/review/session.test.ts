@@ -43,6 +43,8 @@ function item(id: string, english: string | null = "book"): VocabItem {
     filled_at: null,
     harvest_id: null,
     released_at: "2026-09-01T00:00:00.000Z",
+    suss_at: null,
+    suss_note: null,
     created_at: "2026-09-01T00:00:00.000Z",
     updated_at: "2026-09-01T00:00:00.000Z",
   };
