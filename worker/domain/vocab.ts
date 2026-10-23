@@ -170,6 +170,7 @@ export async function createVocab(
     source: input.source,
     airtable_id: null,
     checked_at: null,
+    checked_fields: 0,
     filled_at: null,
     harvest_id: options.harvestId ?? null,
     released_at: options.queued ? null : at,

@@ -629,6 +629,43 @@ describe("f13 scope rules", () => {
     expect(JSON.parse((await handoffRow(handoff_id))?.payload ?? "")).toMatchObject({ mode });
   });
 
+  // mp08: roman 1, english 2, notes 4.
+  it("a check ORs in the fields it judged; empty fields, completeness and a repeat add none", async () => {
+    const item = await setup();
+    const mask = async () =>
+      (
+        await env.DB.prepare("SELECT checked_fields FROM vocab WHERE id = ?")
+          .bind(item.id)
+          .first<{ checked_fields: number }>()
+      )?.checked_fields;
+    expect(item.checked_fields).toBe(0);
+    const run = async (options: object) => {
+      const handoff_id = await issue(options);
+      await json(await apply({ handoff_id, corrections: [], accept: [] }));
+      return handoff_id;
+    };
+    const first = await run({ fields: ["english"] });
+    expect(await mask()).toBe(2);
+    // notes is empty: nothing to judge, so no bit.
+    await run({ mode: "both", fields: ["roman", "notes"] });
+    expect(await mask()).toBe(3);
+    await json(await apply({ handoff_id: first, corrections: [], accept: [] }));
+    expect(await mask()).toBe(3);
+    // A stamp is not an edit.
+    expect((await getItem(item.id)).updated_at).toBe(item.updated_at);
+    const fill = await issue({ mode: "completeness", fields: ["notes"] });
+    await json(
+      await apply({
+        handoff_id: fill,
+        corrections: [{ vocab_id: item.id, urdu: KITAB, notes: "n", reason: "r" }],
+        accept: [{ vocab_id: item.id, fields: { notes: null }, reset: false }],
+      }),
+    );
+    expect(await mask()).toBe(3);
+    await run({ fields: ["notes"] });
+    expect(await mask()).toBe(7);
+  });
+
   it("a batch issued before modes keeps f11's rules and stamps checked_at", async () => {
     const item = await setup();
     const handoff_id = "01K00000000000000000000F11";
@@ -645,6 +682,8 @@ describe("f13 scope rules", () => {
     await json(await apply({ handoff_id, corrections: [], accept: [] }));
     expect(await stamps(item.id)).toMatchObject({ filled_at: null });
     expect((await stamps(item.id))?.checked_at).not.toBeNull();
+    // f11 covered every field; the item has roman and english.
+    expect((await getItem(item.id)).checked_fields).toBe(3);
   });
 
   it("accepts 50 corrections", async () => {

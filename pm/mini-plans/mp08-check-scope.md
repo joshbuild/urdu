@@ -1,6 +1,6 @@
 # Mini-plan — Check scope (topic & level, field mask, which words, vocab-json file)
 
-**Status**: 🟡 IN PROGRESS — *opened 2026-10-22; s01 `checked_fields` next.*
+**Status**: 🟡 IN PROGRESS — *opened 2026-10-22; s01 `checked_fields` built 2026-10-22 (migration 0010, local only); s02 topic field next.*
 **Handle**: `mp08`
 **Created**: 2026-10-22 · **Updated**: 2026-10-22
 
@@ -34,15 +34,17 @@ instructions; record which fields a check covered as a bitmask beside the date.
 check field has a fixed bit in `shared/api.ts`: roman 1, english 2, notes 4, example_urdu 8,
 example_english 16, topic 32 (topic, cefr and tags as one field). Bits are immutable like ladder
 ids: never renumbered or reused; a new field takes the next free bit.
-- Applying a correctness or both batch ORs the batch's field bits into every item in it
-  (`checked_fields = checked_fields | ?`) and stamps `checked_at` as now. It never clears a bit.
+- Applying a correctness or both batch ORs into every item in it the bits of the chosen fields
+  the item has a value in once the batch's writes land, and stamps `checked_at` as now. It never
+  clears a bit. An empty field is neither owed a check nor marked checked (261022c).
 - `checked_at` keeps its meaning of last checked, any field; it orders the rotation. The mask
   answers *which* fields were ever checked: correctness's "only unchecked" becomes
-  `(checked_fields & <ticked>) != <ticked>`, any ticked field not yet checked. Both mode uses the
-  same test in place of `checked_at IS NULL`.
-- Backfill: items with `checked_at` set get 31 (all five content bits; the dialog defaulted to
-  every field, and the batches don't say which items were applied under which fields cheaply
-  enough to be worth replaying). The topic bit starts clear everywhere.
+  `(checked_fields & <ticked and present>) != <ticked and present>`, any ticked field the item
+  has not yet checked. Both mode uses the same test in place of `checked_at IS NULL`. The
+  rotation ranks an item owing a check with the never-checked, then by `checked_at`.
+- Backfill: items with `checked_at` set get the bits of the content fields they have now (the
+  dialog defaulted to every field, and the batches don't say which items were applied under which
+  fields cheaply enough to be worth replaying). The topic bit starts clear everywhere.
 - Completeness is unchanged: `filled_at` stays, and a missing field shows as null, so it needs no
   mask.
 - A second `last_checked_fields` column was considered and rejected: each batch's ids, mode and
@@ -109,7 +111,7 @@ instructions is the hedge, and the first real run after the change is the check.
 
 ## Done When
 
-- [ ] `pnpm check` green with s01–s04.
+- [ ] `pnpm check` green with s01–s04. (s01: green 2026-10-22, 859 tests.)
 - [ ] Sponsor applies 0010 remotely and deploys (after 0009, mp07); uploads `prompts/vocab-json.md`
       to the ChatGPT Project's files and re-pastes the instructions.
 - [ ] Phone: a Topic & level check over the 2026-10-22 conjugation imports (by date or by their
@@ -131,5 +133,6 @@ instructions is the hedge, and the first real run after the change is the check.
 - 2026-10-22: one OR-accumulated `checked_fields` mask beside `checked_at` (sponsor's proposal);
   a second "last checked fields" mask rejected as duplicating `handoffs.payload` (agent,
   sponsor asked for the assessment). DECISIONS 261022b.
-- 2026-10-22: existing checked items backfill to all five content bits; topic starts unchecked.
+- 2026-10-22: existing checked items backfill to the bits of their present content fields; topic
+  starts unchecked. Bits count only for fields with a value (DECISIONS 261022c, found in s01).
 - 2026-10-22: `vocab-json.md` generated and pinned; instructions keep a trigger line (sponsor).

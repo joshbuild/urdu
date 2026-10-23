@@ -44,6 +44,9 @@ export type VocabItem = {
   // UTC instant this item was last in an applied accuracy check (f11); null means never checked.
   // Only the check apply writes it, and a stamp is not an edit, so updated_at is left alone.
   checked_at: string | null;
+  // mp08: the fields this item has ever been checked for, as CHECK_FIELD_BITS ORed together; 0
+  // means none. Written with checked_at, only by the check apply.
+  checked_fields: number;
   // UTC instant this item was last in an applied completeness check (f13); null means never.
   // Written like checked_at: only by the check apply, and without touching updated_at.
   filled_at: string | null;
@@ -440,6 +443,17 @@ export const FILLABLE_FIELDS = [
 ] as const;
 export type FillableField = (typeof FILLABLE_FIELDS)[number];
 
+// mp08: each check field's bit in vocab.checked_fields. Immutable like ladder ids: a bit is never
+// renumbered or reused, and a new field takes the next free bit. A bit is set only for a field
+// that had a value when checked.
+export const CHECK_FIELD_BITS: Readonly<Record<FillableField, number>> = {
+  roman: 1,
+  english: 2,
+  notes: 4,
+  example_urdu: 8,
+  example_english: 16,
+};
+
 // A pasted row naming an item by id, echoing its urdu, with proposed field values. The base of a
 // check correction.
 export type Revision = { vocab_id: string; urdu: string } & Partial<
@@ -461,7 +475,8 @@ export type CheckOptions = {
   // Non-empty: the fields the chat may check or fill.
   fields: FillableField[];
   count: number;
-  // Only items never checked in this mode (checked_at or filled_at null).
+  // Only items not yet checked this way: a chosen field never checked for (checked_fields), or
+  // for completeness never filled (filled_at null).
   only_unchecked: boolean;
   // mp07: the suss cards, oldest flag first, instead of the rotation; forces mode both over every
   // field and ignores only_unchecked. Applying the batch clears their flags.

@@ -31,6 +31,8 @@ type Seed = {
   n: number;
   added_at?: string;
   checked_at?: string | null;
+  // mp08: default every content bit once checked; only the bits of present fields count.
+  checked_fields?: number;
   filled_at?: string | null;
   // Present fields; every other fillable field is null. Default: English only.
   has?: string[];
@@ -39,23 +41,32 @@ type Seed = {
 // Rows written straight to D1, so added_at, the stamps, the fields and id order are set exactly.
 async function seed(rows: Seed[]): Promise<void> {
   await env.DB.batch(
-    rows.map(({ n, added_at = ADDED, checked_at = null, filled_at = null, has = ["english"] }) =>
-      env.DB.prepare(
-        `INSERT INTO vocab (id, urdu, urdu_key, kind, roman, english, notes, example_urdu,
+    rows.map(
+      ({
+        n,
+        added_at = ADDED,
+        checked_at = null,
+        checked_fields = checked_at === null ? 0 : 31,
+        filled_at = null,
+        has = ["english"],
+      }) =>
+        env.DB.prepare(
+          `INSERT INTO vocab (id, urdu, urdu_key, kind, roman, english, notes, example_urdu,
            example_english, ladder_id, ladder_step, interval_seconds, added_at, source,
-           checked_at, filled_at, created_at, updated_at)
-         VALUES (?, ?, ?, 'word', ?, ?, ?, ?, ?, 3, 0, 10800, ?, 'manual', ?, ?, ?, ?)`,
-      ).bind(
-        vocabId(n),
-        `w${n}`,
-        `w${n}`,
-        ...FILLABLE_FIELDS.map((f) => (has.includes(f) ? `${f} ${n}` : null)),
-        added_at,
-        checked_at,
-        filled_at,
-        added_at,
-        added_at,
-      ),
+           checked_at, checked_fields, filled_at, created_at, updated_at)
+         VALUES (?, ?, ?, 'word', ?, ?, ?, ?, ?, 3, 0, 10800, ?, 'manual', ?, ?, ?, ?, ?)`,
+        ).bind(
+          vocabId(n),
+          `w${n}`,
+          `w${n}`,
+          ...FILLABLE_FIELDS.map((f) => (has.includes(f) ? `${f} ${n}` : null)),
+          added_at,
+          checked_at,
+          checked_fields,
+          filled_at,
+          added_at,
+          added_at,
+        ),
     ),
   );
 }
@@ -206,6 +217,34 @@ describe("check-batch modes (f13)", () => {
     expect(ids(body)).toEqual([5, 1, 3, 4, 2].map(vocabId));
     expect(body).toMatchObject({ candidates: 5, unchecked: 1 });
     expect(ids(await checkBatch({ mode: "both", only_unchecked: true }))).toEqual([vocabId(5)]);
+  });
+
+  // mp08: english 2, notes 4.
+  it("an item checked for other fields is unchecked for these, and sorts with the never-checked", async () => {
+    await seed([
+      { n: 1, checked_at: OLD, checked_fields: 2, has: ["english", "notes"] },
+      { n: 2, checked_at: NEW, checked_fields: 6, has: ["english", "notes"] },
+      { n: 3, has: ["english", "notes"], added_at: "2026-09-02T00:00:00.000Z" },
+      { n: 4, checked_at: "2026-09-05T00:00:00.000Z", checked_fields: 4, has: ["notes"] },
+    ]);
+    // For notes, 1 has only had english checked: it ranks with never-checked 3, by added_at.
+    const notes = await checkBatch({ fields: ["notes"] });
+    expect(ids(notes)).toEqual([1, 3, 4, 2].map(vocabId));
+    expect(notes).toMatchObject({ candidates: 4, unchecked: 2 });
+    expect(ids(await checkBatch({ fields: ["notes"], only_unchecked: true }))).toEqual(
+      [1, 3].map(vocabId),
+    );
+    // For english, 4 has no english to check, and 1 and 2 have been checked for it.
+    expect(ids(await checkBatch({ fields: ["english"], only_unchecked: true }))).toEqual([
+      vocabId(3),
+    ]);
+    // Several fields: unchecked while any one it has is; 4 has no english to owe a check for.
+    expect(ids(await checkBatch({ fields: ["english", "notes"], only_unchecked: true }))).toEqual(
+      [1, 3].map(vocabId),
+    );
+    expect(
+      ids(await checkBatch({ mode: "both", fields: ["notes"], only_unchecked: true })),
+    ).toEqual([1, 3].map(vocabId));
   });
 
   it("records nothing when no item qualifies, and still counts", async () => {

@@ -12,7 +12,7 @@
 - f18 `topic-coverage` — 🟡 IN PROGRESS, opened 2026-10-06 (DECISIONS 261006a); s01–s05 built and deployed (0008 remote); smoke-test-18 steps 1–3, 5 pass, step 4 open → `features/f18-topic-coverage.md`
 - mp05 `voice-vocab-bucket` — 🟡 IN PROGRESS, opened and stress-tested 2026-10-02 (s01–s07; Voice words held from top-up, DECISIONS 261002a); s01 `find_vocab` built 2026-10-22, s02 Voice harvest next (no migration) → `mini-plans/mp05-voice-vocab-bucket.md`
 - mp07 `review-tweaks` — 🟡 IN PROGRESS, opened and built 2026-10-22 (DECISIONS 261022a): suss cards, search first, `conjugation` topic, calendar to black at 400; migration 0009 applied remotely (confirmed 2026-10-22); deploy + phone next → `mini-plans/mp07-review-tweaks.md`
-- mp08 `check-scope` — 🟡 IN PROGRESS, opened 2026-10-22 (DECISIONS 261022b): topic & level as a check field, `checked_fields` mask (migration 0010), Which words, generated `vocab-json.md`; s01 next → `mini-plans/mp08-check-scope.md`
+- mp08 `check-scope` — 🟡 IN PROGRESS, opened 2026-10-22 (DECISIONS 261022b): topic & level as a check field, `checked_fields` mask (migration 0010), Which words, generated `vocab-json.md`; s01 built (0010 local only), s02 topic field next → `mini-plans/mp08-check-scope.md`
 - mp06 `mixed-direction` — 🟡 IN PROGRESS, opened 2026-10-15 (DECISIONS 261015a); s01–s03 built (`b600b71`, not deployed); s04 phone next → `mini-plans/mp06-mixed-direction.md`
 
 ## Next Session Pointers

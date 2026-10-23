@@ -8,6 +8,8 @@
 // queued.
 // 0007 → 0008 (f18): topic and cefr arrive null on every row, the rows otherwise untouched.
 // 0008 → 0009 (mp07): suss_at and suss_note arrive null on every row, the rows otherwise untouched.
+// 0009 → 0010 (mp08): checked_fields holds a checked row's present content fields, 0 on the rest;
+// nothing else changes.
 import { env } from "cloudflare:workers";
 import { beforeEach, describe, expect, it } from "vitest";
 
@@ -437,5 +439,35 @@ describe("migration 0009_suss", () => {
     const after = (await db.prepare("SELECT * FROM vocab").all()).results;
     expect(after).toEqual(before.map((row) => ({ ...row, suss_at: null, suss_note: null })));
     await expect(db.prepare("UPDATE vocab SET suss_note = ''").run()).rejects.toThrow(/CHECK/);
+  });
+});
+
+describe("migration 0010_checked_fields", () => {
+  it("marks checked rows checked for the content fields they have, the rest for none", async () => {
+    for (const prefix of ["0002", "0003", "0004", "0005", "0006", "0007", "0008", "0009"]) {
+      await apply(prefix);
+    }
+    const insert = (id: string, checkedAt: string | null) =>
+      db
+        .prepare(
+          `INSERT INTO vocab (id, urdu, urdu_key, kind, ladder_id, ladder_step, interval_seconds,
+             added_at, source, released_at, created_at, updated_at, checked_at, english, notes)
+           VALUES (?, ?, ?, 'word', 8, 2, 36327, ?, 'manual', ?, ?, ?, ?, 'e', 'n')`,
+        )
+        .bind(id, id, id, NOW, NOW, NOW, NOW, checkedAt);
+    await db.batch([
+      insert("01J00000000000000000000001", NOW),
+      insert("01J00000000000000000000002", null),
+    ]);
+    const before = (await db.prepare("SELECT * FROM vocab ORDER BY id").all()).results;
+
+    await apply("0010");
+
+    const after = (await db.prepare("SELECT * FROM vocab ORDER BY id").all()).results;
+    expect(after).toEqual([
+      { ...before[0], checked_fields: 6 },
+      { ...before[1], checked_fields: 0 },
+    ]);
+    await expect(db.prepare("UPDATE vocab SET checked_fields = -1").run()).rejects.toThrow(/CHECK/);
   });
 });

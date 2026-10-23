@@ -3,6 +3,7 @@
 // items the prompt actually carried, even if the PWA was discarded in between.
 
 import {
+  CHECK_FIELD_BITS,
   type CheckBatchResponse,
   type CheckMode,
   type CheckOptions,
@@ -25,8 +26,20 @@ import { toItem, type VocabRow } from "./vocab";
 
 type Selection = { candidates: string; unchecked: string; order: string };
 
-// Each mode rotates on its own stamp: never stamped first, then the longest since. Field names
-// come from FILLABLE_FIELDS, never from the request, so they are safe to interpolate.
+// mp08: SQL for the checked_fields bits of those of these fields the row has a value in. A check
+// judges only values that are there, so an empty field is neither owed a check nor marked as
+// checked. f11 batches (null fields) covered every field.
+function presentMask(fields: readonly FillableField[] | null): string {
+  const bits = (fields ?? FILLABLE_FIELDS).map(
+    (f) => `CASE WHEN ${f} IS NOT NULL THEN ${CHECK_FIELD_BITS[f]} ELSE 0 END`,
+  );
+  return `(${bits.join(" | ")})`;
+}
+
+// Each mode rotates on its own stamp: never stamped first, then the longest since. A correctness
+// stamp counts only once every chosen field the item has has been checked (mp08): an item checked
+// for other fields is still unchecked for these, and sorts with the never-checked. Field names and
+// bits come from FILLABLE_FIELDS, never from the request, so they are safe to interpolate.
 function selection({ mode, fields, suss }: CheckOptions): Selection {
   // mp07: the flagged cards, oldest flag first.
   if (suss) {
@@ -36,12 +49,11 @@ function selection({ mode, fields, suss }: CheckOptions): Selection {
   const missing = `(${fields.map((f) => `${f} IS NULL`).join(" OR ")})`;
   const present = `(${fields.map((f) => `${f} IS NOT NULL`).join(" OR ")})`;
   const tail = "added_at ASC, id ASC";
+  const owed = presentMask(fields);
+  const notChecked = `(checked_fields & ${owed}) != ${owed}`;
+  const check = `CASE WHEN ${notChecked} THEN '' ELSE coalesce(checked_at, '') END`;
   if (mode === "correctness") {
-    return {
-      candidates: present,
-      unchecked: "checked_at IS NULL",
-      order: `checked_at ASC NULLS FIRST, ${tail}`,
-    };
+    return { candidates: present, unchecked: notChecked, order: `${check} ASC, ${tail}` };
   }
   if (mode === "completeness") {
     return {
@@ -52,11 +64,10 @@ function selection({ mode, fields, suss }: CheckOptions): Selection {
   }
   // Both: the older of the two stamps, a null counting as oldest (''). The fill stamp counts
   // only while the item is missing a field, as in the unchecked test.
-  const check = "coalesce(checked_at, '')";
   const fill = `CASE WHEN ${missing} THEN coalesce(filled_at, '') ELSE ${check} END`;
   return {
     candidates: "1 = 1",
-    unchecked: `(checked_at IS NULL OR (${missing} AND filled_at IS NULL))`,
+    unchecked: `(${notChecked} OR (${missing} AND filled_at IS NULL))`,
     order: `min(${check}, ${fill}) ASC, ${tail}`,
   };
 }
@@ -314,13 +325,16 @@ function planApply(
   return { result, statements };
 }
 
-// Which stamps an applied batch writes: a correctness check is checked_at, a completeness check
-// filled_at.
-const STAMPS: Readonly<Record<CheckMode, string>> = {
-  correctness: "checked_at = ?1",
-  completeness: "filled_at = ?1",
-  both: "checked_at = ?1, filled_at = ?1",
-};
+// Which stamps an applied batch writes: a correctness check is checked_at with its fields ORed
+// into checked_fields (mp08; a bit is never cleared), a completeness check filled_at. The stamp
+// runs after the batch's writes, so a field the check filled counts as checked, and one it
+// removed does not.
+function stamps(mode: CheckMode, fields: readonly FillableField[] | null): string {
+  const checked = `checked_at = ?1, checked_fields = checked_fields | ${presentMask(fields)}`;
+  if (mode === "correctness") return checked;
+  if (mode === "completeness") return "filled_at = ?1";
+  return `${checked}, filled_at = ?1`;
+}
 
 // mp07: a suss batch clears the flag and comment of its cards flagged before it was issued. Like
 // the stamps it is not an edit, so updated_at is left alone.
@@ -380,7 +394,7 @@ export async function applyCorrections(
     // A stamp is not an edit: updated_at is left alone. Ids deleted since the copy match no row.
     db
       .prepare(
-        `UPDATE vocab SET ${STAMPS[mode]}
+        `UPDATE vocab SET ${stamps(mode, batch.fields)}
          WHERE id IN (${vocabIds.map((_, i) => `?${i + 2}`).join(", ")})
            AND ${OPEN.replace("?", `?${vocabIds.length + 2}`)}`,
       )

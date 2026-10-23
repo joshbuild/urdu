@@ -34,6 +34,7 @@ const item = (over: Partial<VocabItem>): VocabItem => ({
   source: "manual",
   airtable_id: null,
   checked_at: null,
+  checked_fields: 0,
   filled_at: null,
   harvest_id: null,
   released_at: "2026-09-01T00:00:00.000Z",
