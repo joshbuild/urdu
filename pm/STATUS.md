@@ -3,11 +3,12 @@
 
 **File Purpose**: The **thin hub** — a cross-front map of where things stand *right now*. Not a journal, not a sessions log. Verbose per-front narration lives in each front's `*-journal.md`; what-happened one-liners live in `SESSIONS.md`. Keep this file scannable.
 
-*As of: 2026-10-22*
+*As of: 2026-10-23*
 
 ## Open Workfronts
 *Work items actively in flight. One line each → its doc/journal. Closed fronts drop off (rosters keep the full list).*
 
+- mp09 `security-bumps` — 🟡 IN PROGRESS, opened 2026-10-23 from the `_overwatch` vuln sweep: `hono` 4.13.7 → 4.13.11 (High, shipped), dev tooling (vite 8.3.3, vitest, miniflare undici/sharp), pnpm 10.34.5; s01 next → `mini-plans/mp09-security-bumps.md`
 - f07 `coach-client` — 🟡 IN PROGRESS, s01–s04 built (migration 0003 applied remotely and deployed 2026-09-23); s05 prompt tuning next → `features/f07-coach-client.md`
 - f18 `topic-coverage` — 🟡 IN PROGRESS, opened 2026-10-06 (DECISIONS 261006a); s01–s05 built and deployed (0008 remote); smoke-test-18 steps 1–3, 5 pass, step 4 open → `features/f18-topic-coverage.md`
 - mp05 `voice-vocab-bucket` — 🟡 IN PROGRESS, opened and stress-tested 2026-10-02 (s01–s07; Voice words held from top-up, DECISIONS 261002a); s01 `find_vocab` built 2026-10-22, s02 Voice harvest next (no migration) → `mini-plans/mp05-voice-vocab-bucket.md`
@@ -18,6 +19,7 @@
 ## Next Session Pointers
 *The 1–3 concrete next actions for a cold start.*
 
+0. **mp09 `security-bumps`** (do first): s01 `hono` 4.13.11 (exact pin; check that the release exists and has provenance), s02 dev tooling, s03 `packageManager` pnpm 10.34.5; `pnpm check` green each time. The deploy in pointer 1 then ships it too. Report back to `_overwatch/reports/vuln-sweep/2026-10-23/remediation.md` → `mini-plans/mp09-security-bumps.md`
 1. **mp07 `review-tweaks`**: 0009 and mp08's 0010 are applied remotely (2026-10-22), so `main` is deployable. Sponsor runs `pnpm run deploy` (also ships mp08 s01–s02, mp06 and f18's undeployed work), re-uploads `prompts/vocab-tags.md` to the ChatGPT Project, then `smoke-tests/smoke-test-mp07.md`. Confirm "vocab search" meant the buried search box.
 2. **mp08 `check-scope`**: s01–s04 built. Rides the same deploy; `vocab-json.md` and the trigger-only instructions are already in the ChatGPT Project (2026-10-22), so run `smoke-tests/smoke-test-mp08.md` (skip its upload step) (step 3 is the conjugation re-sort). Close on daily use.
 3. **mp06 `mixed-direction`**: built, not deployed. Sponsor runs `pnpm run deploy` (no migration; this also ships f18's Dash charts and batch fix) and uses Mixed in normal review; close on a report that the mix feels right and production recall fills in → `smoke-tests/smoke-test-mp06.md`.
