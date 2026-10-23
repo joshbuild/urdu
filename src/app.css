@@ -532,6 +532,24 @@ label.check input {
   margin: 0;
 }
 
+/* mp08: the check dialog's Added between dates, side by side. */
+.check-dates {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.check-dates > label {
+  min-width: 0;
+  margin: 12px 0 0;
+}
+
+.check-dates input {
+  margin-top: 8px;
+  padding: 12px 8px;
+  font-weight: 400;
+}
+
 .vocab-list {
   margin: 0;
   padding: 0;

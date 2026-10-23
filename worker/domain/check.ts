@@ -22,6 +22,7 @@ import {
   type FieldValue,
   type VocabItem,
 } from "../../shared/api";
+import { addDays, startOfDayIn } from "../../shared/dates";
 import { correctStep } from "../../shared/ladders";
 import { urduKey } from "../../shared/normalize";
 import { ulid } from "../../shared/ulid";
@@ -92,6 +93,33 @@ function selection({ mode, fields, suss }: CheckOptions): Selection {
   };
 }
 
+// mp08 Which words: the words a scope and topic narrow the candidates to, with their bound
+// values, and the order the scope puts them in (the rotation keeps the mode's order). Added
+// between runs from the start of `from` to the start of the day after `to`, in the timezone.
+function narrowing(
+  { scope, from, to, topic, suss }: CheckOptions,
+  timeZone: string,
+): { sql: string; binds: string[]; order: string | null } {
+  const sql: string[] = [];
+  const binds: string[] = [];
+  if (suss) return { sql: "1 = 1", binds, order: null };
+  if (scope === "added" && from !== undefined && to !== undefined) {
+    sql.push("added_at >= ? AND added_at < ?");
+    binds.push(startOfDayIn(timeZone, from), startOfDayIn(timeZone, addDays(to, 1)));
+  }
+  if (topic !== undefined) {
+    sql.push("topic = ?");
+    binds.push(topic);
+  }
+  const order =
+    scope === "newest"
+      ? "added_at DESC, id DESC"
+      : scope === "added"
+        ? "added_at ASC, id ASC"
+        : null;
+  return { sql: sql.length > 0 ? sql.join(" AND ") : "1 = 1", binds, order };
+}
+
 // Every call records a new `check_issued` batch holding its ids, mode and fields; one never
 // pasted back is a harmless row. The outcome stays null until the corrections are applied. No
 // qualifying item records nothing.
@@ -99,13 +127,22 @@ export async function issueCheckBatch(
   db: D1Database,
   options: CheckOptions,
   now: Date,
+  timeZone: string,
 ): Promise<CheckBatchResponse> {
-  const { candidates, unchecked, order } = selection(options);
+  const selected = selection(options);
+  const narrow = narrowing(options, timeZone);
+  const candidates = `${selected.candidates} AND ${narrow.sql}`;
+  const { unchecked } = selected;
+  const order = narrow.order ?? selected.order;
   const where = options.only_unchecked ? `${candidates} AND ${unchecked}` : candidates;
   const [rows, all, fresh] = await db.batch([
-    db.prepare(`SELECT * FROM vocab WHERE ${where} ORDER BY ${order} LIMIT ?`).bind(options.count),
-    db.prepare(`SELECT count(*) AS n FROM vocab WHERE ${candidates}`),
-    db.prepare(`SELECT count(*) AS n FROM vocab WHERE ${candidates} AND ${unchecked}`),
+    db
+      .prepare(`SELECT * FROM vocab WHERE ${where} ORDER BY ${order} LIMIT ?`)
+      .bind(...narrow.binds, options.count),
+    db.prepare(`SELECT count(*) AS n FROM vocab WHERE ${candidates}`).bind(...narrow.binds),
+    db
+      .prepare(`SELECT count(*) AS n FROM vocab WHERE ${candidates} AND ${unchecked}`)
+      .bind(...narrow.binds),
   ]);
   const items = ((rows?.results ?? []) as VocabRow[]).map(toItem);
   const count = (r: typeof all) => (r?.results[0] as { n: number } | undefined)?.n ?? 0;

@@ -36,6 +36,7 @@ type Seed = {
   filled_at?: string | null;
   // Present fields; every other fillable field is null. Default: English only.
   has?: string[];
+  topic?: string | null;
 };
 
 // Rows written straight to D1, so added_at, the stamps, the fields and id order are set exactly.
@@ -49,12 +50,13 @@ async function seed(rows: Seed[]): Promise<void> {
         checked_fields = checked_at === null ? 0 : 31,
         filled_at = null,
         has = ["english"],
+        topic = null,
       }) =>
         env.DB.prepare(
           `INSERT INTO vocab (id, urdu, urdu_key, kind, roman, english, notes, example_urdu,
            example_english, ladder_id, ladder_step, interval_seconds, added_at, source,
-           checked_at, checked_fields, filled_at, created_at, updated_at)
-         VALUES (?, ?, ?, 'word', ?, ?, ?, ?, ?, 3, 0, 10800, ?, 'manual', ?, ?, ?, ?, ?)`,
+           checked_at, checked_fields, filled_at, topic, created_at, updated_at)
+         VALUES (?, ?, ?, 'word', ?, ?, ?, ?, ?, 3, 0, 10800, ?, 'manual', ?, ?, ?, ?, ?, ?)`,
         ).bind(
           vocabId(n),
           `w${n}`,
@@ -64,6 +66,7 @@ async function seed(rows: Seed[]): Promise<void> {
           checked_at,
           checked_fields,
           filled_at,
+          topic,
           added_at,
           added_at,
         ),
@@ -272,10 +275,84 @@ describe("check-batch modes (f13)", () => {
     [{ count: 1.5 }, "count"],
     [{ count: "20" }, "count"],
     [{ only_unchecked: "yes" }, "only_unchecked"],
+    [{ scope: "oldest" }, "scope"],
+    [{ scope: "added", to: "2026-09-02" }, "from"],
+    [{ scope: "added", from: "2026-09-02" }, "to"],
+    [{ scope: "added", from: "2026-09-31", to: "2026-10-01" }, "from"],
+    [{ scope: "added", from: "2026-09-03", to: "2026-09-02" }, "to"],
+    [{ scope: "newest", from: "2026-09-02" }, "from"],
+    [{ to: "2026-09-02" }, "to"],
+    [{ topic: "verbs-of-doom" }, "topic"],
+    [{ topic: 7 }, "topic"],
   ])("rejects options %j on %s", async (options, field) => {
     const res = await api("POST", "/api/handoffs/check-batch", options);
     const body = await json<InvalidRequestResponse>(res, 400);
     expect(body.field).toBe(field);
+  });
+});
+
+// mp08 Which words. America/Vancouver (HOME_TZ in wrangler.jsonc) is UTC-7 in September.
+describe("check-batch which words (mp08)", () => {
+  const at = (date: string, hour: number) => `${date}T${String(hour).padStart(2, "0")}:00:00.000Z`;
+
+  it("newest lists the last added first, on top of only unchecked", async () => {
+    await seed([
+      { n: 1, added_at: at("2026-09-01", 12) },
+      { n: 2, added_at: at("2026-09-03", 12), checked_at: OLD },
+      { n: 3, added_at: at("2026-09-02", 12) },
+    ]);
+    const body = await checkBatch({ scope: "newest" });
+    expect(ids(body)).toEqual([2, 3, 1].map(vocabId));
+    expect(body).toMatchObject({ candidates: 3, unchecked: 2 });
+    expect(ids(await checkBatch({ scope: "newest", only_unchecked: true, count: 1 }))).toEqual([
+      vocabId(3),
+    ]);
+  });
+
+  it("added between takes whole local days, oldest first", async () => {
+    await seed([
+      { n: 1, added_at: at("2026-09-02", 6) }, // 23:00 on 1 September locally
+      { n: 2, added_at: at("2026-09-02", 7) }, // midnight on the 2nd
+      { n: 3, added_at: at("2026-09-04", 6) }, // 23:00 on the 3rd
+      { n: 4, added_at: at("2026-09-04", 7) }, // midnight on the 4th
+      { n: 5, added_at: at("2026-09-03", 12), checked_at: OLD },
+    ]);
+    const body = await checkBatch({ scope: "added", from: "2026-09-02", to: "2026-09-03" });
+    expect(ids(body)).toEqual([2, 5, 3].map(vocabId));
+    expect(body).toMatchObject({ candidates: 3, unchecked: 2 });
+    const oneDay = { scope: "added", from: "2026-09-03", to: "2026-09-03", only_unchecked: true };
+    expect(ids(await checkBatch(oneDay))).toEqual([vocabId(3)]);
+  });
+
+  it("a topic narrows any scope and the counts", async () => {
+    await seed([
+      { n: 1, topic: "conjugation", added_at: at("2026-09-01", 12) },
+      { n: 2, topic: "food", added_at: at("2026-09-02", 12) },
+      { n: 3, topic: "conjugation", added_at: at("2026-09-03", 12) },
+      { n: 4, added_at: at("2026-09-04", 12) },
+    ]);
+    const body = await checkBatch({ topic: "conjugation" });
+    expect(ids(body)).toEqual([1, 3].map(vocabId));
+    expect(body).toMatchObject({ candidates: 2, unchecked: 2 });
+    expect(ids(await checkBatch({ scope: "newest", topic: "conjugation" }))).toEqual(
+      [3, 1].map(vocabId),
+    );
+    const range = { scope: "added", from: "2026-09-02", to: "2026-09-04", topic: "food" };
+    expect(ids(await checkBatch(range))).toEqual([vocabId(2)]);
+    expect(await checkBatch({ topic: "travel" })).toMatchObject({
+      handoff_id: null,
+      candidates: 0,
+    });
+  });
+
+  it("completeness keeps its own candidates inside the scope", async () => {
+    await seed([
+      { n: 1, has: ["english", "notes"], added_at: at("2026-09-03", 12) },
+      { n: 2, added_at: at("2026-09-02", 12) },
+      { n: 3, added_at: at("2026-09-01", 12) },
+    ]);
+    const body = await checkBatch({ mode: "completeness", fields: ["notes"], scope: "newest" });
+    expect(ids(body)).toEqual([2, 3].map(vocabId));
   });
 });
 

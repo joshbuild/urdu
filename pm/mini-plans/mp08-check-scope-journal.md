@@ -65,3 +65,29 @@ and FR-E2, CHANGELOG, AGENTS Project state.
 Next: s03 Which words (scope, dates, topic filter).
 
 Wrap: the sponsor reported 0010 applied remotely, so `main` can be deployed.
+
+## 261022f — s03 Which words
+
+`CheckOptions` gains `scope` (`CHECK_SCOPES`: rotation, newest, added), `from`/`to` and `topic`.
+`parseCheckOptions` defaults scope to rotation, requires both dates (valid, from ≤ to) with
+`added` and refuses them with any other scope, and takes `topic` only as a slug on the list.
+`issueCheckBatch` now takes the timezone: a `narrowing` clause ANDs onto the mode's candidates
+(bound values, not interpolated), so the select and both counts are within the selection; newest
+orders `added_at DESC, id DESC`, added `added_at ASC, id ASC`, rotation keeps the mode's order;
+only unchecked still applies on top. New `shared/dates.ts` `startOfDayIn` gives the UTC instant a
+local day starts (two passes for DST), tested on both 2026 change days.
+
+Client: `DEFAULT_CHECK_OPTIONS.scope` rotation; `decodeOptions` decodes the new keys on their own,
+so options stored before s03 keep mode, fields and count; a bad scope or dates fall to rotation,
+a bad topic to every topic. `checkRequest` strips the dates unless Added between. The dialog has
+a **Which words** select (Least recently checked, Newest added, Added between), two date inputs
+side by side for Added between (default the device's today, max today) and a **Topic** select
+(TopicOptions, All topics). An empty batch inside a narrowed selection says so.
+
+Tests: worker `check-batch which words (mp08)` (newest with only unchecked, local-day bounds at
+the 23:00/00:00 edges, topic across scopes and counts, completeness inside a scope) plus nine
+option rejections; client which-words tests; `startOfDayIn` tests. No headless shot (the last two
+sessions were refused local server access), so the dialog is left to the phone step.
+`pnpm check` green, 898 tests. Ripples: PRD FR-F9, CHANGELOG, AGENTS Project state.
+
+Next: s04 `vocab-json.md` generated Project file.

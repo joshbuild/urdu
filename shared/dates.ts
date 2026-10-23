@@ -39,6 +39,41 @@ export function dateIn(timeZone: string): (instant: Date) => string {
   };
 }
 
+// mp08: the UTC instant a calendar day starts in the timezone, for "added between" bounds. A
+// second pass settles a day whose UTC midnight falls on the other side of a DST change.
+export function startOfDayIn(timeZone: string, date: string): string {
+  if (!isIsoDate(date)) throw new RangeError(`Not a YYYY-MM-DD date: ${date}`);
+  const midnight = Date.parse(`${date}T00:00:00Z`);
+  let instant = midnight;
+  for (let pass = 0; pass < 2; pass++) instant = midnight - offsetMs(timeZone, instant);
+  return new Date(instant).toISOString();
+}
+
+// How far the timezone's wall clock runs ahead of UTC at the instant (negative west of Greenwich).
+function offsetMs(timeZone: string, instant: number): number {
+  const parts = new Intl.DateTimeFormat("en-US", {
+    timeZone,
+    hourCycle: "h23",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+  }).formatToParts(new Date(instant));
+  const part = (type: Intl.DateTimeFormatPartTypes) =>
+    Number(parts.find((p) => p.type === type)?.value);
+  const wall = Date.UTC(
+    part("year"),
+    part("month") - 1,
+    part("day"),
+    part("hour"),
+    part("minute"),
+    part("second"),
+  );
+  return wall - Math.floor(instant / 1000) * 1000;
+}
+
 // Monday = 0 … Sunday = 6, for a calendar date.
 export function weekdayOf(date: string): number {
   if (!isIsoDate(date)) throw new RangeError(`Not a YYYY-MM-DD date: ${date}`);

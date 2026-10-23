@@ -493,6 +493,11 @@ export const DEFAULT_CHECK_COUNT = 20;
 export const CHECK_MODES = ["correctness", "completeness", "both"] as const;
 export type CheckMode = (typeof CHECK_MODES)[number];
 
+// mp08 Which words: the rotation (least recently checked first, per mode), the last added
+// (added_at descending), or those added between two HOME_TZ dates, inclusive, oldest first.
+export const CHECK_SCOPES = ["rotation", "newest", "added"] as const;
+export type CheckScope = (typeof CHECK_SCOPES)[number];
+
 // The body of POST /api/handoffs/check-batch. Every key is optional; {} is f11's request.
 export type CheckOptions = {
   mode: CheckMode;
@@ -500,10 +505,17 @@ export type CheckOptions = {
   fields: CheckField[];
   count: number;
   // Only items not yet checked this way: a chosen field never checked for (checked_fields), or
-  // for completeness never filled (filled_at null).
+  // for completeness never filled (filled_at null). Applies on top of any scope.
   only_unchecked: boolean;
+  // mp08: which words; absent is the rotation. `from` and `to` (YYYY-MM-DD, from ≤ to) come
+  // with scope added and only with it.
+  scope?: CheckScope;
+  from?: string;
+  to?: string;
+  // mp08: a topic slug narrows any scope to words with that topic; absent is every word.
+  topic?: string;
   // mp07: the suss cards, oldest flag first, instead of the rotation; forces mode both over every
-  // field and ignores only_unchecked. Applying the batch clears their flags.
+  // field and ignores only_unchecked, scope and topic. Applying the batch clears their flags.
   suss?: boolean;
 };
 

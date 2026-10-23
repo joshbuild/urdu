@@ -8,9 +8,11 @@
 import {
   CHECK_FIELDS,
   CHECK_MODES,
+  CHECK_SCOPES,
   type CheckField,
   type CheckMode,
   type CheckOptions,
+  type CheckScope,
   type ClassifyRequest,
   CORRECTABLE_FIELDS,
   type Correction,
@@ -26,6 +28,8 @@ import {
   MAX_HANDOFF_PROPOSALS,
   type Revision,
 } from "../../shared/api";
+import { isIsoDate } from "../../shared/dates";
+import { isTopic } from "../../shared/topics";
 import {
   isRecord,
   lenientClassification,
@@ -271,7 +275,10 @@ export function parseCorrections(body: unknown, preview: boolean): Parsed<Correc
 // check of every field, 20 items, rotation over the whole vault.
 export function parseCheckOptions(body: unknown): Parsed<CheckOptions> {
   if (!isRecord(body)) return fail(undefined, "body must be a JSON object");
-  const extra = unknownKey(body, new Set(["mode", "fields", "count", "only_unchecked", "suss"]));
+  const extra = unknownKey(
+    body,
+    new Set(["mode", "fields", "count", "only_unchecked", "scope", "from", "to", "topic", "suss"]),
+  );
   if (extra) return fail(extra, "is not a recognised field");
 
   const mode = body.mode ?? "correctness";
@@ -298,6 +305,27 @@ export function parseCheckOptions(body: unknown): Parsed<CheckOptions> {
   }
   const onlyUnchecked = body.only_unchecked ?? false;
   if (typeof onlyUnchecked !== "boolean") return fail("only_unchecked", "must be a boolean");
+  // mp08: which words. Dates come with scope added and only with it.
+  const scope = body.scope ?? "rotation";
+  if (!(CHECK_SCOPES as readonly unknown[]).includes(scope)) {
+    return fail("scope", `must be one of ${CHECK_SCOPES.join(", ")}`);
+  }
+  const range: { from?: string; to?: string } = {};
+  for (const key of ["from", "to"] as const) {
+    const value = body[key];
+    if (scope !== "added") {
+      if (value !== undefined) return fail(key, "is only for scope added");
+      continue;
+    }
+    if (!isIsoDate(value)) return fail(key, "must be a YYYY-MM-DD date");
+    range[key] = value;
+  }
+  if (range.from !== undefined && range.to !== undefined && range.from > range.to) {
+    return fail("to", "must not be before from");
+  }
+  if (body.topic !== undefined && !isTopic(body.topic)) {
+    return fail("topic", "must be a topic slug from the list");
+  }
   const suss = body.suss ?? false;
   if (typeof suss !== "boolean") return fail("suss", "must be a boolean");
   // mp07: a suss batch may change anything, whatever the rest of the body says.
@@ -320,6 +348,9 @@ export function parseCheckOptions(body: unknown): Parsed<CheckOptions> {
       fields,
       count: count as number,
       only_unchecked: onlyUnchecked,
+      scope: scope as CheckScope,
+      ...range,
+      ...(body.topic !== undefined ? { topic: body.topic as string } : {}),
     },
   };
 }

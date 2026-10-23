@@ -1,6 +1,6 @@
 # Mini-plan — Check scope (topic & level, field mask, which words, vocab-json file)
 
-**Status**: 🟡 IN PROGRESS — *opened 2026-10-22; s01 `checked_fields` and s02 Topic & level built 2026-10-22 (migration 0010 applied remotely 2026-10-22, not deployed); s03 Which words next.*
+**Status**: 🟡 IN PROGRESS — *opened 2026-10-22; s01 `checked_fields`, s02 Topic & level and s03 Which words built 2026-10-22 (migration 0010 applied remotely 2026-10-22, not deployed); s04 `vocab-json.md` next.*
 **Handle**: `mp08`
 **Created**: 2026-10-22 · **Updated**: 2026-10-22
 
@@ -111,7 +111,7 @@ instructions is the hedge, and the first real run after the change is the check.
 
 ## Done When
 
-- [ ] `pnpm check` green with s01–s04. (s01: green 2026-10-22, 859 tests; s02: green, 874.)
+- [ ] `pnpm check` green with s01–s04. (s01: green 2026-10-22, 859 tests; s02: green, 874; s03: green, 898.)
 - [ ] Sponsor applies 0010 remotely (done 2026-10-22) and deploys (after 0009, mp07); uploads `prompts/vocab-json.md`
       to the ChatGPT Project's files and re-pastes the instructions.
 - [ ] Phone: a Topic & level check over the 2026-10-22 conjugation imports (by date or by their
@@ -140,3 +140,10 @@ instructions is the hedge, and the first real run after the change is the check.
   prompt stays short; the remembered options keep it once ticked. A topic or level the paste
   names but the list lacks proposes nothing (never a removal); an explicit null removes. Topic &
   level counts as present once the item has a topic, missing while it lacks a topic or level.
+- 2026-10-22 (s03, agent): Which words is `scope` (`rotation` | `newest` | `added`) with `from`/`to`
+  sent only with `added` (the Worker refuses them otherwise) and an optional strict `topic` slug.
+  Added between converts the HOME_TZ dates to UTC bounds (`startOfDayIn`, half-open to the start
+  of the day after `to`). Newest and Added between replace the mode's rotation order; the counts
+  are within the selection; suss ignores all of it. The dialog's dates default to the device's
+  today, are kept while another scope is chosen, and a stored value from before s03 decodes as
+  the rotation with its other options kept.

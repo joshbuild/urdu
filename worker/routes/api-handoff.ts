@@ -46,7 +46,12 @@ handoffRoutes.post("/api/handoffs/check-batch", async (c) => {
   if (body === undefined) return invalid(c, { message: "body must be valid JSON" });
   const parsed = parseCheckOptions(body);
   if (!parsed.ok) return invalid(c, parsed.error);
-  const batch: CheckBatchResponse = await issueCheckBatch(c.env.DB, parsed.value, new Date());
+  const batch: CheckBatchResponse = await issueCheckBatch(
+    c.env.DB,
+    parsed.value,
+    new Date(),
+    c.env.HOME_TZ,
+  );
   return c.json(batch);
 });
 

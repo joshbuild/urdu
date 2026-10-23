@@ -9,6 +9,7 @@
 - A **Verb conjugation** topic under Grammar, for tense and person forms such as karta hoon, kar raha hai, kiya and karega. Re-upload `prompts/vocab-tags.md` to the ChatGPT Project.
 
 - **Topic & level** in the check options: tick it to have ChatGPT check each word's topic, level and secondary topics (or fill in a missing topic or level), and tick the changes you agree with in the preview. A topic or level not on the list is left out and noted. Suss prompts now include it too.
+- **Which words** in the check options: check the least recently checked (as before), the newest added, or those added between two dates, and narrow any of them to one topic. With **Only items not yet checked** ticked, Newest added gives the latest unchecked words.
 
 ### Changed
 

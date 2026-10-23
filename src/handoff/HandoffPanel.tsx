@@ -11,6 +11,7 @@ import {
   type CheckBatchResponse,
   type CheckMode,
   type CheckOptions,
+  type CheckScope,
   type CorrectableField,
   type CorrectionPlan,
   type CorrectionResult,
@@ -18,7 +19,9 @@ import {
   type FieldChange,
   MAX_CHECK_BATCH,
 } from "../../shared/api";
+import { todayIn } from "../../shared/dates";
 import { topicBySlug } from "../../shared/topics";
+import { TopicOptions } from "../reader/DraftFields";
 import { Sheet } from "../reader/Sheet";
 import {
   acceptList,
@@ -31,10 +34,12 @@ import {
 } from "./check";
 import {
   CHECK_FIELD_LABELS,
+  checkRequest,
   MODE_LABELS,
   optionsProblem,
   parseCount,
   readCheckOptions,
+  SCOPE_LABELS,
   storeCheckOptions,
   toggleOptionField,
 } from "./checkOptions";
@@ -57,7 +62,10 @@ export function HandoffPanel({
   // The Worker picks and records the batch, so the prompt waits on it.
   async function copyCheck(options: CheckOptions) {
     setBusy(true);
-    const posted = await postJson<CheckBatchResponse>("/api/handoffs/check-batch", options);
+    const posted = await postJson<CheckBatchResponse>(
+      "/api/handoffs/check-batch",
+      checkRequest(options),
+    );
     setBusy(false);
     setPasting(null);
     if (!posted.ok) return setCopied({ kind: "copied", note: posted.message });
@@ -127,6 +135,9 @@ function emptyNote(options: CheckOptions, candidates: number): string {
   if (candidates > 0) {
     return "Every item has been checked this way; untick Only unchecked to go round again.";
   }
+  if (options.scope !== "rotation" || options.topic !== undefined) {
+    return "No word in this selection has anything to check this way.";
+  }
   if (options.mode === "correctness") return "No item has these fields to check.";
   if (options.mode === "completeness") return "Every item has these fields.";
   return "Your vault is empty; nothing to check.";
@@ -177,6 +188,7 @@ function CheckOptionsSheet({
           </label>
         ))}
       </fieldset>
+      <WhichWords options={options} onChange={setOptions} />
       <label htmlFor="check-count">How many items</label>
       <input
         id="check-count"
@@ -210,6 +222,75 @@ function CheckOptionsSheet({
         Cancel
       </button>
     </Sheet>
+  );
+}
+
+// mp08: the scope select, the two dates while Added between is chosen (today's date until one is
+// picked), and the topic. The device's own date, which is the home timezone's in daily use.
+function WhichWords({
+  options,
+  onChange,
+}: {
+  options: CheckOptions;
+  onChange: (options: CheckOptions) => void;
+}) {
+  const today = todayIn(Intl.DateTimeFormat().resolvedOptions().timeZone);
+  const scope = options.scope ?? "rotation";
+  return (
+    <>
+      <label htmlFor="check-scope">Which words</label>
+      <select
+        id="check-scope"
+        value={scope}
+        onChange={(event) => {
+          const next = event.target.value as CheckScope;
+          onChange(
+            next === "added"
+              ? { ...options, scope: next, from: options.from ?? today, to: options.to ?? today }
+              : { ...options, scope: next },
+          );
+        }}
+      >
+        {(Object.keys(SCOPE_LABELS) as CheckScope[]).map((value) => (
+          <option key={value} value={value}>
+            {SCOPE_LABELS[value]}
+          </option>
+        ))}
+      </select>
+      {scope === "added" && (
+        <div className="check-dates">
+          <label>
+            From
+            <input
+              type="date"
+              value={options.from ?? ""}
+              max={today}
+              onChange={(event) => onChange({ ...options, from: event.target.value })}
+            />
+          </label>
+          <label>
+            To
+            <input
+              type="date"
+              value={options.to ?? ""}
+              max={today}
+              onChange={(event) => onChange({ ...options, to: event.target.value })}
+            />
+          </label>
+        </div>
+      )}
+      <label htmlFor="check-topic">Topic</label>
+      <select
+        id="check-topic"
+        value={options.topic ?? ""}
+        onChange={(event) => {
+          const { topic: _, ...rest } = options;
+          onChange(event.target.value === "" ? rest : { ...rest, topic: event.target.value });
+        }}
+      >
+        <TopicOptions none="All topics" />
+      </select>
+    </>
   );
 }
 

@@ -1,7 +1,36 @@
 import { describe, expect, it } from "vitest";
-import { addDays, isIsoDate, legacyInstant, legacyNextReviewOn, todayIn } from "./dates";
+import {
+  addDays,
+  isIsoDate,
+  legacyInstant,
+  legacyNextReviewOn,
+  startOfDayIn,
+  todayIn,
+} from "./dates";
 
 const HOME_TZ = "America/Vancouver";
+
+describe("startOfDayIn", () => {
+  it.each([
+    ["2026-10-22", "2026-10-22T07:00:00.000Z"],
+    // Both DST change days start before the change, and the day after starts after it.
+    ["2026-03-08", "2026-03-08T08:00:00.000Z"],
+    ["2026-03-09", "2026-03-09T07:00:00.000Z"],
+    ["2026-11-01", "2026-11-01T07:00:00.000Z"],
+    ["2026-11-02", "2026-11-02T08:00:00.000Z"],
+    ["2027-01-01", "2027-01-01T08:00:00.000Z"],
+  ])("%s starts at %s in Vancouver", (date, instant) => {
+    expect(startOfDayIn(HOME_TZ, date)).toBe(instant);
+    expect(todayIn(HOME_TZ, new Date(instant))).toBe(date);
+    expect(todayIn(HOME_TZ, new Date(Date.parse(instant) - 1))).toBe(addDays(date, -1));
+  });
+
+  it("uses the timezone it is given, and refuses a non-date", () => {
+    expect(startOfDayIn("UTC", "2026-06-15")).toBe("2026-06-15T00:00:00.000Z");
+    expect(startOfDayIn("Asia/Karachi", "2026-06-15")).toBe("2026-06-14T19:00:00.000Z");
+    expect(() => startOfDayIn(HOME_TZ, "2026-02-30")).toThrow(RangeError);
+  });
+});
 
 describe("todayIn", () => {
   it.each([

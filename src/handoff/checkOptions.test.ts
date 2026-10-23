@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  checkRequest,
   DEFAULT_CHECK_OPTIONS,
   decodeOptions,
   optionsProblem,
@@ -14,6 +15,7 @@ describe("check options (f13)", () => {
       fields: ["roman", "english", "notes", "example_urdu", "example_english"],
       count: 20,
       only_unchecked: false,
+      scope: "rotation",
     });
     expect(optionsProblem(DEFAULT_CHECK_OPTIONS)).toBeNull();
   });
@@ -44,7 +46,13 @@ describe("check options (f13)", () => {
   });
 
   it("decodes stored options, and falls back to the defaults on anything invalid", () => {
-    const stored = { mode: "both", fields: ["notes", "topic"], count: 35, only_unchecked: true };
+    const stored = {
+      mode: "both",
+      fields: ["notes", "topic"],
+      count: 35,
+      only_unchecked: true,
+      scope: "newest",
+    };
     expect(decodeOptions(JSON.stringify(stored))).toEqual(stored);
     for (const raw of [
       null,
@@ -58,5 +66,50 @@ describe("check options (f13)", () => {
     ]) {
       expect(decodeOptions(raw)).toEqual(DEFAULT_CHECK_OPTIONS);
     }
+  });
+});
+
+describe("which words (mp08)", () => {
+  const added = { ...DEFAULT_CHECK_OPTIONS, scope: "added" as const };
+
+  it("needs both dates for Added between, in order", () => {
+    expect(optionsProblem(added)).toMatch(/both dates/);
+    expect(optionsProblem({ ...added, from: "2026-10-22" })).toMatch(/both dates/);
+    expect(optionsProblem({ ...added, from: "2026-10-23", to: "2026-10-22" })).toMatch(/after/);
+    expect(optionsProblem({ ...added, from: "2026-10-22", to: "2026-10-22" })).toBeNull();
+    // Dates kept from an earlier Added between don't matter to another scope.
+    expect(optionsProblem({ ...DEFAULT_CHECK_OPTIONS, from: "2026-10-23", to: "x" })).toBeNull();
+  });
+
+  it("sends the dates only with Added between, and the topic with any scope", () => {
+    const dates = { from: "2026-10-20", to: "2026-10-22" };
+    expect(checkRequest({ ...DEFAULT_CHECK_OPTIONS, ...dates, topic: "conjugation" })).toEqual({
+      ...DEFAULT_CHECK_OPTIONS,
+      topic: "conjugation",
+    });
+    expect(checkRequest({ ...added, ...dates })).toEqual({ ...added, ...dates });
+  });
+
+  it("decodes a value stored before Which words as the rotation, keeping the rest", () => {
+    const old = { mode: "both", fields: ["notes"], count: 35, only_unchecked: true };
+    expect(decodeOptions(JSON.stringify(old))).toEqual({ ...old, scope: "rotation" });
+  });
+
+  it("keeps good dates and topic, and drops bad ones to the rotation over every topic", () => {
+    const base = { ...DEFAULT_CHECK_OPTIONS };
+    const good = { ...base, scope: "added", from: "2026-10-20", to: "2026-10-22", topic: "food" };
+    expect(decodeOptions(JSON.stringify(good))).toEqual(good);
+    for (const bad of [
+      { ...good, scope: "oldest" },
+      { ...good, from: "2026-10-23" },
+      { ...good, to: "yesterday" },
+    ]) {
+      const { from: _f, to: _t, ...rest } = good;
+      const decoded = decodeOptions(JSON.stringify(bad));
+      expect(decoded.scope).toBe("rotation");
+      expect(decoded.topic).toBe("food");
+      if (bad.scope !== "oldest") expect(decoded).toEqual({ ...rest, scope: "rotation" });
+    }
+    expect(decodeOptions(JSON.stringify({ ...base, topic: "nonsense" }))).toEqual(base);
   });
 });
