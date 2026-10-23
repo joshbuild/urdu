@@ -7,6 +7,7 @@
 
 | Handle | Slug / doc | Status | Stage | One-line |
 |---|---|---|---|---|
+| mp08 | `mini-plans/mp08-check-scope.md` | 🟡 IN PROGRESS | Stage 1 build (s01 next; s01–s04) | Check loop: Topic & level as a check field, a per-field `checked_fields` mask, Which words (newest N, added between, topic), `vocab-json.md` as a generated Project file. |
 | mp07 | `mini-plans/mp07-review-tweaks.md` | 🟡 IN PROGRESS | Stage 1 built (s01–s04); deploy + phone next | Suss cards with a ChatGPT round trip, Vocab search first, a conjugation topic, a review calendar shaded to black at 400/day. |
 | mp06 | `mini-plans/mp06-mixed-direction.md` | 🟡 IN PROGRESS | Stage 1 build (s01 next; s01–s04) | Mixed review direction, the default: each card draws Urdu → English or English → Urdu, production more likely the longer its interval; one shared schedule. |
 | mp05 | `mini-plans/mp05-voice-vocab-bucket.md` | 🟡 IN PROGRESS | Stage 1 build (s01 built 2026-10-22; s02 Voice harvest next; s01–s07) | Voice Coach: `find_vocab` looks up the whole vault; voice adds land queued and held in a per-day Voice harvest, listed, filled and released from the harvest detail. |
