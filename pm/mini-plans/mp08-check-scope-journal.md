@@ -1,8 +1,8 @@
 # Journal — mp08 check-scope
 
 **Current state (2026-10-22):** s01 `checked_fields` (`a2b95d3`) and s02 Topic & level built;
-migration 0010 applied locally only. `main` needs 0010 remotely before any deploy. s03 (Which
-words) next.
+migration 0010 applied remotely 2026-10-22 (sponsor), nothing deployed yet. s03 (Which words)
+next.
 
 ## 261022d — opened; s01 checked-fields mask
 
@@ -63,3 +63,5 @@ dialog and preview are left to the phone step. `pnpm check` green, 874 tests. Ri
 and FR-E2, CHANGELOG, AGENTS Project state.
 
 Next: s03 Which words (scope, dates, topic filter).
+
+Wrap: the sponsor reported 0010 applied remotely, so `main` can be deployed.

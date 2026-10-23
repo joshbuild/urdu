@@ -1,6 +1,6 @@
 # Mini-plan — Check scope (topic & level, field mask, which words, vocab-json file)
 
-**Status**: 🟡 IN PROGRESS — *opened 2026-10-22; s01 `checked_fields` and s02 Topic & level built 2026-10-22 (migration 0010, local only); s03 Which words next.*
+**Status**: 🟡 IN PROGRESS — *opened 2026-10-22; s01 `checked_fields` and s02 Topic & level built 2026-10-22 (migration 0010 applied remotely 2026-10-22, not deployed); s03 Which words next.*
 **Handle**: `mp08`
 **Created**: 2026-10-22 · **Updated**: 2026-10-22
 
@@ -112,7 +112,7 @@ instructions is the hedge, and the first real run after the change is the check.
 ## Done When
 
 - [ ] `pnpm check` green with s01–s04. (s01: green 2026-10-22, 859 tests; s02: green, 874.)
-- [ ] Sponsor applies 0010 remotely and deploys (after 0009, mp07); uploads `prompts/vocab-json.md`
+- [ ] Sponsor applies 0010 remotely (done 2026-10-22) and deploys (after 0009, mp07); uploads `prompts/vocab-json.md`
       to the ChatGPT Project's files and re-pastes the instructions.
 - [ ] Phone: a Topic & level check over the 2026-10-22 conjugation imports (by date or by their
       current topic) runs through ChatGPT, applies, and their chips read Verb conjugation. Daily

@@ -12,13 +12,13 @@
 - f18 `topic-coverage` — 🟡 IN PROGRESS, opened 2026-10-06 (DECISIONS 261006a); s01–s05 built and deployed (0008 remote); smoke-test-18 steps 1–3, 5 pass, step 4 open → `features/f18-topic-coverage.md`
 - mp05 `voice-vocab-bucket` — 🟡 IN PROGRESS, opened and stress-tested 2026-10-02 (s01–s07; Voice words held from top-up, DECISIONS 261002a); s01 `find_vocab` built 2026-10-22, s02 Voice harvest next (no migration) → `mini-plans/mp05-voice-vocab-bucket.md`
 - mp07 `review-tweaks` — 🟡 IN PROGRESS, opened and built 2026-10-22 (DECISIONS 261022a): suss cards, search first, `conjugation` topic, calendar to black at 400; migration 0009 applied remotely (confirmed 2026-10-22); deploy + phone next → `mini-plans/mp07-review-tweaks.md`
-- mp08 `check-scope` — 🟡 IN PROGRESS, opened 2026-10-22 (DECISIONS 261022b): topic & level as a check field, `checked_fields` mask (migration 0010), Which words, generated `vocab-json.md`; s01–s02 built (0010 local only), s03 Which words next → `mini-plans/mp08-check-scope.md`
+- mp08 `check-scope` — 🟡 IN PROGRESS, opened 2026-10-22 (DECISIONS 261022b): topic & level as a check field, `checked_fields` mask (migration 0010), Which words, generated `vocab-json.md`; s01–s02 built (0010 applied remotely 2026-10-22), s03 Which words next → `mini-plans/mp08-check-scope.md`
 - mp06 `mixed-direction` — 🟡 IN PROGRESS, opened 2026-10-15 (DECISIONS 261015a); s01–s03 built (`b600b71`, not deployed); s04 phone next → `mini-plans/mp06-mixed-direction.md`
 
 ## Next Session Pointers
 *The 1–3 concrete next actions for a cold start.*
 
-1. **mp07 `review-tweaks`**: 0009 is applied remotely (the sponsor's `migrations list --remote` showed none pending, 2026-10-22, after the first attempt failed). Sponsor runs `pnpm wrangler d1 migrations apply urdu --remote` (mp08's 0010: `main` needs it, or check batches fail) then `pnpm run deploy` (also ships mp06 and f18's undeployed work), re-uploads `prompts/vocab-tags.md` to the ChatGPT Project, then `smoke-tests/smoke-test-mp07.md`. Confirm "vocab search" meant the buried search box.
+1. **mp07 `review-tweaks`**: 0009 and mp08's 0010 are applied remotely (2026-10-22), so `main` is deployable. Sponsor runs `pnpm run deploy` (also ships mp08 s01–s02,  mp06 and f18's undeployed work), re-uploads `prompts/vocab-tags.md` to the ChatGPT Project, then `smoke-tests/smoke-test-mp07.md`. Confirm "vocab search" meant the buried search box.
 2. **mp08 `check-scope`**: s01–s02 built (Topic & level is a check field); s03 Which words next, then s04 `vocab-json.md` → `mini-plans/mp08-check-scope.md`.
 3. **mp06 `mixed-direction`**: built, not deployed. Sponsor runs `pnpm run deploy` (no migration; this also ships f18's Dash charts and batch fix) and uses Mixed in normal review; close on a report that the mix feels right and production recall fills in → `smoke-tests/smoke-test-mp06.md`.
 4. **mp05 `voice-vocab-bucket`**: s01 `find_vocab` built (not deployed; `get_vocab`'s `tag` is now `topic`); s02 Voice harvest next (no migration) → `mini-plans/mp05-voice-vocab-bucket.md`.
