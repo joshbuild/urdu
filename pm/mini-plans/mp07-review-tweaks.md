@@ -68,7 +68,7 @@ re-uploads it to the ChatGPT Project.
 ## Done When
 
 - [x] `pnpm check` green with s01–s04.
-- [ ] Sponsor applies 0009 remotely and deploys; re-uploads `prompts/vocab-tags.md` to the ChatGPT Project.
+- [ ] Sponsor applies 0009 remotely (done, confirmed 2026-10-22) and deploys; re-uploads `prompts/vocab-tags.md` to the ChatGPT Project.
 - [ ] Phone: flag a card mid-review with a comment, grade it, find it under Suss cards, run the suss
       prompt through ChatGPT, apply, and the card leaves the list. Daily use counts.
 
