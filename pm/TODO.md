@@ -13,6 +13,8 @@
 ## Tasks
 *Bullets, each tagged.*
 
+- Drop the `pnpm.overrides` for `undici`, `sharp` and `source-map-js` in `package.json` once `@cloudflare/vitest-pool-workers` and `wrangler` resolve a miniflare with undici ≥ 7.29.1 and sharp ≥ 0.35.5 (check with `pnpm why undici sharp`). (mp09 close 2026-10-23) #agent-research
+
 - On the phone after the next deploy: scrolling with a finger that starts on the Review ahead slider leaves it where it was; a tap or a sideways drag still sets it (`e13a2d0`; the cause was the scroll, sponsor 2026-10-05). Daily use counts. #sponsor-respond
 
 - Review the parked Read tab on 2026-10-31: the vocab-intake feature hides it from the tab bar to make room for Harvest. The code is kept, and the sponsor reads with ChatGPT for now. Decide whether to restore it, fold parts into another screen (tap-to-speak, Add to vocab), or delete it. #sponsor-decide

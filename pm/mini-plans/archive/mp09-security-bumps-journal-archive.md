@@ -1,6 +1,6 @@
 # Journal — mp09 security-bumps
 
-**Current state (2026-10-23):** s01–s03 built and committed, `pnpm check` green at 903; not deployed. s04 next: the sponsor runs `pnpm run deploy`, a quick phone smoke, then the `_overwatch` row is closed.
+**Current state (2026-10-23):** closed. Deployed by the sponsor and phone smoke passed; `_overwatch` row filled.
 
 ## 261023a — opened
 
@@ -35,3 +35,7 @@ in the doc's table come from walking `pnpm-lock.yaml`. Full findings:
   than the 33 s baseline: probably the AVG toggles have re-synced, not the bumps). I wasn't allowed
   to start `pnpm dev`, so that check is skipped. The Workers-pool tests and both production builds
   do run the new vite and the overridden miniflare.
+
+## 261023c — s04 deployed, closed
+
+The sponsor ran `pnpm run deploy` (which also shipped the undeployed mp06, mp07, mp08 and f18 work) and the phone smoke passed. The urdu row in the `_overwatch` remediation log is filled in and marked closed. mp09 is archived.

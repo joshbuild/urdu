@@ -1,8 +1,15 @@
 # Mini-plan — Security bumps (vuln sweep 2026-10-23)
 
-**Status**: 🟡 IN PROGRESS — *opened 2026-10-23 from the `_overwatch` vulnerability sweep; s01–s03 built 2026-10-23 (`087e03b`, `080c3cd`, `a495c7a`), not deployed; s04 sponsor deploy next.*
+**Status**: 🟢 SHIPPED / CLOSED — *2026-10-23: deployed by the sponsor, phone smoke passed.*
 **Handle**: `mp09`
 **Created**: 2026-10-23 · **Updated**: 2026-10-23
+
+> **As shipped (2026-10-23).** The advisories from the 2026-10-23 `_overwatch` sweep are cleared.
+> `hono` 4.13.11 is live in the Worker. Dev tooling is on vite 8.3.3 and vitest 4.1.12, with
+> `pnpm.overrides` forcing undici 7.29.1, sharp 0.35.5 and source-map-js 1.2.2, and `packageManager` is
+> pnpm 10.34.5. Commits `087e03b`, `080c3cd`, `a495c7a`. The live truth is in `package.json` and
+> `pnpm-lock.yaml`; the report-back is the urdu row in `_overwatch/reports/vuln-sweep/2026-10-23/remediation.md`.
+> Still open: drop the overrides once Cloudflare's miniflare catches up (TODO), and upgrading the global pnpm is the sponsor's job.
 
 **Owner docs it serves**:
 - `package.json` / `pnpm-lock.yaml` (dependency versions, `packageManager`)
