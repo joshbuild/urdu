@@ -10,6 +10,7 @@
 
 ### Changed
 
+- **Only items not yet checked** in the check options now tracks each field: checking just the English no longer counts a word as checked for its notes and examples, and an empty field is never owed a check.
 - Search is the first thing on the Vocab tab, also finds words in notes and example sentences, and while you type the buttons above the list step aside so results come straight under the box.
 - The review calendar keeps darkening past 40 reviews a day, through nine shades to black at 400.
 

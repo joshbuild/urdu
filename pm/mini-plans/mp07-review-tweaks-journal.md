@@ -1,7 +1,14 @@
 # Journal — mp07 review-tweaks
 
-**Current state (2026-10-22):** built and pushed (`be2ddae`); the sponsor's remote apply of 0009
-failed with a Cloudflare API error on the D1 `/query` call, reason not yet seen. Not deployed.
+**Current state (2026-10-22):** built and pushed (`be2ddae`); 0009 is applied remotely (the
+sponsor's `migrations list --remote` showed none pending). Not deployed; `main` now also needs
+mp08's 0010 remotely before the deploy.
+
+## 261022d — 0009 confirmed remote
+
+The sponsor ran `pnpm wrangler d1 migrations list urdu --remote`: "No migrations to apply", so a
+later attempt landed 0009. STATUS, the mp07 Done When and AGENTS updated. Deploy still the
+sponsor's.
 
 ## 261022b — pushed; remote 0009 apply failed
 
