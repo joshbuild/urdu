@@ -7,7 +7,7 @@
 
 | Handle | Slug / doc | Status | Stage | One-line |
 |---|---|---|---|---|
-| mp09 | `mini-plans/mp09-security-bumps.md` | 🟡 IN PROGRESS | Stage 1 bump and verify (s01 next; s01–s04) | Security bumps from the `_overwatch` 2026-10-23 vuln sweep: `hono` 4.13.11 (shipped in the Worker), vite/vitest/miniflare dev tooling, pnpm 10.34.5; report back to `_overwatch`. |
+| mp09 | `mini-plans/mp09-security-bumps.md` | 🟡 IN PROGRESS | Stage 2 deploy and report (s01–s03 built 2026-10-23, not deployed; s04 sponsor deploy next) | Security bumps from the `_overwatch` 2026-10-23 vuln sweep: `hono` 4.13.11 (shipped in the Worker), vite/vitest/miniflare dev tooling, pnpm 10.34.5; report back to `_overwatch`. |
 | mp08 | `mini-plans/mp08-check-scope.md` | 🟡 IN PROGRESS | Stage 1 build (s01 built; s02 next; s01–s04) | Check loop: Topic & level as a check field, a per-field `checked_fields` mask, Which words (newest N, added between, topic), `vocab-json.md` as a generated Project file. |
 | mp07 | `mini-plans/mp07-review-tweaks.md` | 🟡 IN PROGRESS | Stage 1 built (s01–s04); deploy + phone next | Suss cards with a ChatGPT round trip, Vocab search first, a conjugation topic, a review calendar shaded to black at 400/day. |
 | mp06 | `mini-plans/mp06-mixed-direction.md` | 🟡 IN PROGRESS | Stage 1 build (s01 next; s01–s04) | Mixed review direction, the default: each card draws Urdu → English or English → Urdu, production more likely the longer its interval; one shared schedule. |
