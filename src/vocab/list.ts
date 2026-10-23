@@ -77,6 +77,11 @@ export function topicChip(item: Pick<VocabItem, "topic" | "cefr">): string | nul
   return parts.length ? parts.join(" · ") : null;
 }
 
+// f18: secondary topics by label; a legacy free tag shows as typed until the next save.
+export function tagLabels(item: Pick<VocabItem, "tags">): string[] {
+  return item.tags.map((tag) => topicBySlug(tag)?.label ?? tag);
+}
+
 // The chosen sort survives reloads on this device (sponsor request 2026-09-18). Search, topic and
 // due-only stay per visit: they narrow the list, and a stale narrowing would hide items.
 const SORT_KEY = "urdu.vocabSort";

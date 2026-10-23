@@ -39,7 +39,7 @@ import {
 import { readSessionLimit } from "../settings/sessionLimit";
 import { SussSheet } from "../suss/SussSheet";
 import { isSuss } from "../suss/suss";
-import { topicChip } from "../vocab/list";
+import { tagLabels, topicChip } from "../vocab/list";
 
 const DIRECTION_LABELS: Record<CardDirection, string> = {
   ur_en: "Urdu → English",
@@ -451,6 +451,18 @@ export function ReviewScreen({
               <dt>Topic</dt>
               <dd>
                 <span className="chip chip--topic">{topicChip(item)}</span>
+              </dd>
+            </>
+          )}
+          {item.tags.length > 0 && (
+            <>
+              <dt>Also about</dt>
+              <dd className="chip-row">
+                {tagLabels(item).map((label) => (
+                  <span key={label} className="chip chip--topic chip--secondary">
+                    {label}
+                  </span>
+                ))}
               </dd>
             </>
           )}

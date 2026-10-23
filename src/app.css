@@ -1538,6 +1538,21 @@ button.harvest-row {
   color: #2b3f6b;
 }
 
+/* f18: secondary topics on the review card, quieter than the topic chip and wrapping as a row. */
+.chip-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.chip--secondary {
+  padding: 1px 9px;
+  border: 1px solid #c3cbe0;
+  background: transparent;
+  color: #3f4d73;
+  font-weight: 500;
+}
+
 .vocab-row-meta .chip--topic {
   margin-left: 8px;
 }

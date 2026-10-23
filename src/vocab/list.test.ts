@@ -6,6 +6,7 @@ import {
   listQuery,
   parseSort,
   reviewLabel,
+  tagLabels,
   topicChip,
 } from "./list";
 
@@ -50,6 +51,13 @@ describe("topicChip (f18)", () => {
     expect(topicChip({ topic: "questions", cefr: null })).toBe("Question words");
     expect(topicChip({ topic: null, cefr: "B2" })).toBe("B2");
     expect(topicChip({ topic: null, cefr: null })).toBeNull();
+  });
+});
+
+describe("tagLabels (f18)", () => {
+  it("labels secondary topics, keeps a legacy free tag as typed, and is empty for none", () => {
+    expect(tagLabels({ tags: ["questions", "old-tag"] })).toEqual(["Question words", "old-tag"]);
+    expect(tagLabels({ tags: [] })).toEqual([]);
   });
 });
 

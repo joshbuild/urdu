@@ -113,7 +113,7 @@ next batch, no grading of the learner against a level.
   topic pickers in place of free-text tags; legacy free tags show as removable chips and are
   dropped on save. Level picker offers A1–C2 and none. The grid shows A1, A2 and B1 cells and a
   B2+ count per topic with no target. Review card: the topic chip and level shown after
-  reveal only.
+  reveal only; secondary topics as outlined chips under Also about (added 2026-10-22).
 - **Prompts and docs (s05).** A script writes `prompts/vocab-tags.md` from `shared/topics.ts`.
   The ChatGPT Project instructions keep the conventions and `vocab-list`; `vocab-json` gains
   `topic` and `cefr` and its tags rule points at the slug list. PRD, VISION §16 wording, AGENTS
