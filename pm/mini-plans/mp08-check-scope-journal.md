@@ -112,3 +112,8 @@ conjugation re-sort by date and one `vocab-json` run). `pnpm check` green, 902 t
 
 Next: sponsor deploys, uploads `vocab-json.md`, re-pastes the instructions, runs smoke-test-mp08.
 
+Wrap: the sponsor had uploaded the Project files about an hour before s04 landed (so the old
+`vocab-json.md` and full inline instructions); after s04 they re-uploaded the generated
+`vocab-json.md` and re-pasted the trigger-only instructions. `vocab-tags.md` was already current.
+Left: deploy, then smoke-test-mp08 (step 4 is the first `vocab-json` run from the file).
+
