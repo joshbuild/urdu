@@ -18,7 +18,7 @@
 ## Next Session Pointers
 *The 1–3 concrete next actions for a cold start.*
 
-1. **mp07 `review-tweaks`**: 0009 and mp08's 0010 are applied remotely (2026-10-22), so `main` is deployable. Sponsor runs `pnpm run deploy` (also ships mp08 s01–s02,  mp06 and f18's undeployed work), re-uploads `prompts/vocab-tags.md` to the ChatGPT Project, then `smoke-tests/smoke-test-mp07.md`. Confirm "vocab search" meant the buried search box.
+1. **mp07 `review-tweaks`**: 0009 and mp08's 0010 are applied remotely (2026-10-22), so `main` is deployable. Sponsor runs `pnpm run deploy` (also ships mp08 s01–s02, mp06 and f18's undeployed work), re-uploads `prompts/vocab-tags.md` to the ChatGPT Project, then `smoke-tests/smoke-test-mp07.md`. Confirm "vocab search" meant the buried search box.
 2. **mp08 `check-scope`**: s01–s02 built (Topic & level is a check field); s03 Which words next, then s04 `vocab-json.md` → `mini-plans/mp08-check-scope.md`.
 3. **mp06 `mixed-direction`**: built, not deployed. Sponsor runs `pnpm run deploy` (no migration; this also ships f18's Dash charts and batch fix) and uses Mixed in normal review; close on a report that the mix feels right and production recall fills in → `smoke-tests/smoke-test-mp06.md`.
 4. **mp05 `voice-vocab-bucket`**: s01 `find_vocab` built (not deployed; `get_vocab`'s `tag` is now `topic`); s02 Voice harvest next (no migration) → `mini-plans/mp05-voice-vocab-bucket.md`.
