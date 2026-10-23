@@ -5,6 +5,7 @@
 
 import type {
   AddToVaultResult,
+  FindVocabResult,
   GetVocabResult,
   HandoffStatus,
   RecordReviewResult,
@@ -35,17 +36,63 @@ export async function voiceGetVocab(
   const at = now.toISOString();
   if (args.scope === "due") {
     const [items, all] = await Promise.all([
-      dueVocab(db, at, args.limit, { tag: args.tag }),
-      listVocab(db, { due: true, tag: args.tag, sort: "next_review", limit: 1, offset: 0 }, at),
+      dueVocab(db, at, args.limit, { topic: args.topic }),
+      listVocab(db, { due: true, topic: args.topic, sort: "next_review", limit: 1, offset: 0 }, at),
     ]);
     return { items: items.map(entry), total: all.total };
   }
   const page = await listVocab(
     db,
-    { tag: args.tag, sort: "added", limit: args.limit, offset: 0 },
+    { topic: args.topic, sort: "added", limit: args.limit, offset: 0 },
     at,
   );
   return { items: page.items.map(entry), total: page.total };
+}
+
+const FIND_SEARCH_LIMIT = 20;
+const FIND_MATCHES = 5;
+
+const match = (item: VocabItem) => ({
+  id: item.id,
+  urdu: item.urdu,
+  roman: item.roman,
+  english: item.english,
+  mastery: bandName(masteryBand(item)),
+  queued: item.released_at === null,
+});
+
+// mp05: the whole vault, queued items included, so the Coach can answer "is X in my vocab"
+// for words older than get_vocab's newest 50. An exact Urdu key wins outright; otherwise a search,
+// with exact Roman or English hits ahead of the newest partial ones. Read-only.
+export async function voiceFindVocab(
+  db: D1Database,
+  terms: string[],
+  now: Date,
+): Promise<FindVocabResult> {
+  const at = now.toISOString();
+  const results: FindVocabResult["results"] = [];
+  for (const term of terms) {
+    const key = urduKey(term);
+    const id = key === "" ? null : await findIdByKey(db, key);
+    const exact = id ? await getVocab(db, id) : null;
+    if (exact) {
+      results.push({ term, total: 1, matches: [match(exact)] });
+      continue;
+    }
+    const page = await listVocab(
+      db,
+      { q: term, sort: "added", limit: FIND_SEARCH_LIMIT, offset: 0 },
+      at,
+    );
+    const wanted = term.toLowerCase();
+    const equal = (text: string | null) => text?.trim().toLowerCase() === wanted;
+    const ranked = [
+      ...page.items.filter((i) => equal(i.roman) || equal(i.english)),
+      ...page.items.filter((i) => !(equal(i.roman) || equal(i.english))),
+    ];
+    results.push({ term, total: page.total, matches: ranked.slice(0, FIND_MATCHES).map(match) });
+  }
+  return { results };
 }
 
 // Runs `work` once per call id. A repeat returns the stored result; `keep` says whether a result

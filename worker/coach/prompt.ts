@@ -2,7 +2,7 @@
 // these strings, it only gets the answer SDP back from POST /api/voice/session.
 //
 // COACH_INSTRUCTIONS is the sponsor's ChatGPT Urdu Coach (pm/mini-plans/mp02-coach-instructions.md)
-// with the Airtable sections rewritten for the three tools below, plus the mp02 tuning notes
+// with the Airtable sections rewritten for the tools below, plus the mp02 tuning notes
 // (f07 doc, Planning → Prompt tuning). The Coach proposes; Urdu Core decides every state change.
 
 export const LIVE_MODEL = "gpt-live-1";
@@ -43,7 +43,7 @@ This is a spoken conversation. Keep turns short and natural. I often pause to th
 
 My vocabulary lives in the app's vault. Delegate to the backend for anything that reads or changes it. Never rely on memory or this conversation for what is in the vault.
 
-Looking up: when I ask what is due, whether a word is in my vocab, or what my words are, ask the backend to get my vocabulary.
+Looking up: when I ask whether a word is in my vocab, or what my word for something is, ask the backend to find it. When I ask what is due or what my recent words are, ask the backend to get my vocabulary.
 
 Adding: when I say things like "add this to my vocab", "put that word in my list", or "remember this word", ask the backend to add it with the correct Urdu spelling, practical Roman Urdu for Pakistani pronunciation, a concise English equivalent, and whether it is a word or a phrase. Infer obvious fields rather than asking unnecessary questions. Do not add newly taught words unless I ask.
 
@@ -67,7 +67,7 @@ While a vault change is in progress, say only that you are doing it. Never say s
 You cannot edit, favourite, retag, or delete vocabulary, or change my review spacing. If I ask, say briefly that I can do that in the Vocab tab, and carry on coaching.`;
 
 export const BACKEND_INSTRUCTIONS = `You are the backend for a spoken Urdu coaching session. Return concise plain text suitable to be spoken aloud. Never use markdown.
-Use the tools to read and change the learner's vocabulary vault. Call add_to_vault with every item to add in one call. Call record_review once per answer, using the vocab_id from get_vocab when you have it.
+Use the tools to read and change the learner's vocabulary vault. Use find_vocab to check whether words are in the vault, with every word to check in one call; use get_vocab for due or recent words. Call add_to_vault with every item to add in one call. Call record_review once per answer, using the vocab_id from get_vocab when you have it.
 After a tool returns, report only what its result says. If an outcome is duplicate, rejected, unmatched or stale, say plainly that it was not done and why. Never claim a change succeeded unless the result says it did.`;
 
 const GRADE = {
@@ -80,14 +80,33 @@ export const TOOLS = [
     type: "function",
     name: "get_vocab",
     description:
-      "Read the learner's vocabulary: the items due for review now (default), or all items, optionally filtered by tag.",
+      "Read the learner's vocabulary: the items due for review now (default), or the newest items, optionally filtered by topic.",
     parameters: {
       type: "object",
       properties: {
         scope: { type: "string", enum: ["due", "all"] },
-        tag: { type: "string" },
+        topic: { type: "string" },
         limit: { type: "integer", minimum: 1, maximum: 50 },
       },
+      additionalProperties: false,
+    },
+  },
+  {
+    type: "function",
+    name: "find_vocab",
+    description:
+      "Look up words or phrases across the learner's whole vocabulary. Each term may be Urdu script, Roman Urdu or English; returns up to five matches per term and how many there are.",
+    parameters: {
+      type: "object",
+      properties: {
+        terms: {
+          type: "array",
+          minItems: 1,
+          maxItems: 20,
+          items: { type: "string", minLength: 1, maxLength: 100 },
+        },
+      },
+      required: ["terms"],
       additionalProperties: false,
     },
   },

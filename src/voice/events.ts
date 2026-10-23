@@ -4,6 +4,7 @@
 
 import type {
   AddToVaultResult,
+  FindVocabResult,
   GetVocabResult,
   RecordReviewResult,
   VoiceSpendResponse,
@@ -261,6 +262,10 @@ export function toolLabel(call: FunctionCall): string {
   switch (call.name) {
     case "get_vocab":
       return args.scope === "all" ? "Reading your vocab…" : "Reading your due words…";
+    case "find_vocab": {
+      const terms = Array.isArray(args.terms) ? args.terms.map(str).filter(Boolean) : [];
+      return terms.length ? `Looking up ${terms.join("، ")}…` : "Looking up your vocab…";
+    }
     case "add_to_vault": {
       const items = Array.isArray(args.items) ? args.items : [];
       const words = items.map((i) => str(obj(i)?.urdu)).filter(Boolean);
@@ -285,6 +290,18 @@ export function toolSummary(
     case "get_vocab": {
       const r = result as GetVocabResult;
       return { ok: true, detail: `${r.items.length} of ${r.total}` };
+    }
+    case "find_vocab": {
+      // Not finding a word is an answer, not a failure.
+      const parts = (result as FindVocabResult).results.map((r) => {
+        const first = r.matches[0];
+        if (!first) return `${r.term}: not found`;
+        const more = r.total > 1 ? ` +${r.total - 1}` : "";
+        return first.urdu === r.term
+          ? `${r.term}: found${more}`
+          : `${r.term}: ${first.urdu}${more}`;
+      });
+      return { ok: true, detail: parts.join("; ") };
     }
     case "add_to_vault": {
       const parts = (result as AddToVaultResult).results.map((r) =>

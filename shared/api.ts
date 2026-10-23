@@ -604,6 +604,20 @@ export type VoiceVocabEntry = {
 };
 export type GetVocabResult = { items: VoiceVocabEntry[]; total: number };
 
+// mp05: one result per term asked about. `matches` holds at most five; `total` counts them all.
+export type FindVocabMatch = {
+  id: string;
+  urdu: string;
+  roman: string | null;
+  english: string | null;
+  mastery: string;
+  // f17: still in the queue, so not yet in review.
+  queued: boolean;
+};
+export type FindVocabResult = {
+  results: Array<{ term: string; total: number; matches: FindVocabMatch[] }>;
+};
+
 export type AddToVaultResult = {
   results: Array<
     | { urdu: string; outcome: "created"; id: string }
@@ -626,4 +640,8 @@ export type RecordReviewResult =
     }
   | { outcome: "unmatched" | "stale"; reason: string };
 
-export type VoiceToolResult = GetVocabResult | AddToVaultResult | RecordReviewResult;
+export type VoiceToolResult =
+  | GetVocabResult
+  | FindVocabResult
+  | AddToVaultResult
+  | RecordReviewResult;

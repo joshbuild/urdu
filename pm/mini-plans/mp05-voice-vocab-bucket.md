@@ -1,8 +1,8 @@
 # Mini-plan — Voice vocab: whole-vault lookup and a Voice harvest bucket
 
-**Status**: 🟡 IN PROGRESS — opened and stress-tested 2026-10-02; s01 build next (no migration)
+**Status**: 🟡 IN PROGRESS — opened and stress-tested 2026-10-02; s01 built 2026-10-22, s02 Voice harvest next (no migration)
 **Handle**: `mp05`
-**Created**: 2026-10-02 · **Updated**: 2026-10-02
+**Created**: 2026-10-02 · **Updated**: 2026-10-22
 
 **Owner docs it serves**:
 - `pm/PRD.md` FR-G (voice Coach tools), FR-K (queue, sources and harvests), FR-F9 (check/fill)
@@ -169,8 +169,8 @@ sponsor chose A + B. The stress test (2026-10-02) added the hold rule and the bu
 
 ## Done When
 
-1. s01's `find_vocab` tests pass, including an item older than the newest 50 found by Urdu,
-   Roman and English. *(s01)*
+1. ✅ s01's `find_vocab` tests pass, including an item older than the newest 50 found by Urdu,
+   Roman and English. *(s01, 2026-10-22)*
 2. s02's Voice harvest tests pass: queued, linked to the HOME_TZ day's harvest, not due;
    duplicates reported and not linked; no empty bucket from a duplicates-only call. *(s02)*
 3. s03's hold tests pass: top-up and Intake skip Voice harvest words, the tank count excludes

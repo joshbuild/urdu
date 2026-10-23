@@ -2,6 +2,7 @@ import { env, exports } from "cloudflare:workers";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type {
   AddToVaultResult,
+  FindVocabResult,
   GetVocabResult,
   InvalidRequestResponse,
   RecordReviewResult,
@@ -12,6 +13,7 @@ import type {
 import { scheduleReview } from "../shared/ladders";
 import { LIVE_SESSIONS_URL } from "../worker/coach/live";
 import { TOOLS, VOICE } from "../worker/coach/prompt";
+import { createVocab } from "../worker/domain/vocab";
 import { type Api, clearTables, unlockedApi } from "./client";
 import { TEST_OPENAI_KEY } from "./constants";
 
@@ -176,15 +178,18 @@ describe("get_vocab", () => {
     ]);
   });
 
-  it("returns all items, filtered by tag and limited", async () => {
-    await create({ urdu: KITAB, tags: ["home"] });
-    await create({ urdu: PANI, tags: ["home"] });
-    await create({ urdu: GHAR });
-    const tagged = await json<GetVocabResult>(
-      await tool("get_vocab", { scope: "all", tag: "home", limit: 1 }),
+  it("returns all items, filtered by topic (not a secondary tag) and limited", async () => {
+    await create({ urdu: KITAB, topic: "home" });
+    await create({ urdu: PANI, topic: "home" });
+    await create({ urdu: GHAR, topic: "food", tags: ["home"] });
+    const home = await json<GetVocabResult>(
+      await tool("get_vocab", { scope: "all", topic: "home", limit: 1 }),
     );
-    expect(tagged.total).toBe(2);
-    expect(tagged.items).toHaveLength(1);
+    expect(home.total).toBe(2);
+    expect(home.items).toHaveLength(1);
+    expect(
+      (await json<InvalidRequestResponse>(await tool("get_vocab", { tag: "home" }), 400)).field,
+    ).toBe("tag");
   });
 
   it("rejects a bad limit and unknown fields", async () => {
@@ -194,6 +199,104 @@ describe("get_vocab", () => {
     expect(
       (await json<InvalidRequestResponse>(await tool("get_vocab", { mastery: 3 }), 400)).field,
     ).toBe("mastery");
+  });
+});
+
+// Two-letter Urdu fillers (ب پ ت ٹ ج چ د ر), none of them a key of the named words above.
+const LETTERS = [0x0628, 0x067e, 0x062a, 0x0679, 0x062c, 0x0686, 0x062f, 0x0631].map((c) =>
+  String.fromCodePoint(c),
+);
+const FILLERS = LETTERS.flatMap((a) => LETTERS.map((b) => a + b));
+
+// Items made directly, so they can be dated and queued; a later `minutes` is newer.
+async function seed(
+  urdu: string,
+  minutes: number,
+  fields: { roman?: string; english?: string } = {},
+  queued = false,
+): Promise<VocabItem> {
+  const at = new Date(Date.UTC(2026, 0, 1, 0, minutes));
+  const result = await createVocab(env.DB, { urdu, ...fields, source: "manual" }, at, 8, {
+    queued,
+  });
+  if (!result.ok) throw new Error(result.error);
+  return result.item;
+}
+
+const find = async (terms: unknown) =>
+  (await json<FindVocabResult>(await tool("find_vocab", { terms }))).results;
+
+describe("find_vocab", () => {
+  it("finds an item older than get_vocab's newest 50 by Urdu, Roman and English", async () => {
+    const old = await seed(KITAB_WITH_KASRA, 0, { roman: "kitaab", english: "book" });
+    for (const [i, urdu] of FILLERS.slice(0, 50).entries()) await seed(urdu, i + 1);
+    const newest = await json<GetVocabResult>(await tool("get_vocab", { scope: "all", limit: 50 }));
+    expect(newest.items.map((i) => i.id)).not.toContain(old.id);
+
+    const results = await find([KITAB, "Kitaab", "book"]);
+    expect(results.map((r) => r.term)).toEqual([KITAB, "Kitaab", "book"]);
+    for (const r of results) {
+      expect(r.total).toBe(1);
+      expect(r.matches).toEqual([
+        {
+          id: old.id,
+          urdu: KITAB_WITH_KASRA,
+          roman: "kitaab",
+          english: "book",
+          mastery: "New",
+          queued: false,
+        },
+      ]);
+    }
+  });
+
+  it("ranks exact Roman and English hits ahead of newer partial ones", async () => {
+    const water = await seed(PANI, 0, { roman: "paani", english: "water" });
+    await seed(FILLERS[0] as string, 1, { english: "watermelon" });
+    await seed(FILLERS[1] as string, 2, { english: "waterfall" });
+    const [r] = await find(["Water"]);
+    expect(r?.total).toBe(3);
+    expect(r?.matches[0]?.id).toBe(water.id);
+    expect(r?.matches[1]?.english).toBe("waterfall");
+  });
+
+  it("flags a queued item and reports a term with no match", async () => {
+    await seed(GHAR, 0, { roman: "ghar", english: "house" }, true);
+    const [ghar, none] = await find(["ghar", "elephant"]);
+    expect(ghar?.matches[0]?.queued).toBe(true);
+    expect(none).toEqual({ term: "elephant", total: 0, matches: [] });
+  });
+
+  it("returns five matches past five hits, with the full count", async () => {
+    for (const [i, urdu] of FILLERS.slice(0, 7).entries()) {
+      await seed(urdu, i, { english: `colour ${i}` });
+    }
+    const [r] = await find(["colour"]);
+    expect(r?.total).toBe(7);
+    expect(r?.matches).toHaveLength(5);
+    // Newest first among partial hits.
+    expect(r?.matches[0]?.english).toBe("colour 6");
+  });
+
+  it("writes nothing", async () => {
+    await seed(KITAB, 0, { english: "book" });
+    await find(["book"]);
+    const row = await env.DB.prepare("SELECT count(*) AS n FROM handoffs").first<{ n: number }>();
+    expect(row?.n).toBe(0);
+  });
+
+  it("rejects 0 or 21 terms, an empty or 101-character term, and an unknown key", async () => {
+    const field = async (args: unknown) =>
+      (await json<InvalidRequestResponse>(await tool("find_vocab", args), 400)).field;
+    expect(await field({ terms: [] })).toBe("terms");
+    expect(await field({})).toBe("terms");
+    expect(await field({ terms: Array.from({ length: 21 }, (_, i) => `w${i}`) })).toBe("terms");
+    expect(await field({ terms: ["book", "  "] })).toBe("terms[1]");
+    expect(await field({ terms: ["x".repeat(101)] })).toBe("terms[0]");
+    expect(await field({ terms: [3] })).toBe("terms[0]");
+    expect(await field({ terms: ["book"], limit: 5 })).toBe("limit");
+    expect(await find(Array.from({ length: 20 }, (_, i) => `w${i}`))).toHaveLength(20);
+    expect(await find(["x".repeat(100)])).toHaveLength(1);
   });
 });
 

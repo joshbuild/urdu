@@ -7,6 +7,7 @@
 
 ## Log
 *Newest at top.*
+- 261022c · mp05 voice-vocab-bucket · built s01 `find_vocab` (whole-vault lookup by Urdu, Roman or English, exact hits first, 5 per term with a total, queued flagged, read-only), Coach and backend prompt lines, Voice tab label; `get_vocab` `tag` → `topic`; `pnpm check` green at 856; not deployed → `mini-plans/mp05-voice-vocab-bucket-journal.md`
 - 261022b · mp07 review-tweaks · pushed `be2ddae`; sponsor's remote apply of 0009 failed (Cloudflare API `/query` error, reason line not yet seen); triage steps noted, deploy held until 0009 lands → `mini-plans/mp07-review-tweaks-journal.md`
 - 261022a · mp07 review-tweaks · opened and built s01–s04 from four sponsor tweaks: suss cards (review-card flag + comment, Vocab › Suss cards, ChatGPT round trip over the check batch, migration 0009), search first on Vocab (+ notes/examples), 51st topic `conjugation`, nine-shade calendar to black at 400; DECISIONS 261022a; `pnpm check` green at 849; no headless shots (local server access denied); not deployed → `mini-plans/mp07-review-tweaks-journal.md`
 - 261015d · mp06 mixed-direction · built s01–s03: `shared/direction.ts` interval-weighted draw, per-card directions fixed at start (Back/correction keep them), Mixed the default with a card label, no-English items recorded `ur_en`; headless 360 px shots; PRD FR-E1/§2, AGENTS, CHANGELOG, smoke-test-mp06; `pnpm check` green at 833; `b600b71`, not deployed → `mini-plans/mp06-mixed-direction-journal.md`

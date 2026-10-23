@@ -1,4 +1,4 @@
-// Voice Coach routes (f07, FR-B5, FR-F1..F3). Mounted behind requireSession: the Coach's tool calls
+// Voice Coach routes (f07, FR-B5, FR-F1..F3; mp05 find_vocab). Mounted behind requireSession: the Coach's tool calls
 // arrive on the browser's data channel, and the browser relays them here with the session cookie
 // (DECISIONS 260918h). OPENAI_API_KEY never leaves the Worker.
 //
@@ -19,10 +19,11 @@ import { createLiveSession } from "../coach/live";
 import { ID_CONFLICT } from "../domain/handoff";
 import { safeTopUp } from "../domain/intake";
 import { activeLadderId } from "../domain/settings";
-import { voiceAddToVault, voiceGetVocab, voiceRecordReview } from "../domain/voice";
+import { voiceAddToVault, voiceFindVocab, voiceGetVocab, voiceRecordReview } from "../domain/voice";
 import {
   parseAddToVault,
   parseEnvelope,
+  parseFindVocab,
   parseGetVocab,
   parseRecordReview,
 } from "../domain/voice-input";
@@ -128,6 +129,11 @@ voiceRoutes.post("/api/voice/tools/:name", async (c) => {
       // f17: the due scope tops up the new pile first, like the PWA's due read.
       if (args.value.scope === "due") await safeTopUp(c.env.DB, now, c.env.HOME_TZ);
       return c.json(await voiceGetVocab(c.env.DB, args.value, now));
+    }
+    case "find_vocab": {
+      const terms = parseFindVocab(call.value.args);
+      if (!terms.ok) return invalid(c, terms.error);
+      return c.json(await voiceFindVocab(c.env.DB, terms.value, now));
     }
     case "add_to_vault": {
       const items = parseAddToVault(call.value.args);

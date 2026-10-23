@@ -14,6 +14,8 @@ import { isRecord, type Parsed, parseFields, urduText } from "./vocab-input";
 export const DEFAULT_VOICE_VOCAB_LIMIT = 10;
 export const MAX_VOICE_VOCAB_LIMIT = 50;
 export const MAX_VOICE_ADD_ITEMS = 10;
+export const MAX_FIND_TERMS = 20;
+export const MAX_FIND_TERM_LENGTH = 100;
 
 const fail = (field: string | undefined, message: string) =>
   ({ ok: false, error: { field, message } }) as const;
@@ -49,10 +51,11 @@ export function parseEnvelope(body: unknown): Parsed<VoiceCall> {
   return { ok: true, value: { sessionId: sessionId.value, callId: callId.value, args } };
 }
 
-export type GetVocabArgs = { scope: "due" | "all"; tag?: string; limit: number };
+// f18/mp05: `topic` matches the item's own topic, as the Vocab tab's filter does.
+export type GetVocabArgs = { scope: "due" | "all"; topic?: string; limit: number };
 
 export function parseGetVocab(args: Record<string, unknown>): Parsed<GetVocabArgs> {
-  const extra = extraKey(args, ["scope", "tag", "limit"]);
+  const extra = extraKey(args, ["scope", "topic", "limit"]);
   if (extra) return fail(extra, "is not a recognised field");
   const scope = args.scope ?? "due";
   if (scope !== "due" && scope !== "all") return fail("scope", "must be due or all");
@@ -65,12 +68,34 @@ export function parseGetVocab(args: Record<string, unknown>): Parsed<GetVocabArg
   ) {
     return fail("limit", `must be an integer from 1 to ${MAX_VOICE_VOCAB_LIMIT}`);
   }
-  let tag: string | undefined;
-  if (args.tag !== undefined && args.tag !== null) {
-    if (typeof args.tag !== "string") return fail("tag", "must be a string");
-    tag = args.tag.trim() || undefined;
+  let topic: string | undefined;
+  if (args.topic !== undefined && args.topic !== null) {
+    if (typeof args.topic !== "string") return fail("topic", "must be a string");
+    topic = args.topic.trim() || undefined;
   }
-  return { ok: true, value: { scope, tag, limit } };
+  return { ok: true, value: { scope, topic, limit } };
+}
+
+// mp05: each term is Urdu, Roman or English; the lookup decides which.
+export function parseFindVocab(args: Record<string, unknown>): Parsed<string[]> {
+  const extra = extraKey(args, ["terms"]);
+  if (extra) return fail(extra, "is not a recognised field");
+  const terms = args.terms;
+  if (!Array.isArray(terms) || terms.length === 0) {
+    return fail("terms", "is required and must be a non-empty array");
+  }
+  if (terms.length > MAX_FIND_TERMS) {
+    return fail("terms", `must have at most ${MAX_FIND_TERMS} entries`);
+  }
+  const out: string[] = [];
+  for (const [i, term] of terms.entries()) {
+    const text = typeof term === "string" ? term.trim() : "";
+    if (text === "" || text.length > MAX_FIND_TERM_LENGTH) {
+      return fail(`terms[${i}]`, `must be a string of 1 to ${MAX_FIND_TERM_LENGTH} characters`);
+    }
+    out.push(text);
+  }
+  return { ok: true, value: out };
 }
 
 export type AddItem = Pick<VocabFields, "urdu"> &

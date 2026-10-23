@@ -5,6 +5,7 @@
 ### Added
 
 - **Suss** on review cards: tap it to flag a card that looks wrong, with an optional comment on what's off. **Vocab › Suss cards** lists every flagged card; **Copy suss prompt** sends them to ChatGPT with your comments, and **Paste suss reply** shows its fixes to tick (and why it kept the rest). Applying clears the flags.
+- The voice Coach can now check whether a word is in your vocab across the whole vault, by Urdu, Roman Urdu or English, not just your newest 50 words. Asking it for words on a topic now filters by the word's topic.
 - A **Verb conjugation** topic under Grammar, for tense and person forms such as karta hoon, kar raha hai, kiya and karega. Re-upload `prompts/vocab-tags.md` to the ChatGPT Project.
 
 ### Changed

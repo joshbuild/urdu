@@ -1,7 +1,22 @@
 # Journal — mp05 Voice Vocab Bucket
 
-**Current state:** opened and stress-tested 2026-10-02; s01–s07 planned, s01 `find_vocab` build
-next. No migration. The s07 phone check needs f17's deploy (0007 remote) first.
+**Current state:** s01 `find_vocab` built 2026-10-22 (Done When 1). s02 Voice harvest next. No
+migration. 0007 is long since remote, so s07 needs only a deploy.
+
+## 2026-10-22 — s01 `find_vocab` built
+
+- Tool schema, `parseFindVocab`, `voiceFindVocab`, the route case, `FindVocabResult` and its
+  label ("Looking up …") and summary on the Voice tab, per Design 1. A miss reads as done, not
+  failed: not finding a word is an answer.
+- Coach prompt: "is X in my vocab" / "my word for Y" → find; due and recent words → get.
+  Backend prompt names both tools.
+- The As-is note said the slice that touches the tool schema renames `get_vocab`'s `tag` to
+  `topic`; done here. `tag` is now an unknown key (400).
+- Tests: 6 in `test/voice.test.ts` (an item behind 50 newer ones found by Urdu with tashkeel,
+  Roman and English; exact ranked first; queued flagged; no match; 5 of 7; nothing written;
+  bounds), and the topic filter; 1 in `src/voice/events.test.ts`. `pnpm check` green at 856.
+- Not live-checked: voice runs only against the deployment (260921a). It rides s07.
+
 
 ## 2026-10-02 — stress-tested (261002b)
 

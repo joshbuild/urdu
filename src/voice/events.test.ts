@@ -146,6 +146,23 @@ describe("tool lines", () => {
     expect(toolLabel({ name: "add_to_vault", callId: "c", arguments: "{bad" })).toBe(
       "Adding to your vault…",
     );
+    expect(toolLabel(call("find_vocab", { terms: ["کتاب", "water"] }))).toBe(
+      "Looking up کتاب، water…",
+    );
+    expect(toolLabel(call("find_vocab", {}))).toBe("Looking up your vocab…");
+  });
+
+  it("summarises lookups, a miss included, as done", () => {
+    const m = { id: "1", roman: null, english: "water", mastery: "New", queued: false };
+    expect(
+      toolSummary("find_vocab", {
+        results: [
+          { term: "پانی", total: 1, matches: [{ ...m, urdu: "پانی" }] },
+          { term: "water", total: 3, matches: [{ ...m, urdu: "پانی" }] },
+          { term: "elephant", total: 0, matches: [] },
+        ],
+      }),
+    ).toEqual({ ok: true, detail: "پانی: found; water: پانی +2; elephant: not found" });
   });
 
   it("marks an add failed unless every item was created", () => {
