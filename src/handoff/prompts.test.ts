@@ -118,6 +118,33 @@ describe("checkPrompt", () => {
     expect(text).not.toContain("Correctness:");
   });
 
+  // mp08: Topic & level.
+  const classified = [
+    item({ english: "does", topic: "actions", cefr: "A1", tags: ["work"] }),
+    item({ id: "01J0000000000000000000000B", english: "water", cefr: "A1" }),
+  ];
+
+  it("leaves topics out unless Topic & level is chosen", () => {
+    const text = checkPrompt(classified, "C1", { mode: "both", fields: ["english"] });
+    expect(text).not.toContain('"topic"');
+    expect(text).not.toContain("Topic list:");
+  });
+
+  it("with Topic & level shows each item's topic, level and tags, and the topic list", () => {
+    const text = checkPrompt(classified, "C1", { mode: "correctness", fields: ["topic"] });
+    expect(text).toContain('check only these fields of each item: "topic", "cefr", "tags"');
+    expect(text).toContain("the honest level");
+    expect(text).toMatch(/"topic": "actions",\s*"cefr": "A1",\s*"tags": \[\s*"work"\s*\]/);
+    expect(text).toContain("Topic list:");
+    for (const t of TOPICS) expect(text).toContain(`- ${t.slug}:`);
+  });
+
+  it("in completeness lists a missing topic or level, never tags", () => {
+    const text = checkPrompt(classified, "C1", { mode: "completeness", fields: ["topic"] });
+    expect(text).toMatch(/"cefr": "A1",\s*"missing": \[\s*"topic"\s*\]/);
+    expect(text.match(/"missing"/g)).toHaveLength(2);
+  });
+
   it("in both asks for the two together, with neither prohibition", () => {
     const text = checkPrompt(items, "C1", { mode: "both", fields: ["roman", "english"] });
     expect(text).toContain("Correctness:");
@@ -153,6 +180,8 @@ describe("sussPrompt", () => {
     // The one card with a comment, plus two mentions in the instructions.
     expect(text.match(/"comment"/g)).toHaveLength(3);
     expect(text).toContain("Return every item, changed or not");
+    // mp08: the topic list rides along, so a suss fix can re-sort the card.
+    expect(text).toContain("Topic list:");
     expect(text).toContain("urdu_suggestion");
     expect(text).toContain("JSON document alone");
   });

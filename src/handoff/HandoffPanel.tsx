@@ -7,16 +7,18 @@
 
 import { useState } from "react";
 import {
+  CHECK_FIELDS,
   type CheckBatchResponse,
   type CheckMode,
   type CheckOptions,
+  type CorrectableField,
   type CorrectionPlan,
   type CorrectionResult,
   type CorrectionsResponse,
   type FieldChange,
-  type FillableField,
   MAX_CHECK_BATCH,
 } from "../../shared/api";
+import { topicBySlug } from "../../shared/topics";
 import { Sheet } from "../reader/Sheet";
 import {
   acceptList,
@@ -28,6 +30,7 @@ import {
   toggleReset,
 } from "./check";
 import {
+  CHECK_FIELD_LABELS,
   MODE_LABELS,
   optionsProblem,
   parseCount,
@@ -163,14 +166,14 @@ function CheckOptionsSheet({
       </fieldset>
       <fieldset className="direction">
         <legend>Fields</legend>
-        {(Object.keys(FIELD_LABELS) as FillableField[]).map((field) => (
+        {CHECK_FIELDS.map((field) => (
           <label key={field}>
             <input
               type="checkbox"
               checked={options.fields.includes(field)}
               onChange={() => setOptions(toggleOptionField(options, field))}
             />
-            {FIELD_LABELS[field]}
+            {CHECK_FIELD_LABELS[field]}
           </label>
         ))}
       </fieldset>
@@ -210,9 +213,17 @@ function CheckOptionsSheet({
   );
 }
 
+// mp08: topics and tags by label (a legacy free tag as typed), no tags as empty.
+function shown(change: FieldChange, side: "old" | "new"): string | null {
+  const value = change[side];
+  const label = (slug: string) => topicBySlug(slug)?.label ?? slug;
+  if (Array.isArray(value)) return value.length > 0 ? value.map(label).join(", ") : null;
+  return change.field === "topic" && value !== null ? label(value) : value;
+}
+
 // A phone is too narrow for old and new side by side, so each change takes two lines, old struck out.
 function ChangeValue({ change, side }: { change: FieldChange; side: "old" | "new" }) {
-  const value = change[side];
+  const value = shown(change, side);
   const props =
     change.field === "example_urdu"
       ? { className: "urdu-inline", dir: "rtl", lang: "ur" }
@@ -285,6 +296,9 @@ function PlanLine({
           {plan.ignored.length > 0 && (
             <p className="hint">Ignored, not asked for in this check: {fieldList(plan.ignored)}</p>
           )}
+          {plan.dropped !== undefined && (
+            <p className="hint">Left out, not on the topic list: {plan.dropped.join(", ")}</p>
+          )}
           {plan.urdu_suggestion !== undefined && <Flag suggestion={plan.urdu_suggestion} />}
           <label className="check">
             <input
@@ -305,7 +319,7 @@ const RESET_LABEL = {
   skipped: "Not reset: the item was reviewed after the preview.",
 } as const;
 
-function fieldList(fields: readonly FillableField[]): string {
+function fieldList(fields: readonly CorrectableField[]): string {
   return fields.map((f) => FIELD_LABELS[f]).join(", ");
 }
 

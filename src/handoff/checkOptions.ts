@@ -3,20 +3,33 @@
 // what the dialog starts with and whether Copy prompt is enabled.
 
 import {
+  CHECK_FIELDS,
   CHECK_MODES,
+  type CheckField,
   type CheckMode,
   type CheckOptions,
   DEFAULT_CHECK_COUNT,
   FILLABLE_FIELDS,
-  type FillableField,
   MAX_CHECK_BATCH,
 } from "../../shared/api";
+import { FIELD_LABELS } from "./prompts";
 
 export const DEFAULT_CHECK_OPTIONS: CheckOptions = {
   mode: "correctness",
   fields: [...FILLABLE_FIELDS],
   count: DEFAULT_CHECK_COUNT,
   only_unchecked: false,
+};
+
+// The dialog's tickboxes, in CHECK_FIELDS order. mp08: Topic & level is off by default, so the
+// everyday check prompt stays short; the remembered options keep it once ticked.
+export const CHECK_FIELD_LABELS: Readonly<Record<CheckField, string>> = {
+  roman: FIELD_LABELS.roman,
+  english: FIELD_LABELS.english,
+  notes: FIELD_LABELS.notes,
+  example_urdu: FIELD_LABELS.example_urdu,
+  example_english: FIELD_LABELS.example_english,
+  topic: "Topic & level",
 };
 
 export const MODE_LABELS: Readonly<Record<CheckMode, string>> = {
@@ -40,11 +53,11 @@ export function parseCount(text: string): number {
   return /^\d+$/.test(text.trim()) ? Number(text.trim()) : Number.NaN;
 }
 
-// Fields always kept in FILLABLE_FIELDS order, so the prompt and the payload read the same way
+// Fields always kept in CHECK_FIELDS order, so the prompt and the payload read the same way
 // however they were ticked.
-export function toggleOptionField(options: CheckOptions, field: FillableField): CheckOptions {
+export function toggleOptionField(options: CheckOptions, field: CheckField): CheckOptions {
   const on = options.fields.includes(field);
-  const fields = FILLABLE_FIELDS.filter((f) => (f === field ? !on : options.fields.includes(f)));
+  const fields = CHECK_FIELDS.filter((f) => (f === field ? !on : options.fields.includes(f)));
   return { ...options, fields };
 }
 
@@ -55,14 +68,14 @@ export function decodeOptions(raw: string | null): CheckOptions {
     const value = JSON.parse(raw) as Partial<CheckOptions>;
     const options: CheckOptions = {
       mode: value.mode as CheckMode,
-      fields: value.fields as FillableField[],
+      fields: value.fields as CheckField[],
       count: value.count as number,
       only_unchecked: value.only_unchecked as boolean,
     };
     const valid =
       CHECK_MODES.includes(options.mode) &&
       Array.isArray(options.fields) &&
-      options.fields.every((f) => FILLABLE_FIELDS.includes(f)) &&
+      options.fields.every((f) => CHECK_FIELDS.includes(f)) &&
       new Set(options.fields).size === options.fields.length &&
       typeof options.only_unchecked === "boolean" &&
       optionsProblem(options) === null;

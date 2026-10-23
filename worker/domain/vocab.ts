@@ -81,7 +81,7 @@ function isUniqueKeyViolation(err: unknown): boolean {
 }
 
 // Unknown tags get a name-only row so tag filters and a later tag list see them.
-function insertTags(db: D1Database, tags: readonly string[]): D1PreparedStatement[] {
+export function insertTags(db: D1Database, tags: readonly string[]): D1PreparedStatement[] {
   return tags.map((name) => db.prepare("INSERT OR IGNORE INTO tags (name) VALUES (?)").bind(name));
 }
 

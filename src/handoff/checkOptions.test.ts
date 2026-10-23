@@ -35,10 +35,16 @@ describe("check options (f13)", () => {
     const one = { ...DEFAULT_CHECK_OPTIONS, fields: ["example_urdu" as const] };
     expect(toggleOptionField(one, "roman").fields).toEqual(["roman", "example_urdu"]);
     expect(toggleOptionField(one, "example_urdu").fields).toEqual([]);
+    // mp08: Topic & level sorts last.
+    expect(toggleOptionField(toggleOptionField(one, "topic"), "roman").fields).toEqual([
+      "roman",
+      "example_urdu",
+      "topic",
+    ]);
   });
 
   it("decodes stored options, and falls back to the defaults on anything invalid", () => {
-    const stored = { mode: "both", fields: ["notes"], count: 35, only_unchecked: true };
+    const stored = { mode: "both", fields: ["notes", "topic"], count: 35, only_unchecked: true };
     expect(decodeOptions(JSON.stringify(stored))).toEqual(stored);
     for (const raw of [
       null,

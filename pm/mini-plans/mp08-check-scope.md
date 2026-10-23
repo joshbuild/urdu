@@ -1,6 +1,6 @@
 # Mini-plan — Check scope (topic & level, field mask, which words, vocab-json file)
 
-**Status**: 🟡 IN PROGRESS — *opened 2026-10-22; s01 `checked_fields` built 2026-10-22 (migration 0010, local only); s02 topic field next.*
+**Status**: 🟡 IN PROGRESS — *opened 2026-10-22; s01 `checked_fields` and s02 Topic & level built 2026-10-22 (migration 0010, local only); s03 Which words next.*
 **Handle**: `mp08`
 **Created**: 2026-10-22 · **Updated**: 2026-10-22
 
@@ -111,7 +111,7 @@ instructions is the hedge, and the first real run after the change is the check.
 
 ## Done When
 
-- [ ] `pnpm check` green with s01–s04. (s01: green 2026-10-22, 859 tests.)
+- [ ] `pnpm check` green with s01–s04. (s01: green 2026-10-22, 859 tests; s02: green, 874.)
 - [ ] Sponsor applies 0010 remotely and deploys (after 0009, mp07); uploads `prompts/vocab-json.md`
       to the ChatGPT Project's files and re-pastes the instructions.
 - [ ] Phone: a Topic & level check over the 2026-10-22 conjugation imports (by date or by their
@@ -136,3 +136,7 @@ instructions is the hedge, and the first real run after the change is the check.
 - 2026-10-22: existing checked items backfill to the bits of their present content fields; topic
   starts unchecked. Bits count only for fields with a value (DECISIONS 261022c, found in s01).
 - 2026-10-22: `vocab-json.md` generated and pinned; instructions keep a trigger line (sponsor).
+- 2026-10-22 (s02, agent): Topic & level is off in the default options, so the everyday check
+  prompt stays short; the remembered options keep it once ticked. A topic or level the paste
+  names but the list lacks proposes nothing (never a removal); an explicit null removes. Topic &
+  level counts as present once the item has a topic, missing while it lacks a topic or level.

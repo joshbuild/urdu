@@ -106,7 +106,7 @@ describe("suss check batch", () => {
       .first<{ payload: string }>();
     const payload = JSON.parse(row?.payload ?? "{}");
     expect(payload.mode).toBe("both");
-    expect(payload.fields).toHaveLength(5);
+    expect(payload.fields).toHaveLength(6);
     expect(typeof payload.suss_before).toBe("string");
   });
 

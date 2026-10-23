@@ -443,15 +443,39 @@ export const FILLABLE_FIELDS = [
 ] as const;
 export type FillableField = (typeof FILLABLE_FIELDS)[number];
 
+// mp08: the fields a check can be asked about: the text fields, and "topic" (Topic & level),
+// which covers topic, cefr and tags together.
+export const CHECK_FIELDS = [...FILLABLE_FIELDS, "topic"] as const;
+export type CheckField = (typeof CHECK_FIELDS)[number];
+
+// The columns a check correction may change, and what each check field covers.
+export const CORRECTABLE_FIELDS = [...FILLABLE_FIELDS, "topic", "cefr", "tags"] as const;
+export type CorrectableField = (typeof CORRECTABLE_FIELDS)[number];
+export const CHECK_FIELD_OF: Readonly<Record<CorrectableField, CheckField>> = {
+  roman: "roman",
+  english: "english",
+  notes: "notes",
+  example_urdu: "example_urdu",
+  example_english: "example_english",
+  topic: "topic",
+  cefr: "topic",
+  tags: "topic",
+};
+
+// A correctable field's value: text, a topic slug or level, or the tags list. Tags are never
+// null: no tags is [].
+export type FieldValue = string | string[] | null;
+
 // mp08: each check field's bit in vocab.checked_fields. Immutable like ladder ids: a bit is never
 // renumbered or reused, and a new field takes the next free bit. A bit is set only for a field
 // that had a value when checked.
-export const CHECK_FIELD_BITS: Readonly<Record<FillableField, number>> = {
+export const CHECK_FIELD_BITS: Readonly<Record<CheckField, number>> = {
   roman: 1,
   english: 2,
   notes: 4,
   example_urdu: 8,
   example_english: 16,
+  topic: 32,
 };
 
 // A pasted row naming an item by id, echoing its urdu, with proposed field values. The base of a
@@ -473,7 +497,7 @@ export type CheckMode = (typeof CHECK_MODES)[number];
 export type CheckOptions = {
   mode: CheckMode;
   // Non-empty: the fields the chat may check or fill.
-  fields: FillableField[];
+  fields: CheckField[];
   count: number;
   // Only items not yet checked this way: a chosen field never checked for (checked_fields), or
   // for completeness never filled (filled_at null).
@@ -495,18 +519,24 @@ export type CheckBatchResponse = {
 
 // A proposed field is present: a string replaces or fills it, null removes it. `urdu` is the
 // echo that matches the item; a suspect spelling goes in `urdu_suggestion`, never applied.
+// mp08: topic, cefr and tags are read leniently, as in a new-vocab paste (FR-L); `dropped` notes
+// what was left out.
 export type Correction = {
   vocab_id: string;
   urdu: string;
   reason: string;
   urdu_suggestion?: string;
+  topic?: string | null;
+  cefr?: CefrLevel | null;
+  tags?: string[];
+  dropped?: string[];
 } & Partial<Record<FillableField, string | null>>;
 
 // One ticked item: each accepted field with the old value the preview showed, which the write is
 // conditioned on, and whether to put the item back on the first rung.
 export type CorrectionAccept = {
   vocab_id: string;
-  fields: Partial<Record<FillableField, string | null>>;
+  fields: Partial<Record<CorrectableField, FieldValue>>;
   reset: boolean;
 };
 
@@ -517,7 +547,7 @@ export type CorrectionsRequest = {
   accept?: CorrectionAccept[];
 };
 
-export type FieldChange = { field: FillableField; old: string | null; new: string | null };
+export type FieldChange = { field: CorrectableField; old: FieldValue; new: FieldValue };
 
 export type CorrectionPlan =
   | { vocab_id: string; urdu: string; outcome: "rejected"; reason: string }
@@ -529,9 +559,11 @@ export type CorrectionPlan =
       changes: FieldChange[];
       // f13: proposed changes the batch's mode or fields don't allow, never tickable: a field not
       // chosen, a fill in a correctness check, an overwrite or removal in a completeness check.
-      ignored: FillableField[];
+      ignored: CorrectableField[];
       reason: string;
       urdu_suggestion?: string;
+      // mp08: topics, levels or tags the paste named that are not on the list.
+      dropped?: string[];
     };
 
 export const RESET_OUTCOMES = ["applied", "skipped", "not_asked"] as const;
@@ -545,9 +577,9 @@ export type CorrectionResult =
       outcome: "checked";
       written: FieldChange[];
       // Accepted, but the stored value had changed since the preview, so it was left alone.
-      kept: FillableField[];
+      kept: CorrectableField[];
       // Proposed changes left unticked.
-      declined: FillableField[];
+      declined: CorrectableField[];
       // "skipped": the schedule changed (e.g. a review) between the read and the write.
       reset: ResetOutcome;
       reason: string;

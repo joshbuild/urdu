@@ -3,10 +3,10 @@
 // into the `accept` list, carrying each field's old value so the write can refuse a stale one.
 
 import type {
+  CorrectableField,
   CorrectionAccept,
   CorrectionPlan,
   CorrectionResult,
-  FillableField,
 } from "../../shared/api";
 
 type Planned = Exclude<CorrectionPlan, { outcome: "rejected" }>;
@@ -21,21 +21,21 @@ export function tickable(plans: readonly CorrectionPlan[]): Planned[] {
   return plans.filter((p): p is Planned => p.outcome !== "rejected" && isShown(p));
 }
 
-export type ItemTicks = { fields: Partial<Record<FillableField, boolean>>; reset: boolean };
+export type ItemTicks = { fields: Partial<Record<CorrectableField, boolean>>; reset: boolean };
 export type Ticks = Readonly<Record<string, ItemTicks>>;
 
 // Every change ticked, every reset not.
 export function defaultTicks(plans: readonly CorrectionPlan[]): Ticks {
   const ticks: Record<string, ItemTicks> = {};
   for (const plan of tickable(plans)) {
-    const fields: Partial<Record<FillableField, boolean>> = {};
+    const fields: Partial<Record<CorrectableField, boolean>> = {};
     for (const change of plan.changes) fields[change.field] = true;
     ticks[plan.vocab_id] = { fields, reset: false };
   }
   return ticks;
 }
 
-export function toggleField(ticks: Ticks, vocabId: string, field: FillableField): Ticks {
+export function toggleField(ticks: Ticks, vocabId: string, field: CorrectableField): Ticks {
   const item = ticks[vocabId];
   if (!item) return ticks;
   return {

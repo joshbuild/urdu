@@ -85,8 +85,8 @@ describe("parsing /api/handoffs/corrections", () => {
     [
       "an unknown field",
       false,
-      { handoff_id: "h", corrections: [{ ...fix, tags: [] }] },
-      "corrections[0].tags",
+      { handoff_id: "h", corrections: [{ ...fix, favourite: true }] },
+      "corrections[0].favourite",
     ],
     [
       "a missing reason",

@@ -6,16 +6,18 @@
 // pastes.
 
 import {
+  CHECK_FIELDS,
   CHECK_MODES,
+  type CheckField,
   type CheckMode,
   type CheckOptions,
   type ClassifyRequest,
+  CORRECTABLE_FIELDS,
   type Correction,
   type CorrectionAccept,
   type CorrectionsRequest,
   DEFAULT_CHECK_COUNT,
   FILLABLE_FIELDS,
-  type FillableField,
   type HandoffProposal,
   type HandoffRequest,
   MAX_CHECK_BATCH,
@@ -37,7 +39,15 @@ import {
 const PROPOSAL_FIELDS = new Set(["urdu", ...FILLABLE_FIELDS, "topic", "cefr", "tags"]);
 const REVISION_FIELDS = new Set(["vocab_id", "urdu", ...FILLABLE_FIELDS]);
 // mp07: a chat may echo a suss card's "comment" back; it is read and ignored.
-const CORRECTION_FIELDS = new Set([...REVISION_FIELDS, "reason", "urdu_suggestion", "comment"]);
+const CORRECTION_FIELDS = new Set([
+  ...REVISION_FIELDS,
+  "topic",
+  "cefr",
+  "tags",
+  "reason",
+  "urdu_suggestion",
+  "comment",
+]);
 const ACCEPT_FIELDS = new Set(["vocab_id", "fields", "reset"]);
 
 const fail = (field: string | undefined, message: string) =>
@@ -151,7 +161,8 @@ function revision(value: unknown, allowed = REVISION_FIELDS): Parsed<Revision> {
 }
 
 // A correction is a revision that may also remove (null) and must say why. An empty or null
-// urdu_suggestion is read as none.
+// urdu_suggestion is read as none. mp08: topic, level and tags are lenient (FR-L), kept where
+// valid and otherwise dropped and noted; a null topic or level removes it, a null tags is none.
 function correction(value: unknown): Parsed<Correction> {
   const base = revision(value, CORRECTION_FIELDS);
   if (!base.ok) return base;
@@ -159,7 +170,14 @@ function correction(value: unknown): Parsed<Correction> {
   const reason = optionalText("reason", body.reason);
   if (!reason.ok) return reason;
   if (reason.value === null) return fail("reason", "is required and must be a non-empty string");
-  const out: Correction = { ...base.value, reason: reason.value };
+  const classified = lenientClassification(body);
+  // A dropped topic or level reads as null, which here would remove it: it proposes nothing.
+  const proposed = classified.value;
+  if (proposed.topic === null && body.topic !== null) delete proposed.topic;
+  if (proposed.cefr === null && body.cefr !== null) delete proposed.cefr;
+  if (body.tags === null) proposed.tags = [];
+  const out: Correction = { ...base.value, ...proposed, reason: reason.value };
+  if (classified.dropped.length > 0) out.dropped = classified.dropped;
   if (body.urdu_suggestion != null && body.urdu_suggestion !== "") {
     const suggestion = urduText(body.urdu_suggestion);
     if (!suggestion.ok) return fail("urdu_suggestion", suggestion.error.message);
@@ -181,13 +199,20 @@ function accepted(value: unknown, proposed: Correction | undefined): Parsed<Corr
 
   const fields: CorrectionAccept["fields"] = {};
   for (const [key, old] of Object.entries(value.fields)) {
-    if (!(FILLABLE_FIELDS as readonly string[]).includes(key) || !(key in proposed)) {
+    if (!(CORRECTABLE_FIELDS as readonly string[]).includes(key) || !(key in proposed)) {
       return fail(`fields.${key}`, "is not a field this correction proposes");
     }
-    if (old !== null && (typeof old !== "string" || old.length > MAX_TEXT_LENGTH)) {
+    if (key === "tags") {
+      if (
+        !Array.isArray(old) ||
+        !old.every((t) => typeof t === "string" && t.length <= MAX_TEXT_LENGTH)
+      ) {
+        return fail(`fields.${key}`, "must be the old tags shown, an array of strings");
+      }
+    } else if (old !== null && (typeof old !== "string" || old.length > MAX_TEXT_LENGTH)) {
       return fail(`fields.${key}`, "must be the old value shown, a string or null");
     }
-    fields[key as FillableField] = old;
+    fields[key as keyof CorrectionAccept["fields"]] = old;
   }
   if (Object.keys(fields).length === 0 && !value.reset) {
     return fail("fields", "must accept at least one field unless reset is true");
@@ -253,15 +278,15 @@ export function parseCheckOptions(body: unknown): Parsed<CheckOptions> {
   if (!(CHECK_MODES as readonly unknown[]).includes(mode)) {
     return fail("mode", `must be one of ${CHECK_MODES.join(", ")}`);
   }
-  let fields: FillableField[] = [...FILLABLE_FIELDS];
+  let fields: CheckField[] = [...FILLABLE_FIELDS];
   if (body.fields !== undefined) {
     if (!Array.isArray(body.fields) || body.fields.length === 0) {
       return fail("fields", "must be a non-empty array");
     }
     fields = [];
     for (const [i, field] of body.fields.entries()) {
-      if (!(FILLABLE_FIELDS as readonly unknown[]).includes(field)) {
-        return fail(`fields[${i}]`, `must be one of ${FILLABLE_FIELDS.join(", ")}`);
+      if (!(CHECK_FIELDS as readonly unknown[]).includes(field)) {
+        return fail(`fields[${i}]`, `must be one of ${CHECK_FIELDS.join(", ")}`);
       }
       if (fields.includes(field)) return fail(`fields[${i}]`, "appears more than once");
       fields.push(field);
@@ -281,7 +306,7 @@ export function parseCheckOptions(body: unknown): Parsed<CheckOptions> {
       ok: true,
       value: {
         mode: "both",
-        fields: [...FILLABLE_FIELDS],
+        fields: [...CHECK_FIELDS],
         count: count as number,
         only_unchecked: false,
         suss: true,

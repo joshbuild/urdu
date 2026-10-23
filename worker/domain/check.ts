@@ -4,9 +4,13 @@
 
 import {
   CHECK_FIELD_BITS,
+  CHECK_FIELD_OF,
   type CheckBatchResponse,
+  type CheckField,
   type CheckMode,
   type CheckOptions,
+  CORRECTABLE_FIELDS,
+  type CorrectableField,
   type Correction,
   type CorrectionAccept,
   type CorrectionPlan,
@@ -15,39 +19,55 @@ import {
   type CorrectionsResponse,
   FILLABLE_FIELDS,
   type FieldChange,
-  type FillableField,
+  type FieldValue,
   type VocabItem,
 } from "../../shared/api";
 import { correctStep } from "../../shared/ladders";
 import { urduKey } from "../../shared/normalize";
 import { ulid } from "../../shared/ulid";
 import { ID_CONFLICT } from "./handoff";
-import { toItem, type VocabRow } from "./vocab";
+import { insertTags, toItem, type VocabRow } from "./vocab";
 
 type Selection = { candidates: string; unchecked: string; order: string };
 
+// mp08: when a check field has a value to judge, and when it lacks one to fill. Topic & level
+// counts as present once the item has a topic, and as missing while it lacks a topic or a level;
+// tags are never missing.
+function presentSql(field: CheckField): string {
+  return `${field} IS NOT NULL`;
+}
+
+function missingSql(field: CheckField): string {
+  return field === "topic" ? "(topic IS NULL OR cefr IS NULL)" : `${field} IS NULL`;
+}
+
 // mp08: SQL for the checked_fields bits of those of these fields the row has a value in. A check
 // judges only values that are there, so an empty field is neither owed a check nor marked as
-// checked. f11 batches (null fields) covered every field.
-function presentMask(fields: readonly FillableField[] | null): string {
+// checked. f11 batches (null fields) covered every text field.
+function presentMask(fields: readonly CheckField[] | null): string {
   const bits = (fields ?? FILLABLE_FIELDS).map(
-    (f) => `CASE WHEN ${f} IS NOT NULL THEN ${CHECK_FIELD_BITS[f]} ELSE 0 END`,
+    (f) => `CASE WHEN ${presentSql(f)} THEN ${CHECK_FIELD_BITS[f]} ELSE 0 END`,
   );
   return `(${bits.join(" | ")})`;
+}
+
+// Tags are compared as lists, everything else as text.
+function same(a: FieldValue | undefined, b: FieldValue | undefined): boolean {
+  return JSON.stringify(a) === JSON.stringify(b);
 }
 
 // Each mode rotates on its own stamp: never stamped first, then the longest since. A correctness
 // stamp counts only once every chosen field the item has has been checked (mp08): an item checked
 // for other fields is still unchecked for these, and sorts with the never-checked. Field names and
-// bits come from FILLABLE_FIELDS, never from the request, so they are safe to interpolate.
+// bits come from CHECK_FIELDS, never from the request, so they are safe to interpolate.
 function selection({ mode, fields, suss }: CheckOptions): Selection {
   // mp07: the flagged cards, oldest flag first.
   if (suss) {
     const flagged = "suss_at IS NOT NULL";
     return { candidates: flagged, unchecked: flagged, order: "suss_at ASC, added_at ASC, id ASC" };
   }
-  const missing = `(${fields.map((f) => `${f} IS NULL`).join(" OR ")})`;
-  const present = `(${fields.map((f) => `${f} IS NOT NULL`).join(" OR ")})`;
+  const missing = `(${fields.map(missingSql).join(" OR ")})`;
+  const present = `(${fields.map(presentSql).join(" OR ")})`;
   const tail = "added_at ASC, id ASC";
   const owed = presentMask(fields);
   const notChecked = `(checked_fields & ${owed}) != ${owed}`;
@@ -114,16 +134,16 @@ export async function issueCheckBatch(
 type BatchPayload = {
   vocab_ids: string[];
   mode?: CheckMode;
-  fields?: FillableField[];
+  fields?: CheckField[];
   suss_before?: string;
 };
 
 // The handoff_id names no batch this app issued.
 export const NOT_ISSUED = "not_issued";
 
-// What a batch may change. `fields` null is a batch issued by f11, before modes: every field,
-// no mode rule, stamped as a correctness check. `suss_before` marks a suss batch (mp07).
-export type Scope = { mode: CheckMode; fields: FillableField[] | null; suss_before?: string };
+// What a batch may change. `fields` null is a batch issued by f11, before modes: every text
+// field, no mode rule, stamped as a correctness check. `suss_before` marks a suss batch (mp07).
+export type Scope = { mode: CheckMode; fields: CheckField[] | null; suss_before?: string };
 
 type Batch = Scope &
   (
@@ -161,10 +181,11 @@ export async function readItems(db: D1Database, ids: string[]): Promise<Map<stri
 }
 
 // f13: whether the batch's mode and fields let a proposal change this field. The chat only
-// proposes; this decides, whatever the prompt asked.
+// proposes; this decides, whatever the prompt asked. Tags are never null, so a correctness check
+// may change them and a completeness check never does.
 function allowed(scope: Scope, change: FieldChange): boolean {
-  if (scope.fields === null) return true;
-  if (!scope.fields.includes(change.field)) return false;
+  if (scope.fields === null) return (FILLABLE_FIELDS as readonly string[]).includes(change.field);
+  if (!scope.fields.includes(CHECK_FIELD_OF[change.field])) return false;
   if (scope.mode === "correctness") return change.old !== null;
   if (scope.mode === "completeness") return change.old === null;
   return true;
@@ -193,10 +214,16 @@ export function planCorrection(
     };
   }
   const changes: FieldChange[] = [];
-  const ignored: FillableField[] = [];
-  for (const field of FILLABLE_FIELDS) {
-    const proposed = correction[field];
-    if (proposed === undefined || proposed === item[field]) continue;
+  const ignored: CorrectableField[] = [];
+  // mp08: tags never repeat the topic the item will have (the paste already dropped a repeat of a
+  // proposed topic).
+  const topic = correction.topic !== undefined ? correction.topic : item.topic;
+  for (const field of CORRECTABLE_FIELDS) {
+    let proposed: FieldValue | undefined = correction[field];
+    if (field === "tags" && proposed !== undefined) {
+      proposed = (proposed as string[]).filter((t) => t !== topic);
+    }
+    if (proposed === undefined || same(proposed, item[field])) continue;
     const change = { field, old: item[field], new: proposed };
     if (allowed(scope, change)) changes.push(change);
     else ignored.push(field);
@@ -212,6 +239,7 @@ export function planCorrection(
     ...(suggestion !== undefined && urduKey(suggestion) !== item.urdu_key
       ? { urdu_suggestion: suggestion }
       : {}),
+    ...(correction.dropped !== undefined ? { dropped: correction.dropped } : {}),
   };
 }
 
@@ -261,28 +289,32 @@ function planApply(
   const fields = accept?.fields ?? {};
   const statements: D1PreparedStatement[] = [];
   const written: FieldChange[] = [];
-  const kept: FillableField[] = [];
-  for (const change of plan.changes) {
-    if (!(change.field in fields)) continue;
-    const old = fields[change.field] ?? null;
-    if (item[change.field] !== old) {
-      kept.push(change.field);
+  const kept: CorrectableField[] = [];
+  // mp08: tags never hold the topic (f18). Written tags leave out the topic the item will have,
+  // which depends on whether its topic change was ticked; a topic write takes its slug out of
+  // tags left as they were. Tags go first, so that strip never trips the tags write's guard.
+  const topicChange = plan.changes.find((c) => c.field === "topic");
+  const topic =
+    topicChange && "topic" in fields && same(item.topic, fields.topic ?? null)
+      ? topicChange.new
+      : item.topic;
+  const tagsFirst = (c: FieldChange) => (c.field === "tags" ? 0 : 1);
+  for (const proposed of [...plan.changes].sort((a, b) => tagsFirst(a) - tagsFirst(b))) {
+    if (!(proposed.field in fields)) continue;
+    const old = fields[proposed.field] ?? (proposed.field === "tags" ? [] : null);
+    if (!same(item[proposed.field], old)) {
+      kept.push(proposed.field);
       continue;
     }
+    const change =
+      proposed.field === "tags"
+        ? { ...proposed, new: (proposed.new as string[]).filter((t) => t !== topic) }
+        : proposed;
     written.push(change);
-    // One statement per field, conditioned on the old value: a field edited since the preview is
-    // never clobbered, and the other fields still land.
-    statements.push(
-      db
-        .prepare(
-          `UPDATE vocab SET ${change.field} = ?, updated_at = ?
-           WHERE id = ? AND ${change.field} IS ? AND ${OPEN}`,
-        )
-        .bind(change.new, at, item.id, old, handoffId),
-    );
+    statements.push(fieldWrite(db, handoffId, item.id, change, old, at));
   }
   // Accepted, but the stored value now equals the proposal: it was edited since the preview.
-  for (const field of Object.keys(fields) as FillableField[]) {
+  for (const field of Object.keys(fields) as CorrectableField[]) {
     if (!plan.changes.some((c) => c.field === field)) kept.push(field);
   }
   if (accept?.reset) {
@@ -325,11 +357,41 @@ function planApply(
   return { result, statements };
 }
 
+// One statement per field, conditioned on the old value: a field edited since the preview is
+// never clobbered, and the other fields still land. Tags are stored as JSON text. mp08: a topic
+// write takes its slug out of the tags (f18).
+function fieldWrite(
+  db: D1Database,
+  handoffId: string,
+  id: string,
+  change: FieldChange,
+  old: FieldValue,
+  at: string,
+): D1PreparedStatement {
+  const { field } = change;
+  const stored = (v: FieldValue) => (Array.isArray(v) ? JSON.stringify(v) : v);
+  if (field === "topic") {
+    return db
+      .prepare(
+        `UPDATE vocab SET topic = ?1, updated_at = ?2,
+             tags = (SELECT json_group_array(value) FROM json_each(vocab.tags) WHERE value IS NOT ?1)
+         WHERE id = ?3 AND topic IS ?4 AND ${OPEN.replace("?", "?5")}`,
+      )
+      .bind(change.new, at, id, old, handoffId);
+  }
+  return db
+    .prepare(
+      `UPDATE vocab SET ${field} = ?, updated_at = ?
+       WHERE id = ? AND ${field} IS ? AND ${OPEN}`,
+    )
+    .bind(stored(change.new), at, id, stored(old), handoffId);
+}
+
 // Which stamps an applied batch writes: a correctness check is checked_at with its fields ORed
 // into checked_fields (mp08; a bit is never cleared), a completeness check filled_at. The stamp
 // runs after the batch's writes, so a field the check filled counts as checked, and one it
 // removed does not.
-function stamps(mode: CheckMode, fields: readonly FillableField[] | null): string {
+function stamps(mode: CheckMode, fields: readonly CheckField[] | null): string {
   const checked = `checked_at = ?1, checked_fields = checked_fields | ${presentMask(fields)}`;
   if (mode === "correctness") return checked;
   if (mode === "completeness") return "filled_at = ?1";
@@ -400,6 +462,8 @@ export async function applyCorrections(
       )
       .bind(at, ...vocabIds, handoff_id),
     ...sussClear(db, vocabIds, batch.suss_before, handoff_id),
+    // Name rows for any tag written, as every tags write adds them (f04 tag list).
+    ...insertTags(db, [...new Set(results.flatMap(writtenTags))]),
     db
       .prepare(
         `UPDATE handoffs SET status = 'checked', imported_at = ?, payload = ?, outcome = ?
@@ -455,4 +519,9 @@ export async function applyCorrections(
     batch_size: vocabIds.length,
     results,
   };
+}
+
+function writtenTags(result: CorrectionResult): string[] {
+  if (result.outcome !== "checked") return [];
+  return result.written.flatMap((c) => (c.field === "tags" ? (c.new as string[]) : []));
 }

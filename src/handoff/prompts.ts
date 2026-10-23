@@ -5,10 +5,11 @@
 
 import {
   type BatchIssueResponse,
+  type CheckField,
   type CheckOptions,
   type ClassifyItem,
+  type CorrectableField,
   FILLABLE_FIELDS,
-  type FillableField,
   MAX_CHECK_BATCH,
   MAX_HANDOFF_PROPOSALS,
   type VocabItem,
@@ -98,31 +99,65 @@ At most ${total} proposals. Before replying, review the whole list: every field 
 `;
 }
 
-// Each item as the chat sees it: its id, its urdu and every field it has. With `missing`, also the
-// chosen fields it lacks, which a completeness check asks the chat to supply.
-function listItems(items: readonly VocabItem[], missing?: readonly FillableField[]): string {
+// The JSON keys each check field covers: Topic & level is topic, cefr and tags (mp08).
+const KEYS: Readonly<Record<CheckField, readonly CorrectableField[]>> = {
+  roman: ["roman"],
+  english: ["english"],
+  notes: ["notes"],
+  example_urdu: ["example_urdu"],
+  example_english: ["example_english"],
+  topic: ["topic", "cefr", "tags"],
+};
+
+// One item as the chat sees it: its id, its urdu, every text field it has, and with `classified`
+// its topic, level and any tags.
+function entryOf(item: VocabItem, classified: boolean): Record<string, string | string[]> {
+  const entry: Record<string, string | string[]> = { vocab_id: item.id, urdu: item.urdu };
+  for (const field of FILLABLE_FIELDS) {
+    const value = item[field];
+    if (value !== null) entry[field] = value;
+  }
+  if (classified) {
+    if (item.topic !== null) entry.topic = item.topic;
+    if (item.cefr !== null) entry.cefr = item.cefr;
+    if (item.tags.length > 0) entry.tags = item.tags;
+  }
+  return entry;
+}
+
+// With `missing`, each item also lists the chosen fields it lacks, which a completeness check asks
+// the chat to supply. Tags are never missing.
+function listItems(
+  items: readonly VocabItem[],
+  fields: readonly CheckField[],
+  missing: boolean,
+): string {
   const listed = items.map((item) => {
-    const entry: Record<string, string | string[]> = { vocab_id: item.id, urdu: item.urdu };
-    for (const field of FILLABLE_FIELDS) {
-      const value = item[field];
-      if (value !== null) entry[field] = value;
-    }
-    const lacks = missing?.filter((field) => item[field] === null) ?? [];
+    const entry = entryOf(item, fields.includes("topic"));
+    const lacks = missing
+      ? fields.flatMap((f) => KEYS[f]).filter((key) => key !== "tags" && item[key] === null)
+      : [];
     if (lacks.length > 0) entry.missing = lacks;
     return entry;
   });
   return JSON.stringify(listed, null, 2);
 }
 
-const quoted = (fields: readonly FillableField[]) => fields.map((f) => `"${f}"`).join(", ");
+const quoted = (fields: readonly CheckField[]) =>
+  fields
+    .flatMap((f) => KEYS[f])
+    .map((k) => `"${k}"`)
+    .join(", ");
 
 // What a correctness check asks about each field, for the fields chosen.
-const CHECKS: Readonly<Record<FillableField, string>> = {
+const CHECKS: Readonly<Record<CheckField, string>> = {
   roman: 'is "roman" the spelling Pakistanis actually type',
   english: 'is "english" the right meaning in everyday Pakistani use',
   notes: 'are the "notes" accurate',
   example_urdu: 'is "example_urdu" natural everyday Urdu',
   example_english: 'does "example_english" translate the Urdu example',
+  topic:
+    'is "topic" the slug from the topic list where the entry belongs most, "cefr" the honest level, and "tags" right (at most two other slugs, often none)',
 };
 
 // f11 (FR-F9), f13 modes. The handoff_id comes from the Worker, which recorded the batch under it
@@ -149,14 +184,15 @@ export function checkPrompt(
       : mode === "both"
         ? "You are checking entries in my Urdu vocabulary app for accuracy and completing them."
         : "You are checking entries in my Urdu vocabulary app for accuracy.";
+  const classify = fields.includes("topic") ? `\n${CLASSIFY_RULES}` : "";
   return `${opening} Follow these conventions:
 
-${CONVENTIONS}
+${CONVENTIONS}${classify}
 
 ${task}
 
 Items:
-${listItems(items, fill ? fields : undefined)}
+${listItems(items, fields, fill)}
 
 Return only the items you change. For each, copy vocab_id and urdu exactly as given; include only the fields you change or supply, with their values; and give one short "reason" (plain words, e.g. 'added example'; single quotes, never double, around any spelling you cite). Never change "urdu". If you think its spelling is wrong, put the spelling you suggest in "urdu_suggestion". Other fields are shown for context only.
 
@@ -175,19 +211,17 @@ If there is nothing to change, return "corrections": []. At most ${MAX_CHECK_BAT
 
 // mp07: the suss cards, flagged during review, each with the sponsor's comment. The Worker issued
 // the batch in mode both over every field, so any fix or fill the chat proposes can be ticked.
+// mp08: topic, level and tags too.
 export function sussPrompt(items: readonly VocabItem[], handoffId: string): string {
   const listed = items.map((item) => {
-    const entry: Record<string, string> = { vocab_id: item.id, urdu: item.urdu };
-    for (const field of FILLABLE_FIELDS) {
-      const value = item[field];
-      if (value !== null) entry[field] = value;
-    }
+    const entry = entryOf(item, true);
     if (item.suss_note) entry.comment = item.suss_note;
     return entry;
   });
   return `While reviewing my Urdu vocabulary app, I flagged these entries as questionable. Where I left a "comment", it says what looked wrong to me. Follow these conventions:
 
 ${CONVENTIONS}
+${CLASSIFY_RULES}
 
 Check each entry, starting from my comment: is anything wrong, misleading, unnatural or missing? Correct a wrong value, set it to null to remove it, or supply a missing field.
 
@@ -234,12 +268,15 @@ export function describeInvalid(body: { field?: string; message: string }): stri
   return body.field ? `${body.field} ${body.message}` : body.message;
 }
 
-export const FIELD_LABELS: Readonly<Record<FillableField, string>> = {
+export const FIELD_LABELS: Readonly<Record<CorrectableField, string>> = {
   roman: "Roman",
   english: "English",
   notes: "Notes",
   example_urdu: "Example",
   example_english: "Example (English)",
+  topic: "Topic",
+  cefr: "Level",
+  tags: "Also about",
 };
 
 // f18 (FR-L): classify existing words, up to 100 a time. Thin both ways: one line per item out,

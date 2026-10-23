@@ -8,6 +8,8 @@
 - The voice Coach can now check whether a word is in your vocab across the whole vault, by Urdu, Roman Urdu or English, not just your newest 50 words. Asking it for words on a topic now filters by the word's topic.
 - A **Verb conjugation** topic under Grammar, for tense and person forms such as karta hoon, kar raha hai, kiya and karega. Re-upload `prompts/vocab-tags.md` to the ChatGPT Project.
 
+- **Topic & level** in the check options: tick it to have ChatGPT check each word's topic, level and secondary topics (or fill in a missing topic or level), and tick the changes you agree with in the preview. A topic or level not on the list is left out and noted. Suss prompts now include it too.
+
 ### Changed
 
 - **Only items not yet checked** in the check options now tracks each field: checking just the English no longer counts a word as checked for its notes and examples, and an empty field is never owed a check.

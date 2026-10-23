@@ -1,8 +1,8 @@
 # Journal — mp08 check-scope
 
-**Current state (2026-10-22):** opened; s01 `checked_fields` built and committed (`a2b95d3`),
-migration 0010 applied locally only. `main` now needs 0010 remotely before any deploy. s02
-(Topic & level check field) next.
+**Current state (2026-10-22):** s01 `checked_fields` (`a2b95d3`) and s02 Topic & level built;
+migration 0010 applied locally only. `main` needs 0010 remotely before any deploy. s03 (Which
+words) next.
 
 ## 261022d — opened; s01 checked-fields mask
 
@@ -31,3 +31,35 @@ backfill. `pnpm check` green, 859 tests. Ripples: PRD FR-F9, AGENTS Project stat
 remote), DECISIONS 261022b/c.
 
 Next: s02 Topic & level as a check field (bit 32).
+
+## 261022e — s02 Topic & level as a check field
+
+`shared/api.ts` splits the field sets: `CHECK_FIELDS` (the text fields plus `topic`, what the
+dialog ticks and the mask counts, bit 32) and `CORRECTABLE_FIELDS` (adds `cefr` and `tags`, what
+a correction may change), with `CHECK_FIELD_OF` mapping one to the other. `FieldChange` values
+widen to `FieldValue` (text or a tags list; tags are never null). Corrections read topic, level
+and tags with f18's `lenientClassification`; dropped slugs land on the plan as `dropped` and show
+on the preview row. Selection: Topic & level is present once the item has a topic, missing while
+it lacks a topic or level. Scope rules fall out of tags never being null: correctness may change
+them, completeness never.
+
+Two bugs caught by the new tests: (1) a dropped topic came back from the lenient parser as null,
+which in a correction means remove, so an unknown slug wiped the topic; the parse now deletes a
+dropped topic or level. (2) The tags write filtered against the stored topic, so a ticked topic
+change plus tags lost the tags; tags are now filtered in the plan against the topic the item
+will end with (depends on whether the topic change was ticked and still holds), tags write before
+topic, and a topic write strips its slug from tags left alone. Written tags get name rows.
+
+Prompts: with Topic & level ticked, each item shows topic, cefr and tags, the prompt carries
+`CLASSIFY_RULES` (topic list and boundaries) and completeness lists missing topic/cefr; the suss
+prompt always carries them, and the suss batch covers all six fields. The dialog has a sixth tick,
+**Topic & level**, off by default. Preview shows topics and tags by label ("Also about").
+
+Tests: `test/check-topic.test.ts` (12: selection, bit 32, suss, preview, dropped, completeness,
+apply without schedule change, strip, own-topic tag, kept on edit, null tags, accept shape), plus
+prompt and options tests; the old "unknown field" case moved from `tags` to `favourite`.
+Headless shots were not possible: local server access was denied again (as in mp07), so the
+dialog and preview are left to the phone step. `pnpm check` green, 874 tests. Ripples: PRD FR-F9
+and FR-E2, CHANGELOG, AGENTS Project state.
+
+Next: s03 Which words (scope, dates, topic filter).
