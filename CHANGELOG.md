@@ -33,6 +33,10 @@
 - The ChatGPT prompts ask for strict JSON with no double quotes inside the text, so replies paste first time; a bad paste now says what to ask the chat for.
 - The ChatGPT buttons sit at the top of the Vocab tab instead of below the list, and saving fill-ins updates the count of items still missing fields.
 
+### Security
+
+- Updated `hono` to 4.13.11 (GHSA-5r4p-p66f-jhc7; the app doesn't use the affected `serveStatic`) and the build and test tooling (vite 8.3.3, vitest 4.1.12, and undici, sharp and source-map-js through overrides), and pinned pnpm 10.34.5, from the 2026-10-23 vulnerability sweep.
+
 ### Added
 
 - Two Dash charts by CEFR level: **Intervals by level**, a smooth curve per level showing roughly how far apart its reviews are, from hours to years, and **Mastery by level**, a stacked bar per level with a segment per mastery band (counts inside), and below the line the words not started and, under those, the ones still queued.

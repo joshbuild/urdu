@@ -1,6 +1,6 @@
 # Mini-plan — Security bumps (vuln sweep 2026-10-23)
 
-**Status**: 🟡 IN PROGRESS — *opened 2026-10-23 from the `_overwatch` vulnerability sweep; s01 next.*
+**Status**: 🟡 IN PROGRESS — *opened 2026-10-23 from the `_overwatch` vulnerability sweep; s01–s03 built 2026-10-23 (`087e03b`, `080c3cd`, `a495c7a`), not deployed; s04 sponsor deploy next.*
 **Handle**: `mp09`
 **Created**: 2026-10-23 · **Updated**: 2026-10-23
 
@@ -94,6 +94,11 @@ versions, the commit, the deploy date, and anything held or overridden.
 
 ## Decisions
 
+- 2026-10-23 — s02 used `pnpm.overrides` (`undici@<7.29.1`, `sharp@<0.35.5`, `source-map-js@<1.2.2`)
+  and left `wrangler` 4.129.0 and `@cloudflare/vite-plugin` 1.54.4 alone. Even the latest
+  `@cloudflare/vitest-pool-workers` (0.23.0) pins a miniflare with `undici@7.29.0`, so an override
+  was needed whatever we bumped, and a 23-minor wrangler jump just before a deploy wasn't worth
+  it for dev-only fixes. Drop the overrides once the pool's miniflare catches up.
 - 2026-10-23 — Opened from the `_overwatch` sweep. Severity was ranked there (recipe §6.1):
   urdu counts as deployed, and its dev tooling counts as not shipped. Fix versions come only from
   the advisories' structured fields, never from advisory prose.
