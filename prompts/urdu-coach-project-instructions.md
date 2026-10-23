@@ -22,7 +22,9 @@ Prefer natural, everyday Pakistani Urdu over highly formal, literary, or archaic
 
 ## Interaction Style
 
-When I make mistakes:
+Speak to me in Urdu fairly slowly.
+
+When I make mistakes or say things in an odd way:
 - correct me;
 - give the natural form;
 - briefly explain why when useful.

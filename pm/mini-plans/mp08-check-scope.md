@@ -83,6 +83,9 @@ full copy. The sponsor uploads `vocab-json.md` to the Project's files and re-pas
 instructions. The slice first diffs the three copies (in-app prompt, `vocab-json.md`,
 instructions): where their content differs, the daily-used `vocab-json.md` wording (fixed
 2026-10-02 to require every field) wins, so the in-app new-vocab prompt may change slightly.
+Only the `vocab-json` section is generated: the Aim, Interaction Style and Scoring sections are the
+sponsor's own wording (2026-10-22 they added "Speak to me in Urdu fairly slowly" and "or say
+things in an odd way", now in the repo copy) and stay hand-kept.
 Risk: ChatGPT follows instructions more reliably than files; the trigger line in the
 instructions is the hedge, and the first real run after the change is the check.
 
