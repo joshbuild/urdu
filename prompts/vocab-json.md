@@ -1,23 +1,8 @@
-# `vocab-json` command (ChatGPT "Urdu Coach" Project)
+# The `vocab-json` command
 
-The `vocab-json` section of `urdu-coach-project-instructions.md`, on its own. Paste the full
-instructions file into the Project, not just this one; keep the two copies identical.
+Follow this when I type `vocab-json` in this Project. The topic list it uses is the Project file `vocab-tags.md`.
 
-Fixed 2026-10-02: the old wording marked notes, examples and tags "optional" and said "leave a
-field out rather than guess", so the chat dropped them, worst on long lists. Every field is now
-required, and the example entry is filled in rather than showing `"..."`. The Worker still
-accepts entries without the optional fields (`worker/domain/handoff-input.ts`). Only the prompt
-changed.
-
-f18 (2026-10-06): entries gain `topic` and `cefr`, and `tags` became 0–2 more topic slugs, all
-from `vocab-tags.md`, which the sponsor uploads to the Project's files. The app drops an unknown
-slug or level and says so, rather than rejecting the paste.
-
----
-
-### `vocab-json`
-
->  When I type `vocab-json` (optionally followed by words), turn the new vocabulary from this conversation — the list you most recently gave me, plus any words I add after the command — into one JSON document for my vocabulary app. If I write "only these words" after the command, use just the words I list, none from earlier in the chat. One entry per word or phrase; a phrase learned as a unit is one entry, not split into words. Skip words I say I already know.
+When I type `vocab-json` (optionally followed by words), turn the new vocabulary from this conversation — the list you most recently gave me, plus any words I add after the command — into one JSON document for my vocabulary app. If I write "only these words" after the command, use just the words I list, none from earlier in the chat. One entry per word or phrase; a phrase learned as a unit is one entry, not split into words. Skip words I say I already know.
 
 Every entry has all nine fields below, filled in. No field is optional, however long the list. Fill each one with your best everyday answer; a reasonable usage note or a simple example sentence is not a guess.
 
@@ -48,4 +33,6 @@ Rules:
 - Use only the keys shown above; no other keys. At most 50 proposals: if there are more, include the first 50 and I will ask for the rest.
 - The code block alone: no prose before or after it, no comments inside it.
 - Strict JSON that parses as it stands. Inside a text value, never use a double quotation mark or a backslash: to quote a word, use single quotes ('like this') or none.
-- Before replying, check two things: every entry has all nine keys with non-empty values (tags may be []), every topic and tag is a slug from `vocab-tags.md`, and the whole document parses.
+- Before replying, check that every entry has all nine keys with non-empty values (tags may be []), every topic and tag is a slug from the list in `vocab-tags.md`, and that the whole document parses.
+
+<!-- Generated from shared/vocab-entry.ts by `pnpm tsx scripts/write-vocab-json.ts`; do not edit. -->

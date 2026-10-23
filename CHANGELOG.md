@@ -13,6 +13,7 @@
 
 ### Changed
 
+- The ChatGPT Project's `vocab-json` command now lives in its own Project file, `prompts/vocab-json.md`; the Project instructions just point to it. Upload the file and re-paste the instructions. The app's **Copy new-vocab prompt** uses the same wording, so it now asks for every field.
 - **Only items not yet checked** in the check options now tracks each field: checking just the English no longer counts a word as checked for its notes and examples, and an empty field is never owed a check.
 - Search is the first thing on the Vocab tab, also finds words in notes and example sentences, and while you type the buttons above the list step aside so results come straight under the box.
 - The review calendar keeps darkening past 40 reviews a day, through nine shades to black at 400.

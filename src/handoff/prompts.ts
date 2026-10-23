@@ -1,7 +1,7 @@
 // f06: the ChatGPT round trip's prompts (FR-F6; f11/f13 FR-F9) and paste parsing. Pure, so the node
 // project tests them. Each prompt carries a fresh handoff_id for the chat to echo, which makes a
-// pasted reply idempotent: pasting it twice is a no-op in Urdu Core. The standing ChatGPT
-// Project version of newVocabPrompt is prompts/urdu-coach-project-instructions.md; keep the two in step.
+// pasted reply idempotent: pasting it twice is a no-op in Urdu Core. newVocabPrompt's entry rules
+// are shared/vocab-entry.ts, which also writes the ChatGPT Project's prompts/vocab-json.md (mp08).
 
 import {
   type BatchIssueResponse,
@@ -16,6 +16,7 @@ import {
 } from "../../shared/api";
 import { TOPIC_BOUNDARIES, TOPICS, topicBySlug } from "../../shared/topics";
 import { ulid } from "../../shared/ulid";
+import { ENTRY_CHECK, ENTRY_EXAMPLE, entryFieldRules } from "../../shared/vocab-entry";
 
 const CONVENTIONS = `Language conventions:
 - Everyday Pakistani Urdu as people actually speak it, in Urdu script (not Hindi, not formal Arabic or Persian register).
@@ -41,11 +42,16 @@ Topic boundaries: ${TOPIC_BOUNDARIES}
 Topic list:
 ${TOPIC_LIST}`;
 
+// mp08 s04: the Project's vocab-json wording (shared/vocab-entry.ts), with the topic list inline.
 export function newVocabPrompt(handoffId: string = ulid(), sessionAt = new Date()): string {
   return `You are helping me add Urdu vocabulary to my learning app. For each word or phrase I give you below, draft one vocabulary entry. A phrase that is learned as a unit is one entry, not split into words.
 
-${CONVENTIONS}
-${CLASSIFY_RULES}
+${entryFieldRules("the topic list below")}
+
+Topic boundaries: ${TOPIC_BOUNDARIES}
+
+Topic list:
+${TOPIC_LIST}
 
 Return exactly this JSON shape, copying handoff_id and session_at as given:
 
@@ -53,11 +59,11 @@ Return exactly this JSON shape, copying handoff_id and session_at as given:
   "handoff_id": "${handoffId}",
   "session_at": "${sessionAt.toISOString()}",
   "proposals": [
-    { "urdu": "کتاب", "roman": "kitaab", "english": "book", "notes": "...", "example_urdu": "...", "example_english": "...", "topic": "school", "cefr": "A1", "tags": [] }
+    ${ENTRY_EXAMPLE}
   ]
 }
 
-"urdu" is required on every proposal; every other field is optional. At most ${MAX_HANDOFF_PROPOSALS} proposals. ${JSON_ONLY} ${NO_GUESS}
+Use only the keys shown above. At most ${MAX_HANDOFF_PROPOSALS} proposals. Before replying, check that ${ENTRY_CHECK}. ${JSON_ONLY}
 
 My words (Urdu, Roman Urdu or English — if English, give the everyday Urdu for it):
 `;

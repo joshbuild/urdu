@@ -91,3 +91,24 @@ sessions were refused local server access), so the dialog is left to the phone s
 `pnpm check` green, 898 tests. Ripples: PRD FR-F9, CHANGELOG, AGENTS Project state.
 
 Next: s04 `vocab-json.md` generated Project file.
+
+## 261022g — s04 `vocab-json.md` as a generated Project file
+
+Diffed the three copies first: `vocab-json.md` and the instructions' section were identical; the
+in-app `newVocabPrompt` still had the pre-2026-10-02 wording (fields optional, "leave a field
+out rather than guess", `"..."` in the example). Per the plan the daily-used wording won: it now
+lives in `shared/vocab-entry.ts` (`entryFieldRules(topicList)`, `ENTRY_EXAMPLE`, `ENTRY_CHECK`),
+and `newVocabPrompt` uses it with the topic list inline, so the in-app prompt now asks for every
+field. `scripts/vocab-json.ts` builds `prompts/vocab-json.md` from it (`write-vocab-json.ts`
+writes it), and `scripts/vocab-json.test.ts` pins the file and checks the instructions keep only
+the trigger line. The instructions' `vocab-json` section is one line pointing to `vocab-json.md`
+(and `vocab-tags.md` for topics); its header now lists both Project files. The Aim, Interaction
+Style and Scoring sections are untouched. The rule text itself is unchanged apart from the
+self-check line's wording.
+
+Ripples: PRD FR-F6, AGENTS (command, keep-in-sync, Project state), CHANGELOG (Changed), and
+`smoke-tests/smoke-test-mp08.md` (deploy, two uploads and a re-paste, then the dialog, the
+conjugation re-sort by date and one `vocab-json` run). `pnpm check` green, 902 tests.
+
+Next: sponsor deploys, uploads `vocab-json.md`, re-pastes the instructions, runs smoke-test-mp08.
+

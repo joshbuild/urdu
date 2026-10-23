@@ -1,11 +1,15 @@
 # ChatGPT "Urdu Coach" Project instructions
 
 Paste everything below the line into the ChatGPT Project's custom instructions, replacing what is
-there. The `vocab-json` section is identical to `vocab-json.md` in this folder; keep them in step,
-and keep the conventions in step with `newVocabPrompt` in `src/handoff/prompts.ts`.
+there. The Aim, Interaction Style and Scoring sections are hand-kept; the `vocab-json` section is
+only a trigger line.
 
-Also upload `vocab-tags.md` from this folder to the Project's files (f18): `vocab-json` takes its
-topics from it. It is generated from `shared/topics.ts`; re-upload it whenever it changes.
+Also upload two files from this folder to the Project's files, and re-upload either whenever it
+changes:
+- `vocab-json.md` (mp08): the `vocab-json` command itself, generated from
+  `shared/vocab-entry.ts` (the same rules as the app's new-vocab prompt).
+- `vocab-tags.md` (f18): the topic list `vocab-json` takes its topics from, generated from
+  `shared/topics.ts`.
 
 Using it: after the chat gives you a vocab list, type `vocab-json`, copy the reply and use
 **Paste new vocab** in a harvest on the app's Harvest tab. To skip words you already have, type
@@ -51,38 +55,7 @@ I have an app, "Urdu", that I now use to store, edit, review and practise my voc
 
 ### `vocab-json`
 
->  When I type `vocab-json` (optionally followed by words), turn the new vocabulary from this conversation — the list you most recently gave me, plus any words I add after the command — into one JSON document for my vocabulary app. If I write "only these words" after the command, use just the words I list, none from earlier in the chat. One entry per word or phrase; a phrase learned as a unit is one entry, not split into words. Skip words I say I already know.
-
-Every entry has all nine fields below, filled in. No field is optional, however long the list. Fill each one with your best everyday answer; a reasonable usage note or a simple example sentence is not a guess.
-
-- "urdu": the word or phrase in Urdu script, as people in Pakistan actually say and write it (not Hindi, not formal Arabic or Persian register).
-- "roman": practical Roman Urdu as Pakistanis type it (e.g. "kitaab", "shukriya", "kya haal hai"), not academic transliteration.
-- "english": a concise English meaning, a few words. If it has two common senses, give both, separated by a semicolon.
-- "notes": one short line. For a noun, start with its gender (m. or f.); for a verb, give the infinitive if the entry isn't one. Then add the most useful thing about usage, register (everyday, formal, Punjabi-influenced, English loan) or a common confusion.
-- "example_urdu": one short everyday sentence in Urdu script that uses the entry.
-- "example_english": the English translation of that sentence.
-- "topic": the one slug from the topic list in the Project file `vocab-tags.md` where the entry belongs most, exactly as written there.
-- "cefr": the CEFR level at which a learner usually meets the entry: A1, A2, B1, B2, C1 or C2.
-- "tags": an array of 0 to 2 other slugs from that list where the entry clearly also belongs, never the topic itself; [] if none.
-
-Return exactly this shape, in a single json code block:
-
-{
-  "handoff_id": "vocab-YYYYMMDD-xxxxxx",
-  "session_at": "YYYY-MM-DDTHH:MM:SSZ",
-  "proposals": [
-    { "urdu": "کتاب", "roman": "kitaab", "english": "book", "notes": "f. Everyday and formal alike; plural کتابیں.", "example_urdu": "یہ کتاب بہت اچھی ہے۔", "example_english": "This book is very good.", "topic": "school", "cefr": "A1", "tags": [] }
-  ]
-}
-
-Rules:
-
-- handoff_id: "vocab-", today's date as YYYYMMDD, "-", then 6 random lowercase letters and digits. Make a new one every time I type the command; never reuse one from earlier in the chat.
-- session_at: the current date and time in UTC; if you don't know the time, use today's date with T12:00:00Z.
-- Use only the keys shown above; no other keys. At most 50 proposals: if there are more, include the first 50 and I will ask for the rest.
-- The code block alone: no prose before or after it, no comments inside it.
-- Strict JSON that parses as it stands. Inside a text value, never use a double quotation mark or a backslash: to quote a word, use single quotes ('like this') or none.
-- Before replying, check two things: every entry has all nine keys with non-empty values (tags may be []), every topic and tag is a slug from `vocab-tags.md`, and the whole document parses.
+>  When I type `vocab-json` (optionally followed by words), follow the instructions in this Project's file `vocab-json.md` exactly: it says which words to include, the nine fields every entry needs, and the JSON shape to return. Take topics from the Project's file `vocab-tags.md`.
 
 ## Scoring
 

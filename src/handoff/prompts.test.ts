@@ -53,7 +53,7 @@ describe("newVocabPrompt", () => {
     for (const field of ["proposals", "urdu", "roman", "english", "example_urdu", "tags"]) {
       expect(text).toContain(`"${field}"`);
     }
-    expect(text).toContain("Pakistani Urdu");
+    expect(text).toContain("people in Pakistan");
     expect(text).toContain("JSON document alone");
   });
 
@@ -62,7 +62,15 @@ describe("newVocabPrompt", () => {
     for (const field of ["topic", "cefr"]) expect(text).toContain(`"${field}"`);
     for (const t of TOPICS) expect(text).toContain(t.slug);
     expect(text).toContain("A1, A2, B1, B2, C1 or C2");
-    expect(text).toContain("at most two");
+    expect(text).toContain("0 to 2 other slugs");
+  });
+
+  // mp08 s04: the Project's vocab-json wording, every field required and a filled-in example.
+  it("asks for every field, with a filled-in example", () => {
+    const text = newVocabPrompt("H1");
+    expect(text).toContain("No field is optional");
+    expect(text).not.toContain('"..."');
+    expect(text).not.toContain("Leave a field out");
   });
 
   it("makes a fresh id each time by default", () => {
