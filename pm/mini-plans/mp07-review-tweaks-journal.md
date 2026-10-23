@@ -1,5 +1,18 @@
 # Journal — mp07 review-tweaks
 
+**Current state (2026-10-22):** built and pushed (`be2ddae`); the sponsor's remote apply of 0009
+failed with a Cloudflare API error on the D1 `/query` call, reason not yet seen. Not deployed.
+
+## 261022b — pushed; remote 0009 apply failed
+
+Pushed `be2ddae`. The sponsor ran `pnpm wrangler d1 migrations apply urdu --remote` and got
+"A request to the Cloudflare API (…/d1/database/3b3e…/query) failed", without the follow-on
+reason line. Likely causes: expired wrangler login (fix: `pnpm wrangler login`, re-apply), a
+partial apply ("duplicate column name: suss_at", since 0009 is two ALTERs; fix: mark it applied
+rather than re-run), or a network blip (re-run). Next: `pnpm wrangler whoami` and
+`pnpm wrangler d1 migrations list urdu --remote`, plus the full error text. Do not deploy until
+0009 is applied: the new code reads `suss_at`.
+
 ## 261022a — opened and built s01–s04
 
 Sponsor asked for four tweaks in one message: a Suss button on review cards with a place to see
